@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+.npm
+
+# Build outputs
+.next/
+dist/
+build/
+out/
+
+# Prisma generated
+backend/node_modules/.prisma/
+
+# Environment files — NEVER commit these
+.env
+.env.local
+.env.production
+.env*.local
+frontend/.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Editor
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Setup scripts (not needed in repo)
+create-frontend.bat
+create-backend.bat
+setup-portals.js
+
+# Test coverage
+coverage/

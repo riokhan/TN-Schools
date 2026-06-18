@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_URI")
+}
+
+// ─── Enums ────────────────────────────────────────────────────
+
+enum Role {
+  STUDENT
+  PARENT
+  TEACHER
+  HEADMASTER
+  BEO
+  DEO
+  COMMISSIONER
+  MINISTER
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  LEAVE
+}
+
+enum ScholarshipStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  DISBURSED
+}
+
+// ─── Core Entities ────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(uuid())
+  emisId       String?  @unique       // EMIS Student ID
+  aadhaarHash  String?  @unique       // Hashed Aadhaar (never store raw)
+  mobile       String?  @unique
+  name         String
+  email        String?  @unique
+  passwordHash String?
+  role         Role     @default(STUDENT)
+  isActive     Boolean  @default(true)
+  schoolId     String?
+  school       School?  @relation(fields: [schoolId], references: [id])
+  student      Student?
+  teacher      Teacher?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model School {
+  id             String    @id @default(uuid())
+  dise           String    @unique      // DISE code
+  name           String
+  address        String?
+  district       String
+  block          String
+  pincode        String?
+  schoolType     String    @default("Government")  // Government, Aided, etc.
+  mediumOfInstruction String @default("Tamil")
+  classes        String[]  // e.g. ["6","7","8","9","10","11","12"]
+  users          User[]
+  students       Student[]
+  teachers       Teacher[]
+  attendance     Attendance[]
+  timetables     Timetable[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Student {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id])
+  schoolId     String
+  school       School    @relation(fields: [schoolId], references: [id])
+  class        String    // "6" to "12"
+  section      String    // "A", "B", "C" etc.
+  rollNumber   String?
+  dob          DateTime?
+  gender       String?
+  religion     String?
+  caste        String?   // For scholarship eligibility
+  parentName   String?
+  parentMobile String?
+  attendance   Attendance[]
+  marks        Mark[]
+  scholarships Scholarship[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Teacher {
+  id           String    @id @default(uuid())
+  userId       String    @unique
+  user         User      @relation(fields: [userId], references: [id])
+  schoolId     String
+  school       School    @relation(fields: [schoolId], references: [id])
+  employeeId   String?   @unique
+  subjects     String[]  // ["Mathematics", "Science"]
+  qualification String?
+  joiningDate  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ─── Academic Entities ─────────────────────────────────────────
+
+model Mark {
+  id         String   @id @default(uuid())
+  studentId  String
+  student    Student  @relation(fields: [studentId], references: [id])
+  subject    String
+  examType   String   // "Unit1", "Midterm", "Annual", "Mock"
+  maxMarks   Int      @default(100)
+  scored     Int
+  grade      String?
+  academicYear String @default("2024-25")
+  createdAt  DateTime @default(now())
+
+  @@index([studentId, subject, examType])
+}
+
+model Attendance {
+  id        String           @id @default(uuid())
+  studentId String
+  student   Student          @relation(fields: [studentId], references: [id])
+  schoolId  String
+  school    School           @relation(fields: [schoolId], references: [id])
+  date      DateTime
+  status    AttendanceStatus @default(PRESENT)
+  method    String?          // "QR", "RFID", "Biometric", "Manual"
+  createdAt DateTime         @default(now())
+
+  @@unique([studentId, date])
+  @@index([studentId, date])
+  @@index([schoolId, date])
+}
+
+model Timetable {
+  id        String   @id @default(uuid())
+  schoolId  String
+  school    School   @relation(fields: [schoolId], references: [id])
+  class     String
+  section   String
+  dayOfWeek Int      // 0=Mon ... 4=Fri
+  period    Int      // 1-8
+  subject   String
+  teacherId String?
+  startTime String   // "09:00"
+  endTime   String   // "09:45"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schoolId, class, section, dayOfWeek, period])
+}
+
+// ─── Welfare & Governance ─────────────────────────────────────
+
+model Scholarship {
+  id          String            @id @default(uuid())
+  studentId   String
+  student     Student           @relation(fields: [studentId], references: [id])
+  scheme      String            // "BC/MBC", "SC/ST", "Minority"
+  amount      Float
+  status      ScholarshipStatus @default(PENDING)
+  appliedDate DateTime          @default(now())
+  approvedDate DateTime?
+  disbursedDate DateTime?
+  remarks     String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+}
+
+model MidDayMeal {
+  id           String   @id @default(uuid())
+  schoolId     String
+  date         DateTime
+  studentsServed Int
+  menuItems    String[]
+  stockUsedKg  Float?
+  wastePercent Float?
+  supplierId   String?
+  createdAt    DateTime @default(now())
+
+  @@unique([schoolId, date])
+  @@index([schoolId, date])
+}
+
+model SchoolAsset {
+  id          String   @id @default(uuid())
+  schoolId    String
+  category    String   // "SmartClassroom", "Computer", "Furniture", "Sports"
+  name        String
+  quantity    Int
+  condition   String   @default("Good") // "Good", "Needs Repair", "Condemned"
+  purchaseDate DateTime?
+  value       Float?
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+}
