@@ -88,9 +88,12 @@ export default function FunQuizzesPage() {
                        <span className="flex items-center gap-1"><span>⏱️</span> {challenge.timeLimit}</span>
                        <span className="flex items-center gap-1"><span>⚡</span> {challenge.difficulty}</span>
                     </div>
-                    <button className={`w-full mt-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all active:scale-95 bg-gradient-to-r ${challenge.category === 'Science' ? 'from-blue-600 to-indigo-600' : 'from-emerald-600 to-teal-600'} hover:brightness-110`}>
+                    <Link 
+                      href={`/student/middle-school/quizzes/${challenge.category.toLowerCase().replace(" ", "-")}/daily`}
+                      className={`block text-center w-full mt-4 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all active:scale-95 bg-gradient-to-r ${challenge.category === 'Science' ? 'from-blue-600 to-indigo-600' : 'from-emerald-600 to-teal-600'} hover:brightness-110`}
+                    >
                       Play Now
-                    </button>
+                    </Link>
                  </div>
                ))}
              </div>
@@ -110,7 +113,11 @@ export default function FunQuizzesPage() {
 
              <div className="grid grid-cols-2 gap-4">
                 {quizCategories.map((cat, idx) => (
-                  <div key={idx} className="bg-slate-900/40 p-5 rounded-2xl border border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-500 transition-all cursor-pointer group">
+                  <Link 
+                    href={`/student/middle-school/quizzes/${cat.name.toLowerCase().replace(" ", "-")}`}
+                    key={idx} 
+                    className="block bg-slate-900/40 p-5 rounded-2xl border border-slate-700/50 hover:bg-slate-800/60 hover:border-slate-500 transition-all cursor-pointer group"
+                  >
                      <div className="flex items-center gap-4 mb-4">
                         <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${cat.color} flex items-center justify-center text-3xl shadow-lg group-hover:scale-110 transition-transform origin-bottom-left`}>
                            {cat.icon}
@@ -124,7 +131,7 @@ export default function FunQuizzesPage() {
                         <div className={`bg-gradient-to-r ${cat.color} h-1.5 rounded-full`} style={{ width: `${(cat.completed / (cat.completed + cat.active)) * 100}%` }}></div>
                      </div>
                      <div className="text-[10px] text-right font-bold text-slate-500 uppercase tracking-wider">{cat.completed} Completed</div>
-                  </div>
+                  </Link>
                 ))}
              </div>
            </div>
@@ -191,9 +198,9 @@ export default function FunQuizzesPage() {
                 <span className="text-xl">🤖</span> Challenge the AI
               </h3>
               <p className="text-xs text-slate-400 mb-4 leading-relaxed">Think you're fast? Race against our AI tutor in a rapid-fire quiz battle to earn double XP!</p>
-              <button className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-indigo-500/20">
+              <Link href="/student/middle-school/quizzes/ai-battle" className="block text-center w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-bold transition-colors shadow-lg shadow-indigo-500/20">
                 Start AI Battle →
-              </button>
+              </Link>
            </div>
 
         </div>
