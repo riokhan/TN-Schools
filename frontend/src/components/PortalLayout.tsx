@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { roleConfigs, NavItem } from "@/lib/navConfig";
 
 interface PortalLayoutProps {
@@ -28,6 +28,7 @@ export default function PortalLayout({
 }: PortalLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { data: session, status } = useSession();
 
   // Redirect to sign-in page if not logged in
@@ -151,7 +152,7 @@ export default function PortalLayout({
   return (
     <div className={`min-h-screen gradient-bg ${resolvedThemeClass}`}>
       {/* Sidebar */}
-      <aside className="sidebar">
+      <aside className={`sidebar ${isMobileMenuOpen ? "open" : ""}`}>
         <div className="px-6 mb-6">
           <Link href="/" className="flex items-center gap-2 text-white hover:opacity-80 transition-opacity">
             <span className="text-xl">🏛️</span>
@@ -216,13 +217,29 @@ export default function PortalLayout({
         </div>
       </aside>
 
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 md:hidden" 
+          onClick={() => setIsMobileMenuOpen(false)} 
+        />
+      )}
+
       {/* Main */}
       <div className="main-content">
         {/* Topbar */}
         <div className="topbar mb-8 rounded-2xl -mt-2 mx-0">
-          <div>
-            <h1 className="text-lg font-bold text-white">{resolvedTitle}</h1>
-            <p className="text-xs text-slate-500">{resolvedSubtitle}</p>
+          <div className="flex items-center gap-3">
+            <button 
+              className="md:hidden text-white p-2 glass rounded-lg" 
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              ☰
+            </button>
+            <div className="hidden sm:block">
+              <h1 className="text-lg font-bold text-white">{resolvedTitle}</h1>
+              <p className="text-xs text-slate-500 truncate max-w-xs md:max-w-md">{resolvedSubtitle}</p>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
