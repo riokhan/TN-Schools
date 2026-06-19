@@ -12,7 +12,14 @@ const blocks = [
 
 export default function DEODashboard() {
   return (
-    <PortalLayout>
+    <PortalLayout
+      title="DEO Dashboard"
+      subtitle="DEO Officer · Coimbatore District"
+      avatarLetter="D"
+      avatarColor="#ec4899"
+      themeClass="theme-deo"
+      accentColor="#ec4899"
+    >
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
