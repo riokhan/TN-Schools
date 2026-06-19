@@ -118,6 +118,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       // Common Student Menu
       { label: "---", href: "#", icon: "" },
       { label: "Common Tools", href: "#", icon: "" },
+      { label: "Announcements", href: "/student/announcements", icon: "📢" },
       { label: "My Subjects", href: "/student/subjects", icon: "📖" },
       { label: "Virtual Labs", href: "/student/labs", icon: "🧪" },
       { label: "Homework", href: "/student/homework", icon: "📝" },
@@ -145,6 +146,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       // Common Student Menu
       { label: "---", href: "#", icon: "" },
       { label: "Common Tools", href: "#", icon: "" },
+      { label: "Announcements", href: "/student/announcements", icon: "📢" },
       { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
       { label: "My Subjects", href: "/student/subjects", icon: "📖" },
       { label: "Virtual Labs", href: "/student/labs", icon: "🧪" },
@@ -172,6 +174,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       // Common Student Menu
       { label: "---", href: "#", icon: "" },
       { label: "Common Tools", href: "#", icon: "" },
+      { label: "Announcements", href: "/student/announcements", icon: "📢" },
       { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
       { label: "My Subjects", href: "/student/subjects", icon: "📖" },
       { label: "Virtual Labs", href: "/student/labs", icon: "🧪" },
