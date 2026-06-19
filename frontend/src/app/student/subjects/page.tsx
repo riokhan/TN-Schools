@@ -1,6 +1,7 @@
 "use client";
 
 import PortalLayout from "@/components/PortalLayout";
+import Link from "next/link";
 
 const subjectsData = [
   { 
@@ -148,12 +149,13 @@ export default function SubjectsPage() {
 
             {/* Action Buttons */}
             <div className="flex gap-3 relative z-10">
-              <button 
-                className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-white shadow-lg hover:shadow-xl transition-all active:scale-95"
+              <Link 
+                href={`/student/subjects/${subject.name.toLowerCase().replace(" ", "-")}`}
+                className="flex-1 py-3 px-4 rounded-xl text-sm font-bold text-white shadow-lg hover:shadow-xl transition-all active:scale-95 text-center flex items-center justify-center"
                 style={{ background: `linear-gradient(135deg, ${subject.color}, ${subject.color}dd)` }}
               >
                 Go to Subject →
-              </button>
+              </Link>
               <button 
                 className="p-3 bg-slate-800 hover:bg-slate-700 rounded-xl border border-slate-700 transition-colors tooltip-trigger relative group/btn"
               >
