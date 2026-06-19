@@ -114,6 +114,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Fun Quizzes", href: "/student/middle-school/quizzes", icon: "🎮" },
       { label: "Story Books", href: "/student/middle-school/stories", icon: "📚" },
       { label: "AI Helper", href: "/student/middle-school/ai", icon: "🤖" },
+      { label: "Welfare & Benefits", href: "/student/middle-school/welfare", icon: "🎁" },
       
       // Common Student Menu
       { label: "---", href: "#", icon: "" },
@@ -142,6 +143,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Mock Tests", href: "/student/high-school/mock-tests", icon: "📝" },
       { label: "Study Boost", href: "/student/high-school/study-boost", icon: "⚡" },
       { label: "Career Aptitude", href: "/student/high-school/career", icon: "🧭" },
+      { label: "Scholarships", href: "/student/high-school/scholarships", icon: "🎓" },
 
       // Common Student Menu
       { label: "---", href: "#", icon: "" },
@@ -170,6 +172,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "NEET/JEE Prep", href: "/student/higher-secondary/competitive", icon: "🚀" },
       { label: "Mock Tests", href: "/student/higher-secondary/mock-tests", icon: "📝" },
       { label: "College Admissions", href: "/student/higher-secondary/admissions", icon: "🎓" },
+      { label: "Scholarships", href: "/student/higher-secondary/scholarships", icon: "📜" },
 
       // Common Student Menu
       { label: "---", href: "#", icon: "" },
