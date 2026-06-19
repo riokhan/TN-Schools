@@ -7,11 +7,11 @@ interface StaffMember {
   name: string;
   subject: string;
   attendance: number;
-  performance: string;
+  performance: "Excellent" | "Good" | "Average";
   leave: number;
 }
 
-export default function HeadmasterDashboard() {
+export default function StaffManagementPage() {
   const [staff, setStaff] = useState<StaffMember[]>([
     { name: "Mrs. Sumathi Devi", subject: "Mathematics", attendance: 96, performance: "Excellent", leave: 1 },
     { name: "Mr. Rajan K.", subject: "Science", attendance: 92, performance: "Good", leave: 0 },
@@ -20,14 +20,13 @@ export default function HeadmasterDashboard() {
     { name: "Ms. Deepa N.", subject: "English", attendance: 94, performance: "Good", leave: 1 },
   ]);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
   const [newSubject, setNewSubject] = useState("Science");
-  
   const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleManualSubmit = (e: React.FormEvent) => {
+  const handleAddStaff = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newName) return;
 
@@ -41,7 +40,7 @@ export default function HeadmasterDashboard() {
 
     setStaff(prev => [...prev, newTeacher]);
     setNewName("");
-    setIsModalOpen(false);
+    setIsAddModalOpen(false);
     setToast(`🎉 ${newTeacher.name} successfully registered to teaching staff registry.`);
     setTimeout(() => setToast(null), 4000);
   };
@@ -55,29 +54,36 @@ export default function HeadmasterDashboard() {
       ];
       setStaff(prev => [...prev, ...excelTeachers]);
       setIsUploading(false);
-      setIsModalOpen(false);
+      setIsAddModalOpen(false);
       setToast("📊 Staff Excel directory successfully imported! 2 teachers added to registry.");
       setTimeout(() => setToast(null), 4000);
     }, 1500);
   };
 
   return (
-    <PortalLayout>
-      {/* KPI Row */}
+    <PortalLayout
+      title="Staff Management"
+      subtitle="Mr. Venkatesh R. · GHS Coimbatore · DISE: 33012345"
+      avatarLetter="V"
+      avatarColor="#3b82f6"
+      themeClass="theme-headmaster"
+      accentColor="#3b82f6"
+    >
+      {/* Staff Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
-          { label: "Total Enrollment", value: "1,247", icon: "👨‍🎓", color: "text-blue-400", sub: "Classes 6–12" },
-          { label: "Today's Attendance", value: "96.2%", icon: "📅", color: "text-emerald-400", sub: "1,199 present" },
-          { label: "Teaching Staff", value: staff.length.toString(), icon: "👩‍🏫", color: "text-amber-400", sub: `${staff.length} present today` },
-          { label: "Dropout Risk", value: "8", icon: "⚠️", color: "text-red-400", sub: "Needs intervention" },
+          { label: "Total Teaching Staff", value: staff.length, icon: "👩‍🏫", color: "text-blue-400", sub: "Permanent" },
+          { label: "Staff Present Today", value: staff.filter((s) => s.attendance >= 90).length, icon: "🟢", color: "text-emerald-400", sub: "Healthy attendance" },
+          { label: "Total Leave Days", value: staff.reduce((acc, curr) => acc + curr.leave, 0), icon: "📄", color: "text-amber-400", sub: "This term cumulative" },
+          { label: "Vacancy Status", value: "0", icon: "🏫", color: "text-cyan-400", sub: "All positions filled" },
         ].map((kpi) => (
           <div key={kpi.label} className="kpi-card">
             <div className="flex items-center justify-between mb-3">
               <span className="text-2xl">{kpi.icon}</span>
-              <span className={`text-xs font-medium ${kpi.color}`}>{kpi.sub}</span>
+              <span className={`text-[10px] font-bold ${kpi.color}`}>{kpi.sub}</span>
             </div>
-            <div className={`text-3xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
-            <div className="text-xs text-slate-500">{kpi.label}</div>
+            <div className={`text-2xl font-extrabold ${kpi.color} mb-1`}>{kpi.value}</div>
+            <div className="text-xs text-slate-500 font-semibold">{kpi.label}</div>
           </div>
         ))}
       </div>
@@ -88,27 +94,27 @@ export default function HeadmasterDashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Staff Table */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 fade-in-2 border border-slate-800">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-white">👩‍🏫 Staff Performance</h2>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              id="headmaster-add-staff"
-              className="text-xs text-blue-400 hover:text-blue-300 font-bold bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg transition-all"
-            >
-              + Add Staff
-            </button>
-          </div>
+      {/* Main Table */}
+      <div className="glass rounded-2xl p-6 border border-slate-800 mb-6">
+        <div className="flex justify-between items-center mb-5">
+          <h2 className="text-base font-semibold text-white">👩‍🏫 Teaching Staff Directory</h2>
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all shadow-md"
+          >
+            + Add Teacher
+          </button>
+        </div>
+
+        <div className="overflow-x-auto">
           <table className="data-table">
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Subject</th>
-                <th>Attendance</th>
-                <th>Performance</th>
-                <th>Leave Days</th>
+                <th>Teacher Name</th>
+                <th>Subject Speciality</th>
+                <th>Attendance Rate</th>
+                <th>Performance Index</th>
+                <th>Leave Balance Used</th>
               </tr>
             </thead>
             <tbody>
@@ -120,80 +126,26 @@ export default function HeadmasterDashboard() {
                     <span className={`badge ${s.attendance >= 95 ? "badge-green" : s.attendance >= 90 ? "badge-yellow" : "badge-red"}`}>{s.attendance}%</span>
                   </td>
                   <td>
-                    <span className={`badge ${s.performance === "Excellent" ? "badge-green" : s.performance === "Good" ? "badge-blue" : "badge-yellow"}`}>{s.performance}</span>
+                    <span className={`badge ${
+                      s.performance === "Excellent"
+                        ? "badge-green"
+                        : s.performance === "Good"
+                        ? "badge-blue"
+                        : "badge-yellow"
+                    }`}>
+                      {s.performance}
+                    </span>
                   </td>
-                  <td className={s.leave >= 3 ? "text-red-400" : "text-slate-400"}>{s.leave}</td>
+                  <td className={s.leave >= 2 ? "text-red-400 font-bold" : "text-slate-400"}>{s.leave} days</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-
-        {/* School Resources */}
-        <div className="glass rounded-2xl p-6 fade-in-3 border border-slate-800">
-          <h2 className="text-base font-semibold text-white mb-4">🏗️ School Resources</h2>
-          <div className="space-y-3">
-            {[
-              { label: "Smart Classrooms", value: "8/12", icon: "🖥️", status: "good" },
-              { label: "Computer Lab", value: "48 systems", icon: "💻", status: "good" },
-              { label: "Library Books", value: "4,200", icon: "📚", status: "good" },
-              { label: "Sports Equipment", value: "Needs Repair", icon: "⚽", status: "warn" },
-              { label: "Mid-Day Meal Stock", value: "12 days left", icon: "🍛", status: "warn" },
-              { label: "Sanitation Blocks", value: "4/4 functional", icon: "🚻", status: "good" },
-            ].map((res) => (
-              <div key={res.label} className="flex items-center justify-between py-2 border-b border-slate-800">
-                <div className="flex items-center gap-2">
-                  <span>{res.icon}</span>
-                  <span className="text-sm text-slate-300">{res.label}</span>
-                </div>
-                <span className={`text-xs font-medium ${res.status === "good" ? "text-emerald-400" : "text-amber-400"}`}>{res.value}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
 
-      {/* Mid-Day Meal & Scholarship */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 fade-in-4">
-        <div className="glass rounded-2xl p-6 border border-slate-800">
-          <h2 className="text-base font-semibold text-white mb-4">🍛 Mid-Day Meal Today</h2>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Students Served", value: "1,180", color: "text-emerald-400" },
-              { label: "Food Stock (kg)", value: "245", color: "text-blue-400" },
-              { label: "Menu", value: "Rice + Sambar", color: "text-amber-400" },
-              { label: "Waste %", value: "3.2%", color: "text-slate-400" },
-            ].map((m) => (
-              <div key={m.label} className="bg-slate-900/60 rounded-xl p-3 border border-slate-850">
-                <div className={`text-lg font-bold ${m.color}`}>{m.value}</div>
-                <div className="text-xs text-slate-500 mt-0.5">{m.label}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="glass rounded-2xl p-6 border border-slate-800">
-          <h2 className="text-base font-semibold text-white mb-4">🎓 Scholarship Status</h2>
-          <div className="space-y-3">
-            {[
-              { scheme: "BC/MBC Scholarship", eligible: 340, approved: 312, pending: 28 },
-              { scheme: "SC/ST Scholarship", eligible: 210, approved: 205, pending: 5 },
-              { scheme: "Minority Scholarship", eligible: 45, approved: 38, pending: 7 },
-            ].map((sc) => (
-              <div key={sc.scheme} className="p-3 bg-slate-900/60 rounded-xl border border-slate-850">
-                <div className="text-xs font-semibold text-blue-300 mb-2">{sc.scheme}</div>
-                <div className="flex gap-4 text-xs text-slate-400">
-                  <span>Eligible: <strong className="text-white">{sc.eligible}</strong></span>
-                  <span>Approved: <strong className="text-emerald-400">{sc.approved}</strong></span>
-                  <span>Pending: <strong className="text-amber-400">{sc.pending}</strong></span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Modal */}
-      {isModalOpen && (
+      {/* Add teacher modal */}
+      {isAddModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div
             className="w-full max-w-lg rounded-3xl p-6 space-y-6 relative"
@@ -204,9 +156,9 @@ export default function HeadmasterDashboard() {
             }}
           >
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-white">👩‍🏫 Register New Staff Roster</h3>
+              <h3 className="text-sm font-bold text-white">👩‍🏫 Register New Teaching Faculty</h3>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => setIsAddModalOpen(false)}
                 className="text-slate-400 hover:text-white text-xs"
               >
                 ✕ Close
@@ -215,7 +167,7 @@ export default function HeadmasterDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Form Input */}
-              <form onSubmit={handleManualSubmit} className="space-y-4">
+              <form onSubmit={handleAddStaff} className="space-y-4">
                 <div className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Manual Entry</div>
                 <div>
                   <label className="block text-[10px] text-slate-400 mb-1.5 font-medium">Full Name</label>
@@ -224,7 +176,7 @@ export default function HeadmasterDashboard() {
                     required
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
-                    placeholder="e.g. Mrs. Mala S."
+                    placeholder="e.g. Mr. Vignesh K."
                     className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
                   />
                 </div>
@@ -248,7 +200,7 @@ export default function HeadmasterDashboard() {
                   type="submit"
                   className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2"
                 >
-                  Register Staff
+                  Register Teacher
                 </button>
               </form>
 
@@ -268,9 +220,9 @@ export default function HeadmasterDashboard() {
                     ) : (
                       <>
                         <span className="text-3xl">📊</span>
-                        <span className="text-xs font-bold text-white">Import Staff Roster</span>
+                        <span className="text-xs font-bold text-white">Import Excel Sheet</span>
                         <span className="text-[9px] text-slate-500 leading-normal">
-                          Click to simulate dragging <strong>staff_roster.xlsx</strong> into this dropzone
+                          Click to simulate dragging <strong>teacher_roster.xlsx</strong> into this dropzone
                         </span>
                       </>
                     )}
@@ -278,7 +230,7 @@ export default function HeadmasterDashboard() {
                 </div>
 
                 <div className="text-[10px] text-slate-500 italic leading-relaxed pt-4">
-                  * Dynamic parsing will update active teaching stats.
+                  * Auto-sync will map subjects to vacancy checklists.
                 </div>
               </div>
             </div>
