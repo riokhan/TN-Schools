@@ -136,7 +136,10 @@ export default function PortalLayout({
       userRole = "STUDENT_MIDDLE";
     } else if (pathname.startsWith("/student/high-school")) {
       userRole = "STUDENT_HIGH";
-    } else if (pathname.startsWith("/student/higher-secondary")) {
+    } else if (pathname === "/student") {
+      // Leave as generic STUDENT for the portal landing page
+    } else {
+      // Default to STUDENT_HIGHER for common tools (Wellness, Subjects, etc.)
       userRole = "STUDENT_HIGHER";
     }
   }
