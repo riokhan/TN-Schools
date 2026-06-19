@@ -1,13 +1,6 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/commissioner", icon: "🏠" },
-  { label: "District Comparisons", href: "/commissioner/districts", icon: "🗺️" },
-  { label: "Policy Monitoring", href: "/commissioner/policy", icon: "⚖️" },
-  { label: "Budget Utilization", href: "/commissioner/budget", icon: "💰" },
-  { label: "School Performance", href: "/commissioner/performance", icon: "📊" },
-  { label: "Infrastructure Score", href: "/commissioner/infrastructure", icon: "🏗️" },
-];
 
 const districts = [
   { name: "Chennai", schools: 820, students: "6.2L", attendance: 93, passRate: 91, score: 94 },
@@ -20,15 +13,7 @@ const districts = [
 
 export default function CommissionerDashboard() {
   return (
-    <PortalLayout
-      title="Commissioner Portal"
-      subtitle="Ms. Revathy IAS · Commissioner, School Education, Tamil Nadu"
-      avatarLetter="C"
-      avatarColor="#06b6d4"
-      navItems={navItems}
-      themeClass="theme-commissioner"
-      accentColor="#06b6d4"
-    >
+    <PortalLayout>
       {/* State-level KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

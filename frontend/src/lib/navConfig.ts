@@ -1,0 +1,233 @@
+export interface NavItem {
+  label: string;
+  href: string;
+  icon: string;
+}
+
+export interface PortalConfig {
+  title: string;
+  subtitle: string;
+  avatarLetter: string;
+  avatarColor: string;
+  themeClass: string;
+  accentColor: string;
+  navItems: NavItem[];
+}
+
+export const portals = [
+  {
+    href: "/student",
+    label: "Student Portal",
+    icon: "🎓",
+    desc: "AI Tutor, Adaptive Learning, Quizzes, Career Guidance",
+    color: "from-indigo-600 to-purple-600",
+    border: "border-indigo-500/30",
+    bg: "hover:bg-indigo-500/10",
+  },
+  {
+    href: "/parent",
+    label: "Parent Portal",
+    icon: "👨‍👩‍👧",
+    desc: "Child Performance, Notifications, AI Parent Assistant",
+    color: "from-emerald-600 to-teal-600",
+    border: "border-emerald-500/30",
+    bg: "hover:bg-emerald-500/10",
+  },
+  {
+    href: "/teacher",
+    label: "Teacher Portal",
+    icon: "📚",
+    desc: "AI Lesson Planner, Question Generator, Student Analytics",
+    color: "from-amber-600 to-orange-600",
+    border: "border-amber-500/30",
+    bg: "hover:bg-amber-500/10",
+  },
+  {
+    href: "/headmaster",
+    label: "Headmaster Portal",
+    icon: "🏫",
+    desc: "School Management, Staff, Resources, Enrollment",
+    color: "from-blue-600 to-cyan-600",
+    border: "border-blue-500/30",
+    bg: "hover:bg-blue-500/10",
+  },
+  {
+    href: "/block-education-officer",
+    label: "Block Education Officer",
+    icon: "🏢",
+    desc: "School Comparisons, Attendance & Exam Analytics",
+    color: "from-violet-600 to-purple-600",
+    border: "border-violet-500/30",
+    bg: "hover:bg-violet-500/10",
+  },
+  {
+    href: "/district-education-officer",
+    label: "District Education Officer",
+    icon: "🗺️",
+    desc: "District Dashboard, Dropout Heatmap, School Ranking",
+    color: "from-pink-600 to-rose-600",
+    border: "border-pink-500/30",
+    bg: "hover:bg-pink-500/10",
+  },
+  {
+    href: "/commissioner",
+    label: "Commissioner Portal",
+    icon: "⚖️",
+    desc: "State Operations, Policy Monitoring, Budget Utilization",
+    color: "from-cyan-600 to-sky-600",
+    border: "border-cyan-500/30",
+    bg: "hover:bg-cyan-500/10",
+  },
+  {
+    href: "/minister",
+    label: "Minister Dashboard",
+    icon: "🏛️",
+    desc: "Executive Command Center, Live State View, KPI Monitoring",
+    color: "from-red-600 to-orange-600",
+    border: "border-red-500/30",
+    bg: "hover:bg-red-500/10",
+  },
+];
+
+export const roleConfigs: Record<string, PortalConfig> = {
+  STUDENT: {
+    title: "Student Portal",
+    subtitle: "Welcome back, Arjun Kumar · Class 10A · EMIS: 3301234567",
+    avatarLetter: "A",
+    avatarColor: "#6366f1",
+    themeClass: "theme-student",
+    accentColor: "#6366f1",
+    navItems: [
+      { label: "Dashboard", href: "/student", icon: "🏠" },
+      { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
+      { label: "My Subjects", href: "/student/subjects", icon: "📖" },
+      { label: "Homework", href: "/student/homework", icon: "📝" },
+      { label: "Practice Tests", href: "/student/tests", icon: "✅" },
+      { label: "Career Guidance", href: "/student/career", icon: "🚀" },
+      { label: "Digital Portfolio", href: "/student/portfolio", icon: "🗂️" },
+      { label: "Wellness", href: "/student/wellness", icon: "💚" },
+      { label: "Coding Academy", href: "/student/coding", icon: "💻" },
+    ],
+  },
+  TEACHER: {
+    title: "Teacher Dashboard",
+    subtitle: "Mrs. Sumathi Devi · Mathematics · GHS Coimbatore",
+    avatarLetter: "S",
+    avatarColor: "#f59e0b",
+    themeClass: "theme-teacher",
+    accentColor: "#f59e0b",
+    navItems: [
+      { label: "Dashboard", href: "/teacher", icon: "🏠" },
+      { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
+      { label: "AI Lesson Planner", href: "/teacher/lesson-planner", icon: "📋" },
+      { label: "Question Generator", href: "/teacher/questions", icon: "❓" },
+      { label: "AI Evaluation", href: "/teacher/evaluation", icon: "✅" },
+      { label: "Student Analytics", href: "/teacher/analytics", icon: "📊" },
+      { label: "Homework Manager", href: "/teacher/homework", icon: "📝" },
+      { label: "Risk Alerts", href: "/teacher/risk-alerts", icon: "⚠️" },
+      { label: "Parent Communication", href: "/teacher/communication", icon: "💬" },
+    ],
+  },
+  PARENT: {
+    title: "Parent Portal",
+    subtitle: "Rajesh Kumar · Parent of Priya · Class 9B",
+    avatarLetter: "R",
+    avatarColor: "#10b981",
+    themeClass: "theme-parent",
+    accentColor: "#10b981",
+    navItems: [
+      { label: "Dashboard", href: "/parent", icon: "🏠" },
+      { label: "Child Performance", href: "/parent/performance", icon: "📊" },
+      { label: "Attendance", href: "/parent/attendance", icon: "📅" },
+      { label: "Homework Status", href: "/parent/homework", icon: "📝" },
+      { label: "Notifications", href: "/parent/notifications", icon: "🔔" },
+      { label: "AI Assistant", href: "/parent/ai-assistant", icon: "🤖" },
+      { label: "Scholarship", href: "/parent/scholarship", icon: "🎓" },
+      { label: "PTA Meetings", href: "/parent/pta", icon: "🤝" },
+    ],
+  },
+  HEADMASTER: {
+    title: "Headmaster Portal",
+    subtitle: "Mr. Venkatesh R. · GHS Coimbatore · DISE: 33012345",
+    avatarLetter: "V",
+    avatarColor: "#3b82f6",
+    themeClass: "theme-headmaster",
+    accentColor: "#3b82f6",
+    navItems: [
+      { label: "Dashboard", href: "/headmaster", icon: "🏠" },
+      { label: "Student Monitoring", href: "/headmaster/students", icon: "👨‍🎓" },
+      { label: "Staff Management", href: "/headmaster/staff", icon: "👩‍🏫" },
+      { label: "Attendance", href: "/headmaster/attendance", icon: "📅" },
+      { label: "Timetable", href: "/headmaster/timetable", icon: "🗓️" },
+      { label: "School Resources", href: "/headmaster/resources", icon: "🏗️" },
+      { label: "Mid-Day Meal", href: "/headmaster/midday-meal", icon: "🍛" },
+      { label: "Scholarship", href: "/headmaster/scholarship", icon: "🎓" },
+      { label: "Exam Schedule", href: "/headmaster/exams", icon: "📋" },
+    ],
+  },
+  BEO: {
+    title: "Block Education Officer",
+    subtitle: "Mr. Murugesan P. · Coimbatore South Block",
+    avatarLetter: "M",
+    avatarColor: "#8b5cf6",
+    themeClass: "theme-beo",
+    accentColor: "#8b5cf6",
+    navItems: [
+      { label: "Dashboard", href: "/block-education-officer", icon: "🏠" },
+      { label: "School Comparisons", href: "/block-education-officer/schools", icon: "🏫" },
+      { label: "Attendance Analytics", href: "/block-education-officer/attendance", icon: "📅" },
+      { label: "Exam Analytics", href: "/block-education-officer/exams", icon: "📊" },
+      { label: "Infrastructure", href: "/block-education-officer/infrastructure", icon: "🏗️" },
+      { label: "Teacher Deployment", href: "/block-education-officer/teachers", icon: "👩‍🏫" },
+    ],
+  },
+  DEO: {
+    title: "District Education Officer",
+    subtitle: "DEO Officer · Coimbatore District",
+    avatarLetter: "D",
+    avatarColor: "#ec4899",
+    themeClass: "theme-deo",
+    accentColor: "#ec4899",
+    navItems: [
+      { label: "Dashboard", href: "/district-education-officer", icon: "🏠" },
+      { label: "District Overview", href: "/district-education-officer/overview", icon: "🗺️" },
+      { label: "School Rankings", href: "/district-education-officer/rankings", icon: "🏆" },
+      { label: "Dropout Heatmap", href: "/district-education-officer/dropout", icon: "🔴" },
+      { label: "Teacher Analytics", href: "/district-education-officer/teachers", icon: "👩‍🏫" },
+      { label: "Scholarship Tracking", href: "/district-education-officer/scholarship", icon: "🎓" },
+      { label: "Learning Outcomes", href: "/district-education-officer/outcomes", icon: "📈" },
+    ],
+  },
+  COMMISSIONER: {
+    title: "Commissioner Portal",
+    subtitle: "Commissioner · State Operations",
+    avatarLetter: "C",
+    avatarColor: "#06b6d4",
+    themeClass: "theme-commissioner",
+    accentColor: "#06b6d4",
+    navItems: [
+      { label: "Dashboard", href: "/commissioner", icon: "🏠" },
+      { label: "District Comparisons", href: "/commissioner/districts", icon: "🗺️" },
+      { label: "Policy Monitoring", href: "/commissioner/policy", icon: "⚖️" },
+      { label: "Budget Utilization", href: "/commissioner/budget", icon: "💰" },
+      { label: "School Performance", href: "/commissioner/performance", icon: "📊" },
+      { label: "Infrastructure Score", href: "/commissioner/infrastructure", icon: "🏗️" },
+    ],
+  },
+  MINISTER: {
+    title: "Minister Dashboard",
+    subtitle: "Minister · Executive Command Center",
+    avatarLetter: "M",
+    avatarColor: "#ef4444",
+    themeClass: "theme-minister",
+    accentColor: "#ef4444",
+    navItems: [
+      { label: "Command Center", href: "/minister", icon: "🏛️" },
+      { label: "Live State View", href: "/minister/live", icon: "📡" },
+      { label: "KPI Monitoring", href: "/minister/kpi", icon: "📊" },
+      { label: "AI Predictions", href: "/minister/predictions", icon: "🤖" },
+      { label: "District Reports", href: "/minister/districts", icon: "🗺️" },
+      { label: "Policy Intelligence", href: "/minister/policy", icon: "💡" },
+    ],
+  },
+};

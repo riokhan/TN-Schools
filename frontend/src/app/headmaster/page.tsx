@@ -1,16 +1,6 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/headmaster", icon: "🏠" },
-  { label: "Student Monitoring", href: "/headmaster/students", icon: "👨‍🎓" },
-  { label: "Staff Management", href: "/headmaster/staff", icon: "👩‍🏫" },
-  { label: "Attendance", href: "/headmaster/attendance", icon: "📅" },
-  { label: "Timetable", href: "/headmaster/timetable", icon: "🗓️" },
-  { label: "School Resources", href: "/headmaster/resources", icon: "🏗️" },
-  { label: "Mid-Day Meal", href: "/headmaster/midday-meal", icon: "🍛" },
-  { label: "Scholarship", href: "/headmaster/scholarship", icon: "🎓" },
-  { label: "Exam Schedule", href: "/headmaster/exams", icon: "📋" },
-];
 
 const staffList = [
   { name: "Mrs. Sumathi Devi", subject: "Mathematics", attendance: 96, performance: "Excellent", leave: 1 },
@@ -22,15 +12,7 @@ const staffList = [
 
 export default function HeadmasterDashboard() {
   return (
-    <PortalLayout
-      title="Headmaster Portal"
-      subtitle="Mr. Venkatesh R. · GHS Coimbatore · DISE: 33012345"
-      avatarLetter="V"
-      avatarColor="#3b82f6"
-      navItems={navItems}
-      themeClass="theme-headmaster"
-      accentColor="#3b82f6"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

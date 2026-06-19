@@ -1,15 +1,6 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/parent", icon: "🏠" },
-  { label: "Child Performance", href: "/parent/performance", icon: "📊" },
-  { label: "Attendance", href: "/parent/attendance", icon: "📅" },
-  { label: "Homework Status", href: "/parent/homework", icon: "📝" },
-  { label: "Notifications", href: "/parent/notifications", icon: "🔔" },
-  { label: "AI Assistant", href: "/parent/ai-assistant", icon: "🤖" },
-  { label: "Scholarship", href: "/parent/scholarship", icon: "🎓" },
-  { label: "PTA Meetings", href: "/parent/pta", icon: "🤝" },
-];
 
 const notifications = [
   { type: "warning", icon: "⚠️", message: "Priya was absent on 3 days this month", time: "2 hrs ago" },
@@ -28,15 +19,7 @@ const subjectMarks = [
 
 export default function ParentDashboard() {
   return (
-    <PortalLayout
-      title="Parent Portal"
-      subtitle="Rajesh Kumar · Parent of Priya · Class 9B"
-      avatarLetter="R"
-      avatarColor="#10b981"
-      navItems={navItems}
-      themeClass="theme-parent"
-      accentColor="#10b981"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

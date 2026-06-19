@@ -1,16 +1,6 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/student", icon: "🏠" },
-  { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
-  { label: "My Subjects", href: "/student/subjects", icon: "📖" },
-  { label: "Homework", href: "/student/homework", icon: "📝" },
-  { label: "Practice Tests", href: "/student/tests", icon: "✅" },
-  { label: "Career Guidance", href: "/student/career", icon: "🚀" },
-  { label: "Digital Portfolio", href: "/student/portfolio", icon: "🗂️" },
-  { label: "Wellness", href: "/student/wellness", icon: "💚" },
-  { label: "Coding Academy", href: "/student/coding", icon: "💻" },
-];
 
 const subjects = [
   { name: "Mathematics", progress: 78, color: "#6366f1", icon: "📐" },
@@ -29,15 +19,7 @@ const recentActivity = [
 
 export default function StudentDashboard() {
   return (
-    <PortalLayout
-      title="Student Dashboard"
-      subtitle="Welcome back, Arjun Kumar · Class 10A · EMIS: 3301234567"
-      avatarLetter="A"
-      avatarColor="#6366f1"
-      navItems={navItems}
-      themeClass="theme-student"
-      accentColor="#6366f1"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
@@ -86,7 +68,7 @@ export default function StudentDashboard() {
         <div className="glass rounded-2xl p-6 fade-in-3 flex flex-col">
           <h2 className="text-base font-semibold text-white mb-4">🤖 AI Tutor</h2>
           <div className="flex-1 bg-slate-900/60 rounded-xl p-4 mb-4 text-sm text-slate-400 italic min-h-[120px] flex items-center justify-center text-center">
-            "Ask me anything about your syllabus. I speak Tamil and English!"
+            &quot;Ask me anything about your syllabus. I speak Tamil and English!&quot;
           </div>
           <div className="space-y-2">
             {["Explain Pythagoras Theorem", "Help with Essay Writing", "Science Doubts"].map((q) => (

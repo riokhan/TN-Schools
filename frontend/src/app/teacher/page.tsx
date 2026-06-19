@@ -1,16 +1,7 @@
+import Link from "next/link";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/teacher", icon: "🏠" },
-  { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
-  { label: "AI Lesson Planner", href: "/teacher/lesson-planner", icon: "📋" },
-  { label: "Question Generator", href: "/teacher/questions", icon: "❓" },
-  { label: "AI Evaluation", href: "/teacher/evaluation", icon: "✅" },
-  { label: "Student Analytics", href: "/teacher/analytics", icon: "📊" },
-  { label: "Homework Manager", href: "/teacher/homework", icon: "📝" },
-  { label: "Risk Alerts", href: "/teacher/risk-alerts", icon: "⚠️" },
-  { label: "Parent Communication", href: "/teacher/communication", icon: "💬" },
-];
+
 
 const classData = [
   { class: "10A - Mathematics", students: 42, attendance: 94, homeworkRate: 88, avgScore: 76, risk: 2 },
@@ -27,15 +18,7 @@ const riskStudents = [
 
 export default function TeacherDashboard() {
   return (
-    <PortalLayout
-      title="Teacher Dashboard"
-      subtitle="Mrs. Sumathi Devi · Mathematics · GHS Coimbatore"
-      avatarLetter="S"
-      avatarColor="#f59e0b"
-      navItems={navItems}
-      themeClass="theme-teacher"
-      accentColor="#f59e0b"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
@@ -58,13 +41,14 @@ export default function TeacherDashboard() {
       {/* AI Tools */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 fade-in-2">
         {[
-          { icon: "📋", label: "AI Lesson Planner", desc: "Auto-generate lesson plans", color: "from-amber-600 to-orange-600", id: "teacher-ai-lesson-planner" },
-          { icon: "❓", label: "Question Generator", desc: "MCQ, Short & Long answers", color: "from-violet-600 to-purple-600", id: "teacher-question-generator" },
-          { icon: "📄", label: "Worksheet Generator", desc: "Printable worksheets", color: "from-blue-600 to-cyan-600", id: "teacher-worksheet-generator" },
-          { icon: "🎯", label: "AI Evaluation", desc: "Auto-grade answers", color: "from-emerald-600 to-teal-600", id: "teacher-ai-evaluation" },
+          { icon: "📋", label: "AI Lesson Planner", desc: "Auto-generate lesson plans", color: "from-amber-600 to-orange-600", id: "teacher-ai-lesson-planner", href: "/teacher/lesson-planner" },
+          { icon: "❓", label: "Question Generator", desc: "MCQ, Short & Long answers", color: "from-violet-600 to-purple-650", id: "teacher-question-generator", href: "/teacher/questions" },
+          { icon: "📄", label: "Worksheet Generator", desc: "Printable worksheets", color: "from-blue-600 to-cyan-600", id: "teacher-worksheet-generator", href: "/teacher/questions" },
+          { icon: "🎯", label: "AI Evaluation", desc: "Auto-grade answers", color: "from-emerald-600 to-teal-650", id: "teacher-ai-evaluation", href: "/teacher/evaluation" },
         ].map((tool) => (
-          <button
+          <Link
             key={tool.label}
+            href={tool.href}
             id={tool.id}
             className="glass rounded-2xl p-5 text-left hover:-translate-y-1 transition-all hover:shadow-xl group"
           >
@@ -73,7 +57,7 @@ export default function TeacherDashboard() {
             </div>
             <div className="text-sm font-semibold text-white mb-1">{tool.label}</div>
             <div className="text-xs text-slate-500">{tool.desc}</div>
-          </button>
+          </Link>
         ))}
       </div>
 
@@ -118,9 +102,8 @@ export default function TeacherDashboard() {
             {riskStudents.map((s, i) => (
               <div
                 key={i}
-                className={`p-3 rounded-xl border text-xs ${
-                  s.risk === "high" ? "border-red-500/30 bg-red-500/5" : "border-amber-500/30 bg-amber-500/5"
-                }`}
+                className={`p-3 rounded-xl border text-xs ${s.risk === "high" ? "border-red-500/30 bg-red-500/5" : "border-amber-500/30 bg-amber-500/5"
+                  }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>
@@ -132,12 +115,13 @@ export default function TeacherDashboard() {
               </div>
             ))}
           </div>
-          <button
+          <Link
+            href="/teacher/risk-alerts"
             id="teacher-view-all-risks"
-            className="mt-4 w-full py-2 rounded-xl text-xs font-semibold text-amber-400 border border-amber-500/30 hover:bg-amber-500/10 transition-all"
+            className="mt-4 w-full py-2 rounded-xl text-xs font-semibold text-amber-400 border border-amber-500/30 hover:bg-amber-500/10 transition-all text-center block"
           >
             View All Risk Students →
-          </button>
+          </Link>
         </div>
       </div>
     </PortalLayout>

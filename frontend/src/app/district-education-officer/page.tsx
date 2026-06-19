@@ -1,14 +1,6 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/district-education-officer", icon: "🏠" },
-  { label: "District Overview", href: "/district-education-officer/overview", icon: "🗺️" },
-  { label: "School Rankings", href: "/district-education-officer/rankings", icon: "🏆" },
-  { label: "Dropout Heatmap", href: "/district-education-officer/dropout", icon: "🔴" },
-  { label: "Teacher Analytics", href: "/district-education-officer/teachers", icon: "👩‍🏫" },
-  { label: "Scholarship Tracking", href: "/district-education-officer/scholarship", icon: "🎓" },
-  { label: "Learning Outcomes", href: "/district-education-officer/outcomes", icon: "📈" },
-];
 
 const blocks = [
   { block: "Coimbatore South", schools: 24, students: 22450, attendance: 91, dropouts: 17, rank: 1 },
@@ -20,15 +12,7 @@ const blocks = [
 
 export default function DEODashboard() {
   return (
-    <PortalLayout
-      title="District Education Officer"
-      subtitle="Dr. Annamalai S. · Coimbatore District"
-      avatarLetter="D"
-      avatarColor="#ec4899"
-      navItems={navItems}
-      themeClass="theme-deo"
-      accentColor="#ec4899"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

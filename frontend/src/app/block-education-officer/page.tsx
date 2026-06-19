@@ -1,13 +1,6 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/block-education-officer", icon: "🏠" },
-  { label: "School Comparisons", href: "/block-education-officer/schools", icon: "🏫" },
-  { label: "Attendance Analytics", href: "/block-education-officer/attendance", icon: "📅" },
-  { label: "Exam Analytics", href: "/block-education-officer/exams", icon: "📊" },
-  { label: "Infrastructure", href: "/block-education-officer/infrastructure", icon: "🏗️" },
-  { label: "Teacher Deployment", href: "/block-education-officer/teachers", icon: "👩‍🏫" },
-];
 
 const schools = [
   { name: "GHS Coimbatore", students: 1247, attendance: 96, exam10: 94, exam12: 89, rank: 1 },
@@ -19,15 +12,7 @@ const schools = [
 
 export default function BEODashboard() {
   return (
-    <PortalLayout
-      title="Block Education Officer"
-      subtitle="Mr. Murugesan P. · Coimbatore South Block"
-      avatarLetter="M"
-      avatarColor="#8b5cf6"
-      navItems={navItems}
-      themeClass="theme-beo"
-      accentColor="#8b5cf6"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

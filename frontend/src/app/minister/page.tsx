@@ -1,13 +1,6 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Command Center", href: "/minister", icon: "🏛️" },
-  { label: "Live State View", href: "/minister/live", icon: "📡" },
-  { label: "KPI Monitoring", href: "/minister/kpi", icon: "📊" },
-  { label: "AI Predictions", href: "/minister/predictions", icon: "🤖" },
-  { label: "District Reports", href: "/minister/districts", icon: "🗺️" },
-  { label: "Policy Intelligence", href: "/minister/policy", icon: "💡" },
-];
 
 const stateKpis = [
   { label: "10th Pass %", value: "87.4%", target: "90%", trend: "+2.1%", status: "on-track", icon: "📘" },
@@ -20,15 +13,7 @@ const stateKpis = [
 
 export default function MinisterDashboard() {
   return (
-    <PortalLayout
-      title="Minister Dashboard"
-      subtitle="Hon. Minister for School Education, Tamil Nadu"
-      avatarLetter="M"
-      avatarColor="#ef4444"
-      navItems={navItems}
-      themeClass="theme-minister"
-      accentColor="#ef4444"
-    >
+    <PortalLayout>
       {/* Executive Live State View */}
       <div className="glass rounded-2xl p-6 mb-6 fade-in" style={{ borderColor: "rgba(239,68,68,0.3)" }}>
         <div className="flex items-center justify-between mb-5">

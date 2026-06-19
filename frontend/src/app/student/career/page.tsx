@@ -1,16 +1,6 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/student", icon: "🏠" },
-  { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
-  { label: "My Subjects", href: "/student/subjects", icon: "📖" },
-  { label: "Homework", href: "/student/homework", icon: "📝" },
-  { label: "Practice Tests", href: "/student/tests", icon: "✅" },
-  { label: "Career Guidance", href: "/student/career", icon: "🚀" },
-  { label: "Digital Portfolio", href: "/student/portfolio", icon: "🗂️" },
-  { label: "Wellness", href: "/student/wellness", icon: "💚" },
-  { label: "Coding Academy", href: "/student/coding", icon: "💻" },
-];
 
 const careers = [
   { title: "Doctor / MBBS", icon: "🩺", path: "NEET → MBBS → MD", color: "from-red-600 to-rose-600", subjects: ["Biology", "Chemistry", "Physics"], category: "Medical" },
@@ -28,11 +18,6 @@ export default function CareerGuidancePage() {
     <PortalLayout
       title="Career Guidance"
       subtitle="AI-powered career mapping for Class 9–12"
-      avatarLetter="A"
-      avatarColor="#6366f1"
-      navItems={navItems}
-      themeClass="theme-student"
-      accentColor="#6366f1"
     >
       {/* AI Analysis Banner */}
       <div className="glass rounded-2xl p-6 mb-6 fade-in border border-indigo-500/20" style={{ background: "linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.1))" }}>

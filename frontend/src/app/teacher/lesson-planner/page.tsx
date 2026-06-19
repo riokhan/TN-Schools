@@ -1,0 +1,355 @@
+"use client";
+import { useState, useEffect } from "react";
+import PortalLayout from "@/components/PortalLayout";
+
+
+
+const syllabusOptions = ["TN State Board (Samacheer Kalvi)", "CBSE", "ICSE"];
+const grades = ["Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"];
+const subjects = ["Mathematics", "Science", "Social Science", "English", "Tamil"];
+
+const steps = [
+  "Fetching TN School Syllabus guidelines...",
+  "Framing learning objectives (LO) and cognitive levels...",
+  "Structuring pedagogical activities (Hook, Core, Evaluation)...",
+  "Translating complex definitions for bilingual students...",
+  "Finalizing evaluation materials and exit tickets...",
+];
+
+export default function LessonPlannerPage() {
+  const [syllabus, setSyllabus] = useState(syllabusOptions[0]);
+  const [grade, setGrade] = useState(grades[4]); // Grade 10
+  const [subject, setSubject] = useState(subjects[0]); // Maths
+  const [topic, setTopic] = useState("Pythagoras Theorem & Trigonometry");
+  const [duration, setDuration] = useState("45 Minutes");
+  
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [showPlan, setShowPlan] = useState(false);
+  const [activeTab, setActiveTab] = useState<"outline" | "bilingual" | "assessment">("outline");
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isGenerating) {
+      interval = setInterval(() => {
+        setCurrentStep((prev) => {
+          if (prev < steps.length - 1) {
+            return prev + 1;
+          } else {
+            clearInterval(interval);
+            setIsGenerating(false);
+            setShowPlan(true);
+            return 0;
+          }
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isGenerating]);
+
+  const handleGenerate = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!topic.trim()) return;
+    setIsGenerating(true);
+    setShowPlan(false);
+    setCurrentStep(0);
+  };
+
+  return (
+    <PortalLayout
+      title="AI Lesson Planner"
+      subtitle="Generate interactive syllabus-aligned lesson plans in seconds"
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left Column - Input Form */}
+        <div className="glass rounded-2xl p-6 h-fit">
+          <h2 className="text-white font-semibold text-sm mb-4">📋 Configure Lesson Plan</h2>
+          
+          <form onSubmit={handleGenerate} className="space-y-4">
+            <div>
+              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Syllabus Standard</label>
+              <select
+                value={syllabus}
+                onChange={(e) => setSyllabus(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+              >
+                {syllabusOptions.map((s) => (
+                  <option key={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-semibold text-slate-400 block mb-1.5">Grade / Class</label>
+                <select
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                >
+                  {grades.map((g) => (
+                    <option key={g}>{g}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-slate-400 block mb-1.5">Subject</label>
+                <select
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                >
+                  {subjects.map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Topic / Chapter</label>
+              <input
+                type="text"
+                required
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                placeholder="e.g. Newton's Laws of Motion"
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Duration</label>
+              <select
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+              >
+                <option>30 Minutes</option>
+                <option>45 Minutes</option>
+                <option>60 Minutes</option>
+                <option>90 Minutes</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isGenerating}
+              className="w-full mt-2 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:bg-amber-800 text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2"
+            >
+              {isGenerating ? "Generating..." : "⚡ Generate AI Lesson Plan"}
+            </button>
+          </form>
+        </div>
+
+        {/* Right Column - Results Area */}
+        <div className="lg:col-span-2 flex flex-col min-h-[450px]">
+          {/* Initial State */}
+          {!isGenerating && !showPlan && (
+            <div className="glass rounded-2xl p-8 flex-1 flex flex-col items-center justify-center text-center border border-dashed border-slate-800">
+              <span className="text-4xl mb-4">📋</span>
+              <h3 className="text-white font-semibold text-sm">No Plan Generated</h3>
+              <p className="text-xs text-slate-500 max-w-sm mt-1">
+                Configure your grade, subject, and chapter standards, then trigger the AI engine to generate a comprehensive lesson planner outline.
+              </p>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isGenerating && (
+            <div className="glass rounded-2xl p-8 flex-1 flex flex-col items-center justify-center text-center">
+              <div className="w-12 h-12 rounded-full border-4 border-amber-500/20 border-t-amber-500 animate-spin mb-6" />
+              <h3 className="text-white font-semibold text-sm mb-2">AI Planner Synthesizing</h3>
+              
+              <div className="space-y-2 w-full max-w-xs mt-3">
+                {steps.map((stepText, idx) => {
+                  let status = "text-slate-600";
+                  if (idx < currentStep) status = "text-emerald-400 font-medium";
+                  else if (idx === currentStep) status = "text-amber-400 font-semibold animate-pulse";
+                  return (
+                    <div key={idx} className={`text-xs text-left flex items-start gap-2 ${status}`}>
+                      <span>{idx < currentStep ? "✅" : idx === currentStep ? "⏳" : "○"}</span>
+                      <span>{stepText}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Result Plan Panel */}
+          {showPlan && !isGenerating && (
+            <div className="glass rounded-2xl overflow-hidden border border-slate-800 flex-1 flex flex-col">
+              {/* Header Info */}
+              <div className="p-6 border-b border-slate-800 bg-slate-900/40 flex justify-between items-start gap-4">
+                <div>
+                  <span className="badge badge-yellow mb-2">{grade} · {subject}</span>
+                  <h3 className="text-white font-bold text-base leading-snug">{topic}</h3>
+                  <p className="text-xs text-slate-550 mt-1">{syllabus} · Standard Curriculum</p>
+                </div>
+                <div className="flex gap-2">
+                  <button className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-xs font-semibold text-white border border-slate-700/50">
+                    📂 Export PDF
+                  </button>
+                  <button className="px-3 py-1.5 rounded-lg bg-amber-500 hover:bg-amber-600 text-xs font-semibold text-white">
+                    💾 Save
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabs Menu */}
+              <div className="flex border-b border-slate-850 px-6 bg-slate-950/20">
+                {(["outline", "bilingual", "assessment"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`py-3 px-4 text-xs font-semibold border-b-2 capitalize transition-all ${
+                      activeTab === tab
+                        ? "border-amber-500 text-amber-550"
+                        : "border-transparent text-slate-450 hover:text-white"
+                    }`}
+                  >
+                    {tab === "outline" ? "🗺️ Lesson Outline" : tab === "bilingual" ? "🌐 Bilingual Glossary" : "✍️ Exit Tickets"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Tab Contents */}
+              <div className="p-6 overflow-y-auto flex-1 max-h-[400px]">
+                {activeTab === "outline" && (
+                  <div className="space-y-5 text-xs text-slate-300">
+                    <div>
+                      <h4 className="text-white font-semibold text-xs mb-1.5">🎯 Core Objectives</h4>
+                      <ul className="list-disc list-inside space-y-1 text-slate-400">
+                        <li>Understand the mathematical rationale behind Pythagoras theorem: a² + b² = c²</li>
+                        <li>Learn to identify Right-angled triangles from coordinate geometry problems.</li>
+                        <li>Apply calculations in real-world scenarios like building measurements.</li>
+                      </ul>
+                    </div>
+
+                    <hr className="border-slate-800" />
+
+                    <div>
+                      <h4 className="text-white font-semibold text-xs mb-3">⏰ Timeline & Flow ({duration})</h4>
+                      <div className="space-y-3">
+                        <div className="flex gap-4">
+                          <span className="font-mono text-amber-400 font-bold w-14 flex-shrink-0">00-05 Mins</span>
+                          <div>
+                            <span className="text-white font-semibold block">The Hook (Introduction)</span>
+                            <span className="text-slate-450">Draw a standard triangle on the board. Ask students how builders ensure walls are perpendicular (90 degrees) using 3-4-5 rope method.</span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <span className="font-mono text-amber-400 font-bold w-14 flex-shrink-0">05-25 Mins</span>
+                          <div>
+                            <span className="text-white font-semibold block">Core Instruction & Proof</span>
+                            <span className="text-slate-450">Graphically demonstrate the squares on the three sides. Explain terms: Hypotenuse, Perpendicular, and Base. Solve 2 examples step-by-step.</span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <span className="font-mono text-amber-400 font-bold w-14 flex-shrink-0">25-40 Mins</span>
+                          <div>
+                            <span className="text-white font-semibold block">Guided Pair Practice</span>
+                            <span className="text-slate-450">Distribute sample worksheet with 3 triangle scenarios. Students pair up to solve, focusing on side ratios.</span>
+                          </div>
+                        </div>
+
+                        <div className="flex gap-4">
+                          <span className="font-mono text-amber-400 font-bold w-14 flex-shrink-0">40-45 Mins</span>
+                          <div>
+                            <span className="text-white font-semibold block">Exit Ticket Check</span>
+                            <span className="text-slate-450">Individual student answers 1 quick conceptual question to submit before leaving class.</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeTab === "bilingual" && (
+                  <div className="space-y-4 text-xs">
+                    <div className="bg-amber-500/5 p-3 rounded-xl border border-amber-550/15 mb-4">
+                      <p className="text-amber-400 font-medium leading-relaxed">
+                        📢 **Teacher Tip**: Use these Tamil equivalent terms in lecture transitions to assist students from regional media backgrounds in adapting to the math formulas.
+                      </p>
+                    </div>
+
+                    <table className="data-table">
+                      <thead>
+                        <tr>
+                          <th>English Term</th>
+                          <th>Tamil Equivalent</th>
+                          <th>Phonetic / Pronunciation</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className="font-semibold text-white">Right-Angled Triangle</td>
+                          <td className="text-amber-400 font-semibold font-tamil">செங்கோண முக்கோணம்</td>
+                          <td>Sengoana Mukkoanam</td>
+                        </tr>
+                        <tr>
+                          <td className="font-semibold text-white">Hypotenuse</td>
+                          <td className="text-amber-400 font-semibold font-tamil">கர்ணம்</td>
+                          <td>Karnam</td>
+                        </tr>
+                        <tr>
+                          <td className="font-semibold text-white">Perpendicular side</td>
+                          <td className="text-amber-400 font-semibold font-tamil">செங்குத்துப்பக்கம்</td>
+                          <td>Sengkuthu Pakkam</td>
+                        </tr>
+                        <tr>
+                          <td className="font-semibold text-white">Adjacent side</td>
+                          <td className="text-amber-400 font-semibold font-tamil">அடுத்துள்ள பக்கம்</td>
+                          <td>Adhuthulla Pakkam</td>
+                        </tr>
+                        <tr>
+                          <td className="font-semibold text-white">Theorem / Proof</td>
+                          <td className="text-amber-400 font-semibold font-tamil">தேற்றம் / நிரூபணம்</td>
+                          <td>Thetram / Niroobanam</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {activeTab === "assessment" && (
+                  <div className="space-y-4 text-xs text-slate-350">
+                    <h4 className="text-white font-semibold text-xs mb-2">🎯 Exit Ticket MCQs & Answers</h4>
+
+                    <div className="space-y-3.5">
+                      <div className="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800">
+                        <div className="font-semibold text-white">Question 1: In a right-angled triangle, if base = 6 cm and height = 8 cm, what is the length of the hypotenuse?</div>
+                        <div className="grid grid-cols-2 gap-2 mt-2 font-mono text-[11px] text-slate-400">
+                          <div>A) 10 cm</div>
+                          <div>B) 14 cm</div>
+                          <div>C) 12 cm</div>
+                          <div>D) 15 cm</div>
+                        </div>
+                        <div className="mt-2 text-emerald-400 font-semibold text-[11px]">Correct Answer: A (10 cm). Explanation: 6² + 8² = 36 + 64 = 100. √100 = 10.</div>
+                      </div>
+
+                      <div className="p-3.5 bg-slate-900/60 rounded-xl border border-slate-800">
+                        <div className="font-semibold text-white">Question 2: Who proved the relationship of sides in right-angled triangles in standard Indian maths texts beforehand?</div>
+                        <div className="grid grid-cols-2 gap-2 mt-2 font-mono text-[11px] text-slate-400">
+                          <div>A) Aryabhata</div>
+                          <div>B) Baudhayana Sulba Sutras</div>
+                          <div>C) Bhaskara</div>
+                          <div>D) Ramanujan</div>
+                        </div>
+                        <div className="mt-2 text-emerald-400 font-semibold text-[11px]">Correct Answer: B (Baudhayana Sulba Sutras). Contextual integration included.</div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </PortalLayout>
+  );
+}
