@@ -67,9 +67,9 @@ export default function ExtracurricularsPage() {
                 </div>
               ))}
             </div>
-            <button className="w-full mt-4 py-3 border border-dashed border-slate-600 rounded-xl text-sm font-bold text-slate-400 hover:text-white hover:border-slate-400 transition-colors">
+            <Link href="/student/activities/directory" className="block text-center w-full mt-4 py-3 border border-dashed border-slate-600 rounded-xl text-sm font-bold text-slate-400 hover:text-white hover:border-slate-400 transition-colors">
               + Join another club
-            </button>
+            </Link>
           </div>
 
           {/* Upcoming Events Calendar */}
@@ -173,9 +173,12 @@ export default function ExtracurricularsPage() {
                   <p className="text-xs text-slate-400 mb-4 flex items-center gap-1">
                     <span>👥</span> {club.members} Active Members
                   </p>
-                  <button className={`w-full py-2 rounded-xl text-sm font-bold bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 transition-colors ${club.color}`}>
+                  <Link 
+                    href={`/student/activities/${club.name.toLowerCase().replace(" ", "-")}`}
+                    className={`block text-center w-full py-2 rounded-xl text-sm font-bold bg-slate-900/50 hover:bg-slate-800 border border-slate-700/50 transition-colors ${club.color}`}
+                  >
                     Learn More & Join
-                  </button>
+                  </Link>
                 </div>
               ))}
               
