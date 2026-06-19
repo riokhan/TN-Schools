@@ -7,6 +7,11 @@ const navItems = [
   { label: "Exam Analytics", href: "/block-education-officer/exams", icon: "📊" },
   { label: "Infrastructure", href: "/block-education-officer/infrastructure", icon: "🏗️" },
   { label: "Teacher Deployment", href: "/block-education-officer/teachers", icon: "👩‍🏫" },
+  { label: "Dropouts Tracking", href: "/block-education-officer/dropouts", icon: "📉" },
+  { label: "Schemes Update", href: "/block-education-officer/schemes", icon: "📜" },
+  { label: "Grievances", href: "/block-education-officer/grievances", icon: "⚖️" },
+  { label: "Financial Reports", href: "/block-education-officer/financials", icon: "💰" },
+  { label: "Circulars", href: "/block-education-officer/circulars", icon: "📢" },
 ];
 
 const schools = [

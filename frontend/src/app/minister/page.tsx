@@ -7,6 +7,11 @@ const navItems = [
   { label: "AI Predictions", href: "/minister/predictions", icon: "🤖" },
   { label: "District Reports", href: "/minister/districts", icon: "🗺️" },
   { label: "Policy Intelligence", href: "/minister/policy", icon: "💡" },
+  { label: "Budget Overview", href: "/minister/budget", icon: "💰" },
+  { label: "Schemes Progress", href: "/minister/schemes", icon: "📜" },
+  { label: "Infrastructure Projects", href: "/minister/infrastructure", icon: "🏗️" },
+  { label: "Public Grievances", href: "/minister/grievances", icon: "⚖️" },
+  { label: "Press & Media", href: "/minister/media", icon: "📰" },
 ];
 
 const stateKpis = [

@@ -61,7 +61,18 @@ export default function PortalLayout({
         </div>
 
         <nav className="flex-1 overflow-y-auto">
-          {navItems.map((item) => {
+          {navItems.map((item, index) => {
+            if (item.label === "---") {
+              return <div key={`sep-${index}`} className="my-4 mx-4 border-t border-slate-700/50" />;
+            }
+            if (item.href === "#") {
+              return (
+                <div key={`header-${index}`} className="px-5 mt-6 mb-2 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  {item.label}
+                </div>
+              );
+            }
+
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
               <Link

@@ -1,0 +1,196 @@
+import PortalLayout from "@/components/PortalLayout";
+
+const navItems = [
+  { label: "Dashboard", href: "/student/higher-secondary", icon: "🏠" },
+  { label: "Board Prep", href: "/student/higher-secondary/board-prep", icon: "🎯" },
+  { label: "NEET/JEE Prep", href: "/student/higher-secondary/competitive", icon: "🚀" },
+  { label: "Mock Tests", href: "/student/higher-secondary/mock-tests", icon: "📝" },
+  { label: "College Admissions", href: "/student/higher-secondary/admissions", icon: "🎓" },
+
+  // Common Student Menu
+  { label: "Common Tools", href: "#", icon: "" },
+  { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
+  { label: "My Subjects", href: "/student/subjects", icon: "📖" },
+  { label: "Virtual Labs", href: "/student/labs", icon: "🧪" },
+  { label: "Homework", href: "/student/homework", icon: "📝" },
+  { label: "Digital Portfolio", href: "/student/portfolio", icon: "🗂️" },
+  { label: "Extracurriculars", href: "/student/activities", icon: "🎭" },
+  { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
+  { label: "Wellness", href: "/student/wellness", icon: "💚" },
+];
+
+const subjects = [
+  { name: "Physics", progress: 75, color: "#3b82f6", icon: "⚛️" },
+  { name: "Chemistry", progress: 82, color: "#10b981", icon: "🧪" },
+  { name: "Biology", progress: 90, color: "#ec4899", icon: "🧬" },
+  { name: "Mathematics", progress: 85, color: "#6366f1", icon: "📐" },
+];
+
+const mockTestScores = [
+  { test: "NEET Mock 1: Biology", score: "320/360", status: "excellent" },
+  { test: "HSC Midterm: Physics", score: "70/100", status: "needs-work" },
+  { test: "HSC Midterm: Chemistry", score: "88/100", status: "good" },
+];
+
+const streamKnowledge = [
+  {
+    stream: "Pure Science & Bio",
+    icon: "🧬",
+    color: "text-pink-400",
+    bgBorder: "border-pink-500/30 bg-pink-900/10",
+    subjects: "Biology, Physics, Chemistry",
+    aiFeature: "Virtual Anatomy Lab & Medical Assistant",
+    projectIdea: "Local Flora & Fauna DNA Mapping",
+  },
+  {
+    stream: "Computer Science & Math",
+    icon: "💻",
+    color: "text-indigo-400",
+    bgBorder: "border-indigo-500/30 bg-indigo-900/10",
+    subjects: "Computer Science, Math, Physics",
+    aiFeature: "AI Code Reviewer & JEE Mock Engine",
+    projectIdea: "Build a School Management API",
+  },
+  {
+    stream: "Commerce & Accountancy",
+    icon: "📈",
+    color: "text-emerald-400",
+    bgBorder: "border-emerald-500/30 bg-emerald-900/10",
+    subjects: "Accountancy, Commerce, Economics",
+    aiFeature: "AI Financial Forecaster (CA Prep)",
+    projectIdea: "Virtual Stock Portfolio Analysis",
+  },
+  {
+    stream: "Arts & Humanities",
+    icon: "🏛️",
+    color: "text-amber-400",
+    bgBorder: "border-amber-500/30 bg-amber-900/10",
+    subjects: "History, Geography, Political Science",
+    aiFeature: "Historical Source Analyzer & Civil Services Guide",
+    projectIdea: "Mock UN Assembly Debate & Policy Draft",
+  },
+];
+
+export default function HigherSecondaryDashboard() {
+  return (
+    <PortalLayout
+      title="Higher Secondary Dashboard (Class 11-12)"
+      subtitle="Welcome, Arjun · Class 12 Biology Stream · Target: Medical Colleges"
+      avatarLetter="A"
+      avatarColor="#8b5cf6"
+      navItems={navItems}
+      themeClass="theme-student"
+      accentColor="#8b5cf6"
+    >
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
+        {[
+          { label: "HSC Board Exam", value: "62 Days", icon: "⏳", color: "text-purple-400", sub: "Exam starts Mar 5" },
+          { label: "NEET Exam", value: "120 Days", icon: "🩺", color: "text-pink-400", sub: "Target Score: 650+" },
+          { label: "Overall HSC Avg", value: "83%", icon: "📊", color: "text-blue-400", sub: "Target: 95%" },
+          { label: "Mock Tests Taken", value: "12/20", icon: "📝", color: "text-amber-400", sub: "Next test: Sunday" },
+        ].map((kpi) => (
+          <div key={kpi.label} className="kpi-card border border-slate-700 hover:border-purple-500/50 transition-colors">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-2xl">{kpi.icon}</span>
+              <span className={`text-xs font-medium ${kpi.color}`}>{kpi.sub}</span>
+            </div>
+            <div className={`text-3xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
+            <div className="text-xs text-slate-400">{kpi.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Subject Progress */}
+        <div className="lg:col-span-2 glass rounded-2xl p-6 fade-in-2 border border-slate-700/50">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-base font-semibold text-white">Stream Specialization: Science</h2>
+            <button className="text-xs text-purple-400 hover:text-purple-300">View Analytics →</button>
+          </div>
+          <div className="space-y-4">
+            {subjects.map((s) => (
+              <div key={s.name} className="flex items-center gap-4">
+                <div className="text-xl w-8">{s.icon}</div>
+                <div className="flex-1">
+                  <div className="flex justify-between text-sm mb-1.5">
+                    <span className="text-slate-300 font-medium">{s.name}</span>
+                    <span className="text-slate-400">{s.progress}%</span>
+                  </div>
+                  <div className="progress-bar bg-slate-800">
+                    <div className="progress-fill" style={{ width: `${s.progress}%`, background: `linear-gradient(90deg, ${s.color}, ${s.color}aa)` }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          {/* Competitive Exam Hub */}
+          <div className="glass rounded-2xl p-6 fade-in-3 border border-pink-500/30 bg-gradient-to-br from-pink-900/20 to-purple-900/20">
+            <h2 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+              <span className="text-pink-500">🚀</span> NEET Prep Hub
+            </h2>
+            <p className="text-sm text-slate-300 mb-4">
+              Your Biology scores are strong! Focus on improving Physics (Optics & Thermodynamics) to cross the 600 mark.
+            </p>
+            <button className="w-full py-2 rounded-lg bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 font-medium text-sm transition-colors border border-pink-500/50">
+              Start Physics Boost
+            </button>
+          </div>
+
+          {/* College Admissions Predictor */}
+          <div className="glass rounded-2xl p-6 fade-in-4 border border-blue-500/30 bg-blue-900/10">
+            <h2 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
+              <span className="text-blue-500">🎓</span> College Predictor
+            </h2>
+            <p className="text-sm text-slate-300 mb-4">
+              Based on your current performance trajectory, you have a <strong>75% chance</strong> of securing a seat in top-tier state medical colleges.
+            </p>
+            <button className="w-full py-2 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 font-medium text-sm transition-colors border border-blue-500/50">
+              Explore Colleges
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Stream Specific Knowledge Base Hub */}
+      <div className="glass rounded-2xl p-6 fade-in-5 border border-slate-700/50">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
+            <span className="text-purple-400">🌐</span> Stream Knowledge & Innovation Hub
+          </h2>
+          <span className="text-xs text-slate-400">Explore multidisciplinary resources</span>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {streamKnowledge.map((stream, idx) => (
+            <div key={idx} className={`p-5 rounded-xl border transition-all hover:-translate-y-1 hover:shadow-lg ${stream.bgBorder}`}>
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-3xl">{stream.icon}</span>
+                <h3 className={`font-bold ${stream.color} leading-tight`}>{stream.stream}</h3>
+              </div>
+              <div className="text-xs text-slate-400 mb-4">
+                <strong>Core Subjects:</strong> {stream.subjects}
+              </div>
+              <div className="space-y-3">
+                <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">AI Assistant Focus</div>
+                  <div className="text-sm text-white font-medium">{stream.aiFeature}</div>
+                </div>
+                <div className="bg-slate-900/50 p-3 rounded-lg border border-slate-700/50">
+                  <div className="text-[10px] text-slate-500 uppercase font-bold mb-1">Capstone Project Idea</div>
+                  <div className="text-sm text-white font-medium">{stream.projectIdea}</div>
+                </div>
+              </div>
+              <button className={`w-full mt-4 py-2 rounded-lg border text-xs font-bold transition-colors ${stream.color.replace('text-', 'border-').replace('400', '500/30')} hover:bg-white/5`}>
+                Enter Knowledge Base →
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+    </PortalLayout>
+  );
+}

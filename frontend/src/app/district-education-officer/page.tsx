@@ -8,6 +8,11 @@ const navItems = [
   { label: "Teacher Analytics", href: "/district-education-officer/teachers", icon: "👩‍🏫" },
   { label: "Scholarship Tracking", href: "/district-education-officer/scholarship", icon: "🎓" },
   { label: "Learning Outcomes", href: "/district-education-officer/outcomes", icon: "📈" },
+  { label: "Block Comparisons", href: "/district-education-officer/blocks", icon: "📊" },
+  { label: "Schemes Tracking", href: "/district-education-officer/schemes", icon: "📜" },
+  { label: "Infrastructure", href: "/district-education-officer/infrastructure", icon: "🏗️" },
+  { label: "Grievances", href: "/district-education-officer/grievances", icon: "⚖️" },
+  { label: "Circulars", href: "/district-education-officer/circulars", icon: "📢" },
 ];
 
 const blocks = [
