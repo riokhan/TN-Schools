@@ -80,6 +80,16 @@ body {
   display: flex;
   flex-direction: column;
   padding: 1.5rem 0;
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+  }
 }
 
 .sidebar-item {
@@ -112,6 +122,14 @@ body {
   min-height: 100vh;
   padding: 2rem;
   background: var(--bg-dark);
+  transition: margin-left 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    padding: 1rem;
+  }
 }
 
 /* Top navbar */
