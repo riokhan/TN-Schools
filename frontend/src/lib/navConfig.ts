@@ -128,6 +128,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
       { label: "Wellness", href: "/student/wellness", icon: "💚" },
       { label: "Coding Academy", href: "/student/coding", icon: "💻" },
+      { label: "Learning Platform", href: "/student/middle-school/learning-platform", icon: "💻" },
     ],
   },
   STUDENT_HIGH: {
@@ -157,6 +158,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Extracurriculars", href: "/student/activities", icon: "🎭" },
       { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
       { label: "Wellness", href: "/student/wellness", icon: "💚" },
+      { label: "Learning Platform", href: "/student/high-school/learning-platform", icon: "💻" },
     ],
   },
   STUDENT_HIGHER: {
@@ -186,6 +188,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Extracurriculars", href: "/student/activities", icon: "🎭" },
       { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
       { label: "Wellness", href: "/student/wellness", icon: "💚" },
+      { label: "Learning Platform", href: "/student/higher-secondary/learning-platform", icon: "💻" },
     ],
   },
   TEACHER: {

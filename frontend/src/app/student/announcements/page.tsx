@@ -111,7 +111,7 @@ export default function AnnouncementsPage() {
         <div className="lg:col-span-3">
            <div className="glass rounded-3xl p-6 border border-slate-700/50 min-h-[600px]">
               
-              <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-800">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-0 mb-6 pb-4 border-b border-slate-800">
                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
                    <span>📢</span> {filter === "All" ? "All Announcements" : `${filter} Announcements`}
                  </h2>
@@ -138,7 +138,7 @@ export default function AnnouncementsPage() {
                          </div>
                          <div className="flex-1">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
-                               <div className="flex items-center gap-2">
+                               <div className="flex flex-wrap items-center gap-2">
                                   <span className={`text-[10px] uppercase font-black tracking-widest px-2 py-0.5 rounded border ${announcement.isUnread ? announcement.color + " border-current" : "text-slate-500 border-slate-600"}`}>
                                     {announcement.type}
                                   </span>
