@@ -117,15 +117,33 @@ export const roleConfigs: Record<string, PortalConfig> = {
     themeClass: "theme-teacher",
     accentColor: "#f59e0b",
     navItems: [
-      { label: "Dashboard", href: "/teacher", icon: "🏠" },
+      { label: "My Subjects (Science)", href: "/teacher", icon: "🔬" },
+      { label: "Science Labs", href: "/teacher/labs", icon: "🧪" },
+      { label: "Subject Analytics", href: "/teacher/subject-analytics", icon: "📊" },
+
+      // Common Menu & Tools
+      { label: "Admin & Tools", href: "#", icon: "" },
       { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
       { label: "AI Lesson Planner", href: "/teacher/lesson-planner", icon: "📋" },
       { label: "Question Generator", href: "/teacher/questions", icon: "❓" },
       { label: "AI Evaluation", href: "/teacher/evaluation", icon: "✅" },
+
+      // Student Management
+      { label: "Student Management", href: "#", icon: "" },
+      { label: "Student Profiles", href: "/teacher/student-profiles", icon: "👤" },
+      { label: "Student Status", href: "/teacher/student-status", icon: "📈" },
+      { label: "Homework Manager", href: "/teacher/homework", icon: "✔️" },
+      { label: "Scholarship Details", href: "/teacher/scholarships", icon: "🎓" },
       { label: "Student Analytics", href: "/teacher/analytics", icon: "📊" },
-      { label: "Homework Manager", href: "/teacher/homework", icon: "📝" },
       { label: "Risk Alerts", href: "/teacher/risk-alerts", icon: "⚠️" },
       { label: "Parent Communication", href: "/teacher/communication", icon: "💬" },
+
+      // Resources & Admin
+      { label: "Resources & Admin", href: "#", icon: "" },
+      { label: "Add Materials", href: "/teacher/add-materials", icon: "📚" },
+      { label: "Daily Attendance", href: "/teacher/attendance", icon: "📅" },
+      { label: "Announcements", href: "/teacher/announcements", icon: "📢" },
+      { label: "Leave Requests", href: "/teacher/leave", icon: "📄" },
     ],
   },
   PARENT: {
