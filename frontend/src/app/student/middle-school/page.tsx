@@ -99,7 +99,7 @@ export default function MiddleSchoolDashboard() {
           </div>
           <div className="flex-1 bg-slate-900/80 rounded-2xl p-5 mb-5 text-sm text-indigo-200 italic border border-indigo-500/30 relative">
             <div className="absolute -left-2 top-4 w-4 h-4 bg-slate-900/80 border-l border-b border-indigo-500/30 rotate-45" />
-            "Hi Arjun! Want to learn why the sky is blue? Or maybe play a math game?"
+            &quot;Hi Arjun! Want to learn why the sky is blue? Or maybe play a math game?&quot;
           </div>
           <div className="space-y-3">
             {["Play a Math Game", "Tell me a Science Fact", "Help with Homework"].map((q) => (

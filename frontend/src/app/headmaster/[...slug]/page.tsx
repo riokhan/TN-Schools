@@ -6,26 +6,26 @@ import { useParams } from "next/navigation";
 
 const navItems = [
   { label: "Dashboard", href: "/headmaster", icon: "🏠" },
-  
+
   { label: "People & Staff", href: "#", icon: "" },
   { label: "Student Monitoring", href: "/headmaster/students", icon: "👨‍🎓" },
   { label: "Staff Management", href: "/headmaster/staff", icon: "👩‍🏫" },
   { label: "Temporary Staff", href: "/headmaster/temporary-staff", icon: "🤝" },
   { label: "Parents Details", href: "/headmaster/parents", icon: "👪" },
   { label: "School Alumni", href: "/headmaster/alumni", icon: "🎓" },
-  
+
   { label: "Academics & Records", href: "#", icon: "" },
   { label: "Attendance", href: "/headmaster/attendance", icon: "📅" },
   { label: "Timetable", href: "/headmaster/timetable", icon: "🗓️" },
   { label: "Exam Schedule", href: "/headmaster/exams", icon: "📋" },
   { label: "Model Exam Results", href: "/headmaster/model-exams", icon: "📝" },
-  
+
   { label: "School Admin & Govt", href: "#", icon: "" },
   { label: "School Resources", href: "/headmaster/resources", icon: "🏗️" },
   { label: "Mid-Day Meal", href: "/headmaster/midday-meal", icon: "🍛" },
   { label: "Scholarship", href: "/headmaster/scholarship", icon: "🏅" },
   { label: "Govt Schemes Update", href: "/headmaster/gov-schemes", icon: "🏛️" },
-  
+
   { label: "Extra Curricular & Info", href: "#", icon: "" },
   { label: "School Events", href: "/headmaster/events", icon: "🎉" },
   { label: "Media Gallery", href: "/headmaster/gallery", icon: "🖼️" },
@@ -41,8 +41,8 @@ export default function HeadmasterPortal() {
 
   let content = null;
   let title = "Headmaster Portal";
-  
-  switch(currentPath) {
+
+  switch (currentPath) {
     case "dashboard":
       content = <DashboardView />;
       title = "Headmaster Dashboard";
@@ -232,47 +232,47 @@ function TemporaryStaffView() {
   return (
     <div className="space-y-6 fade-in">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-         <div className="glass rounded-2xl p-6 border border-slate-700/50">
-            <div className="text-slate-400 text-sm mb-2">Total Temporary Staff</div>
-            <div className="text-3xl font-bold text-blue-400">14</div>
-         </div>
-         <div className="glass rounded-2xl p-6 border border-slate-700/50">
-            <div className="text-slate-400 text-sm mb-2">Agency Outsourced</div>
-            <div className="text-3xl font-bold text-emerald-400">8</div>
-         </div>
-         <div className="glass rounded-2xl p-6 border border-slate-700/50">
-            <div className="text-slate-400 text-sm mb-2">Pending Contract Renewals</div>
-            <div className="text-3xl font-bold text-amber-400">2</div>
-         </div>
+        <div className="glass rounded-2xl p-6 border border-slate-700/50">
+          <div className="text-slate-400 text-sm mb-2">Total Temporary Staff</div>
+          <div className="text-3xl font-bold text-blue-400">14</div>
+        </div>
+        <div className="glass rounded-2xl p-6 border border-slate-700/50">
+          <div className="text-slate-400 text-sm mb-2">Agency Outsourced</div>
+          <div className="text-3xl font-bold text-emerald-400">8</div>
+        </div>
+        <div className="glass rounded-2xl p-6 border border-slate-700/50">
+          <div className="text-slate-400 text-sm mb-2">Pending Contract Renewals</div>
+          <div className="text-3xl font-bold text-amber-400">2</div>
+        </div>
       </div>
 
       <div className="glass rounded-2xl p-6">
-         <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg font-bold text-white">Temporary & Contract Staff Directory</h2>
-            <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700">Add Staff</button>
-         </div>
-         <table className="data-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Role</th>
-                <th>Source/Agency</th>
-                <th>Joined</th>
-                <th>Status</th>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-lg font-bold text-white">Temporary & Contract Staff Directory</h2>
+          <button className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700">Add Staff</button>
+        </div>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Role</th>
+              <th>Source/Agency</th>
+              <th>Joined</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {temps.map((t, i) => (
+              <tr key={i}>
+                <td className="font-medium text-white">{t.name}</td>
+                <td>{t.role}</td>
+                <td>{t.agency}</td>
+                <td>{t.joined}</td>
+                <td><span className="badge badge-green">{t.status}</span></td>
               </tr>
-            </thead>
-            <tbody>
-              {temps.map((t, i) => (
-                <tr key={i}>
-                  <td className="font-medium text-white">{t.name}</td>
-                  <td>{t.role}</td>
-                  <td>{t.agency}</td>
-                  <td>{t.joined}</td>
-                  <td><span className="badge badge-green">{t.status}</span></td>
-                </tr>
-              ))}
-            </tbody>
-         </table>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -291,39 +291,39 @@ function ParentsView() {
           <div className="text-lg font-bold text-amber-400">24th July 2026</div>
         </div>
       </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="glass rounded-2xl p-6">
-           <h3 className="text-white font-semibold mb-4">PTA Core Committee</h3>
-           <div className="space-y-4">
-             {[
-               { name: "Mr. R. Kumar", role: "President (Parent)", phone: "+91 9876543210" },
-               { name: "Mrs. N. Lakshmi", role: "Vice President (Parent)", phone: "+91 9876543211" },
-               { name: "Mr. Venkatesh R.", role: "Secretary (Headmaster)", phone: "School Office" },
-             ].map((p, i) => (
-               <div key={i} className="flex justify-between items-center p-3 border border-slate-700/50 rounded-xl bg-slate-800/50">
-                 <div>
-                   <div className="font-medium text-white text-sm">{p.name}</div>
-                   <div className="text-xs text-blue-400">{p.role}</div>
-                 </div>
-                 <div className="text-xs text-slate-400">{p.phone}</div>
-               </div>
-             ))}
-           </div>
+          <h3 className="text-white font-semibold mb-4">PTA Core Committee</h3>
+          <div className="space-y-4">
+            {[
+              { name: "Mr. R. Kumar", role: "President (Parent)", phone: "+91 9876543210" },
+              { name: "Mrs. N. Lakshmi", role: "Vice President (Parent)", phone: "+91 9876543211" },
+              { name: "Mr. Venkatesh R.", role: "Secretary (Headmaster)", phone: "School Office" },
+            ].map((p, i) => (
+              <div key={i} className="flex justify-between items-center p-3 border border-slate-700/50 rounded-xl bg-slate-800/50">
+                <div>
+                  <div className="font-medium text-white text-sm">{p.name}</div>
+                  <div className="text-xs text-blue-400">{p.role}</div>
+                </div>
+                <div className="text-xs text-slate-400">{p.phone}</div>
+              </div>
+            ))}
+          </div>
         </div>
-        
+
         <div className="glass rounded-2xl p-6">
-           <h3 className="text-white font-semibold mb-4">Recent Parental Grievances</h3>
-           <div className="space-y-3">
-             <div className="p-3 border-l-2 border-amber-500 bg-amber-500/10 rounded-r-xl">
-                <div className="text-sm font-medium text-amber-400">Transport facility delays in Zone B</div>
-                <div className="text-xs text-slate-400 mt-1">Raised by: 12 parents • Status: Under Review</div>
-             </div>
-             <div className="p-3 border-l-2 border-emerald-500 bg-emerald-500/10 rounded-r-xl">
-                <div className="text-sm font-medium text-emerald-400">Request for extra special classes for 10th</div>
-                <div className="text-xs text-slate-400 mt-1">Raised by: PTA Committee • Status: Approved</div>
-             </div>
-           </div>
+          <h3 className="text-white font-semibold mb-4">Recent Parental Grievances</h3>
+          <div className="space-y-3">
+            <div className="p-3 border-l-2 border-amber-500 bg-amber-500/10 rounded-r-xl">
+              <div className="text-sm font-medium text-amber-400">Transport facility delays in Zone B</div>
+              <div className="text-xs text-slate-400 mt-1">Raised by: 12 parents • Status: Under Review</div>
+            </div>
+            <div className="p-3 border-l-2 border-emerald-500 bg-emerald-500/10 rounded-r-xl">
+              <div className="text-sm font-medium text-emerald-400">Request for extra special classes for 10th</div>
+              <div className="text-xs text-slate-400 mt-1">Raised by: PTA Committee • Status: Approved</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -359,15 +359,15 @@ function AlumniView() {
             { name: "Mrs. K. Meena", batch: "1988", contribution: "Sponsored yearly scholarships for 5 girls", role: "IAS Officer" },
             { name: "Mr. T. Arul", batch: "2001", contribution: "Built the new RO water purification plant", role: "Local Business Owner" },
           ].map((al, i) => (
-             <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl gap-4">
-               <div>
-                 <div className="font-bold text-blue-400 mb-1">{al.name} <span className="text-xs text-slate-500 font-normal ml-2">Batch of {al.batch}</span></div>
-                 <div className="text-sm text-white">{al.contribution}</div>
-               </div>
-               <div className="text-sm font-medium text-amber-400 bg-amber-400/10 px-3 py-1.5 rounded-lg whitespace-nowrap">
-                 {al.role}
-               </div>
-             </div>
+            <div key={i} className="flex flex-col md:flex-row md:items-center justify-between p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl gap-4">
+              <div>
+                <div className="font-bold text-blue-400 mb-1">{al.name} <span className="text-xs text-slate-500 font-normal ml-2">Batch of {al.batch}</span></div>
+                <div className="text-sm text-white">{al.contribution}</div>
+              </div>
+              <div className="text-sm font-medium text-amber-400 bg-amber-400/10 px-3 py-1.5 rounded-lg whitespace-nowrap">
+                {al.role}
+              </div>
+            </div>
           ))}
         </div>
       </div>
@@ -392,30 +392,30 @@ function ModelExamsView() {
       </div>
 
       <div className="glass rounded-2xl p-6">
-         <table className="data-table">
-            <thead>
-              <tr>
-                <th>Class</th>
-                <th>Subject</th>
-                <th>Pass %</th>
-                <th>Avg Score</th>
-                <th>Top Score</th>
+        <table className="data-table">
+          <thead>
+            <tr>
+              <th>Class</th>
+              <th>Subject</th>
+              <th>Pass %</th>
+              <th>Avg Score</th>
+              <th>Top Score</th>
+            </tr>
+          </thead>
+          <tbody>
+            {results.map((r, i) => (
+              <tr key={i}>
+                <td className="font-medium text-white">{r.class}</td>
+                <td>{r.subject}</td>
+                <td>
+                  <span className={`badge ${parseInt(r.pass) >= 90 ? "badge-green" : "badge-yellow"}`}>{r.pass}</span>
+                </td>
+                <td>{r.avg}</td>
+                <td className="text-blue-400 text-sm">{r.top}</td>
               </tr>
-            </thead>
-            <tbody>
-              {results.map((r, i) => (
-                <tr key={i}>
-                  <td className="font-medium text-white">{r.class}</td>
-                  <td>{r.subject}</td>
-                  <td>
-                    <span className={`badge ${parseInt(r.pass) >= 90 ? "badge-green" : "badge-yellow"}`}>{r.pass}</span>
-                  </td>
-                  <td>{r.avg}</td>
-                  <td className="text-blue-400 text-sm">{r.top}</td>
-                </tr>
-              ))}
-            </tbody>
-         </table>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -443,7 +443,7 @@ function GovSchemesView() {
                 {sc.status}
               </span>
             </div>
-            
+
             <div className="mt-4 bg-slate-900/50 rounded-xl p-3 flex justify-around">
               <div className="text-center">
                 <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Eligible</div>
@@ -474,7 +474,7 @@ function EventsView() {
         <h2 className="text-white font-bold">Upcoming School Events</h2>
         <button className="text-xs bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">+ New Event</button>
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="glass rounded-2xl p-5 border-t-4 border-amber-500 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-3 text-3xl opacity-20">🏃</div>
@@ -514,29 +514,29 @@ function GalleryView() {
   return (
     <div className="space-y-6 fade-in">
       <div className="glass rounded-2xl p-6">
-         <div className="flex justify-between items-center mb-6">
-            <h2 className="text-white font-bold text-lg">School Media Gallery</h2>
-            <div className="flex gap-2">
-              <span className="badge badge-blue">All</span>
-              <span className="badge badge-gray cursor-pointer">Sports</span>
-              <span className="badge badge-gray cursor-pointer">Academics</span>
-              <span className="badge badge-gray cursor-pointer">Infrastructure</span>
-            </div>
-         </div>
-         
-         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="aspect-square rounded-xl bg-slate-800 border border-slate-700/50 overflow-hidden relative group">
-                 {/* Placeholder for actual image */}
-                 <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-slate-700 text-4xl">
-                   🖼️
-                 </div>
-                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">View Image</span>
-                 </div>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-white font-bold text-lg">School Media Gallery</h2>
+          <div className="flex gap-2">
+            <span className="badge badge-blue">All</span>
+            <span className="badge badge-gray cursor-pointer">Sports</span>
+            <span className="badge badge-gray cursor-pointer">Academics</span>
+            <span className="badge badge-gray cursor-pointer">Infrastructure</span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <div key={i} className="aspect-square rounded-xl bg-slate-800 border border-slate-700/50 overflow-hidden relative group">
+              {/* Placeholder for actual image */}
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 flex items-center justify-center text-slate-700 text-4xl">
+                🖼️
               </div>
-            ))}
-         </div>
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                <span className="text-white text-sm font-medium">View Image</span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -547,33 +547,33 @@ function RewardsView() {
     <div className="space-y-6 fade-in">
       <div className="glass rounded-2xl p-6">
         <h2 className="text-xl font-bold text-white mb-6">Recent Honors & Recognitions</h2>
-        
+
         <div className="space-y-4">
           <div className="flex gap-4 items-start p-4 bg-gradient-to-r from-amber-500/10 to-transparent border border-amber-500/30 rounded-xl">
-             <div className="text-4xl">🏆</div>
-             <div>
-               <h3 className="text-lg font-bold text-amber-400">Best Performing School (District Level)</h3>
-               <p className="text-slate-300 text-sm mt-1">Awarded by District Collector for achieving 100% pass rate in Class 10 public exams for 3 consecutive years.</p>
-               <div className="text-xs text-slate-500 mt-2">Awarded on: 15th August 2025</div>
-             </div>
+            <div className="text-4xl">🏆</div>
+            <div>
+              <h3 className="text-lg font-bold text-amber-400">Best Performing School (District Level)</h3>
+              <p className="text-slate-300 text-sm mt-1">Awarded by District Collector for achieving 100% pass rate in Class 10 public exams for 3 consecutive years.</p>
+              <div className="text-xs text-slate-500 mt-2">Awarded on: 15th August 2025</div>
+            </div>
           </div>
 
           <div className="flex gap-4 items-start p-4 bg-gradient-to-r from-emerald-500/10 to-transparent border border-emerald-500/30 rounded-xl">
-             <div className="text-4xl">🏅</div>
-             <div>
-               <h3 className="text-lg font-bold text-emerald-400">State Level Science Olympiad - Gold Medal</h3>
-               <p className="text-slate-300 text-sm mt-1">Won by M. Karthik (Class 11) for his project on "Low-cost Water Filtration for Rural Homes".</p>
-               <div className="text-xs text-slate-500 mt-2">Awarded on: 12th February 2026</div>
-             </div>
+            <div className="text-4xl">🏅</div>
+            <div>
+              <h3 className="text-lg font-bold text-emerald-400">State Level Science Olympiad - Gold Medal</h3>
+              <p className="text-slate-300 text-sm mt-1">Won by M. Karthik (Class 11) for his project on &quot;Low-cost Water Filtration for Rural Homes&quot;.</p>
+              <div className="text-xs text-slate-500 mt-2">Awarded on: 12th February 2026</div>
+            </div>
           </div>
 
           <div className="flex gap-4 items-start p-4 bg-gradient-to-r from-blue-500/10 to-transparent border border-blue-500/30 rounded-xl">
-             <div className="text-4xl">🌟</div>
-             <div>
-               <h3 className="text-lg font-bold text-blue-400">Dr. Radhakrishnan State Teacher Award</h3>
-               <p className="text-slate-300 text-sm mt-1">Awarded to Mrs. Kavitha S. (Tamil Teacher) for her outstanding contribution to literature education.</p>
-               <div className="text-xs text-slate-500 mt-2">Awarded on: 5th September 2025</div>
-             </div>
+            <div className="text-4xl">🌟</div>
+            <div>
+              <h3 className="text-lg font-bold text-blue-400">Dr. Radhakrishnan State Teacher Award</h3>
+              <p className="text-slate-300 text-sm mt-1">Awarded to Mrs. Kavitha S. (Tamil Teacher) for her outstanding contribution to literature education.</p>
+              <div className="text-xs text-slate-500 mt-2">Awarded on: 5th September 2025</div>
+            </div>
           </div>
         </div>
       </div>
@@ -585,63 +585,63 @@ function HistoryView() {
   return (
     <div className="space-y-6 fade-in">
       <div className="glass rounded-2xl p-8 text-center relative overflow-hidden">
-         <div className="absolute -top-10 -right-10 text-9xl opacity-5">🏛️</div>
-         <h1 className="text-3xl font-bold text-white mb-2">Government High School, Coimbatore</h1>
-         <p className="text-blue-400 font-medium mb-4">Established 1955</p>
-         <p className="text-slate-400 max-w-2xl mx-auto text-sm leading-relaxed">
-           Our school has a rich legacy of empowering rural and semi-urban students through quality education. Over the past six decades, we have evolved from a primary learning center to a highly equipped high school that stands as a beacon of knowledge in the district.
-         </p>
+        <div className="absolute -top-10 -right-10 text-9xl opacity-5">🏛️</div>
+        <h1 className="text-3xl font-bold text-white mb-2">Government High School, Coimbatore</h1>
+        <p className="text-blue-400 font-medium mb-4">Established 1955</p>
+        <p className="text-slate-400 max-w-2xl mx-auto text-sm leading-relaxed">
+          Our school has a rich legacy of empowering rural and semi-urban students through quality education. Over the past six decades, we have evolved from a primary learning center to a highly equipped high school that stands as a beacon of knowledge in the district.
+        </p>
       </div>
 
       <div className="glass rounded-2xl p-6">
-         <h2 className="text-white font-bold text-lg mb-6">Historical Milestones</h2>
-         <div className="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-purple-500 before:to-transparent">
-            
-            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
-               <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-900 bg-blue-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10">
-                 <span className="text-xs font-bold">55</span>
-               </div>
-               <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass p-4 rounded-xl">
-                 <div className="text-blue-400 font-bold mb-1">1955</div>
-                 <div className="text-white font-medium text-sm">School Founded</div>
-                 <div className="text-xs text-slate-400 mt-1">Started as a primary school with 40 students and 2 teachers.</div>
-               </div>
-            </div>
+        <h2 className="text-white font-bold text-lg mb-6">Historical Milestones</h2>
+        <div className="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-purple-500 before:to-transparent">
 
-            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
-               <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-900 bg-purple-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10">
-                 <span className="text-xs font-bold">82</span>
-               </div>
-               <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass p-4 rounded-xl">
-                 <div className="text-purple-400 font-bold mb-1">1982</div>
-                 <div className="text-white font-medium text-sm">Upgraded to Middle School</div>
-                 <div className="text-xs text-slate-400 mt-1">New block constructed and classes extended up to 8th standard.</div>
-               </div>
+          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-900 bg-blue-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10">
+              <span className="text-xs font-bold">55</span>
             </div>
-
-            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
-               <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-900 bg-emerald-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10">
-                 <span className="text-xs font-bold">04</span>
-               </div>
-               <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass p-4 rounded-xl">
-                 <div className="text-emerald-400 font-bold mb-1">2004</div>
-                 <div className="text-white font-medium text-sm">High School Status & First Lab</div>
-                 <div className="text-xs text-slate-400 mt-1">Recognized as a High School. The first science laboratory was inaugurated.</div>
-               </div>
+            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass p-4 rounded-xl">
+              <div className="text-blue-400 font-bold mb-1">1955</div>
+              <div className="text-white font-medium text-sm">School Founded</div>
+              <div className="text-xs text-slate-400 mt-1">Started as a primary school with 40 students and 2 teachers.</div>
             </div>
+          </div>
 
-            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
-               <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-900 bg-amber-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10">
-                 <span className="text-xs font-bold">25</span>
-               </div>
-               <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass p-4 rounded-xl">
-                 <div className="text-amber-400 font-bold mb-1">2025</div>
-                 <div className="text-white font-medium text-sm">Digital Transformation</div>
-                 <div className="text-xs text-slate-400 mt-1">Integrated into the TN AI Smart Learning Ecosystem. Hi-Tech labs operationalized.</div>
-               </div>
+          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-900 bg-purple-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10">
+              <span className="text-xs font-bold">82</span>
             </div>
+            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass p-4 rounded-xl">
+              <div className="text-purple-400 font-bold mb-1">1982</div>
+              <div className="text-white font-medium text-sm">Upgraded to Middle School</div>
+              <div className="text-xs text-slate-400 mt-1">New block constructed and classes extended up to 8th standard.</div>
+            </div>
+          </div>
 
-         </div>
+          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-900 bg-emerald-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10">
+              <span className="text-xs font-bold">04</span>
+            </div>
+            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass p-4 rounded-xl">
+              <div className="text-emerald-400 font-bold mb-1">2004</div>
+              <div className="text-white font-medium text-sm">High School Status & First Lab</div>
+              <div className="text-xs text-slate-400 mt-1">Recognized as a High School. The first science laboratory was inaugurated.</div>
+            </div>
+          </div>
+
+          <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active mb-8">
+            <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-slate-900 bg-amber-500 text-white shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 relative z-10">
+              <span className="text-xs font-bold">25</span>
+            </div>
+            <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] glass p-4 rounded-xl">
+              <div className="text-amber-400 font-bold mb-1">2025</div>
+              <div className="text-white font-medium text-sm">Digital Transformation</div>
+              <div className="text-xs text-slate-400 mt-1">Integrated into the TN AI Smart Learning Ecosystem. Hi-Tech labs operationalized.</div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
@@ -664,13 +664,13 @@ function ResourcesView() {
             <div key={res.label} className="p-4 bg-slate-800/50 border border-slate-700/50 rounded-xl flex items-start gap-4">
               <div className="text-3xl">{res.icon}</div>
               <div>
-                 <div className="flex items-center gap-2 mb-1">
-                   <h3 className="text-white font-bold text-sm">{res.label}</h3>
-                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${res.status === 'good' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                     {res.value}
-                   </span>
-                 </div>
-                 <p className="text-xs text-slate-400">{res.desc}</p>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-white font-bold text-sm">{res.label}</h3>
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${res.status === 'good' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'}`}>
+                    {res.value}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-400">{res.desc}</p>
               </div>
             </div>
           ))}
