@@ -103,7 +103,24 @@ export default function PortalLayout({
   const [currentLanguage, setCurrentLanguage] = useState<"English" | "தமிழ்">("English");
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(3);
+  const [activeStudentLevel, setActiveStudentLevel] = useState("STUDENT_HIGHER");
   const { data: session, status } = useSession();
+
+  useEffect(() => {
+    if (pathname.startsWith("/student/middle-school")) {
+      localStorage.setItem("studentLevel", "STUDENT_MIDDLE");
+      setActiveStudentLevel("STUDENT_MIDDLE");
+    } else if (pathname.startsWith("/student/high-school")) {
+      localStorage.setItem("studentLevel", "STUDENT_HIGH");
+      setActiveStudentLevel("STUDENT_HIGH");
+    } else if (pathname.startsWith("/student/higher-secondary")) {
+      localStorage.setItem("studentLevel", "STUDENT_HIGHER");
+      setActiveStudentLevel("STUDENT_HIGHER");
+    } else if (pathname !== "/student") {
+      const stored = localStorage.getItem("studentLevel");
+      if (stored) setActiveStudentLevel(stored);
+    }
+  }, [pathname]);
 
   // Redirect to sign-in page if not logged in
   useEffect(() => {
@@ -136,11 +153,13 @@ export default function PortalLayout({
       userRole = "STUDENT_MIDDLE";
     } else if (pathname.startsWith("/student/high-school")) {
       userRole = "STUDENT_HIGH";
+    } else if (pathname.startsWith("/student/higher-secondary")) {
+      userRole = "STUDENT_HIGHER";
     } else if (pathname === "/student") {
       // Leave as generic STUDENT for the portal landing page
     } else {
-      // Default to STUDENT_HIGHER for common tools (Wellness, Subjects, etc.)
-      userRole = "STUDENT_HIGHER";
+      // Default to last active level for common tools
+      userRole = activeStudentLevel;
     }
   }
 
