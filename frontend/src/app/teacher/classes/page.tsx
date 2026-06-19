@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
@@ -102,16 +102,16 @@ export default function ClassesPage() {
     <PortalLayout title="My Classes" subtitle="Manage your sections, student rosters, and schedules">
       <div className="flex flex-col gap-6">
         {/* Header Actions */}
-        <div className="flex justify-between items-center bg-slate-900/40 p-4 rounded-2xl border border-slate-800">
+        <div className="flex justify-between items-center bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-4 rounded-2xl border border-[var(--border)]">
           <div>
-            <h2 className="text-white font-semibold text-sm">Class Directory</h2>
-            <p className="text-xs text-slate-500">Select a class to view its active student roster and analytics summary.</p>
+            <h2 className="text-[var(--text-heading)] font-semibold text-sm">Class Directory</h2>
+            <p className="text-xs text-[var(--text-muted)]">Select a class to view its active student roster and analytics summary.</p>
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 transition-colors flex items-center gap-1"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-heading)] bg-[var(--primary)] hover:bg-amber-600 transition-colors flex items-center gap-1"
           >
-            <span>➕</span> Add New Class
+            <span>âž•</span> Add New Class
           </button>
         </div>
 
@@ -123,35 +123,35 @@ export default function ClassesPage() {
               <div
                 key={c.id}
                 onClick={() => setSelectedClassId(c.id)}
-                className={`glass rounded-2xl p-5 border text-left cursor-pointer transition-all hover:scale-[1.01] ${
-                  isSelected ? "border-amber-500/80 bg-amber-500/5 shadow-lg shadow-amber-500/5" : "border-slate-800 hover:border-slate-700"
+                className={`theme-card p-5 border text-left cursor-pointer transition-all hover:scale-[1.01] ${
+                  isSelected ? "border-[var(--primary)]/80 bg-[var(--primary)]/5 shadow-lg shadow-amber-500/5" : "border-[var(--border)] hover:border-[var(--border)]"
                 }`}
               >
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <h3 className="text-white font-bold text-base">{c.name}</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">{c.subject}</p>
+                    <h3 className="text-[var(--text-heading)] font-bold text-base">{c.name}</h3>
+                    <p className="text-xs text-[var(--text-muted)] mt-0.5">{c.subject}</p>
                   </div>
                   <span className="badge badge-blue text-[10px]">{c.syllabus.split(" ")[0]}</span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-slate-800/60 text-xs">
+                <div className="grid grid-cols-2 gap-3 mt-4 pt-3 border-t border-[var(--border)]/60 text-xs">
                   <div>
-                    <span className="text-slate-500 block">Students</span>
-                    <span className="text-white font-semibold">{c.studentsCount}</span>
+                    <span className="text-[var(--text-muted)] block">Students</span>
+                    <span className="text-[var(--text-heading)] font-semibold">{c.studentsCount}</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Attendance</span>
+                    <span className="text-[var(--text-muted)] block">Attendance</span>
                     <span className={`font-semibold ${c.attendance >= 90 ? "text-emerald-400" : "text-amber-400"}`}>
                       {c.attendance}%
                     </span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">Avg Score</span>
-                    <span className="text-white font-semibold">{c.avgScore}%</span>
+                    <span className="text-[var(--text-muted)] block">Avg Score</span>
+                    <span className="text-[var(--text-heading)] font-semibold">{c.avgScore}%</span>
                   </div>
                   <div>
-                    <span className="text-slate-500 block">At Risk</span>
+                    <span className="text-[var(--text-muted)] block">At Risk</span>
                     <span className={`font-semibold ${c.riskCount > 2 ? "text-red-400" : c.riskCount > 0 ? "text-amber-400" : "text-emerald-400"}`}>
                       {c.riskCount} students
                     </span>
@@ -166,17 +166,17 @@ export default function ClassesPage() {
         {selectedClass && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Student Roster */}
-            <div className="lg:col-span-2 glass rounded-2xl p-6">
+            <div className="lg:col-span-2 theme-card p-6">
               <div className="flex justify-between items-center mb-5">
                 <div>
-                  <h3 className="text-white font-semibold text-sm">📋 Student Roster - {selectedClass.name}</h3>
-                  <p className="text-xs text-slate-500">List of students registered in this section.</p>
+                  <h3 className="text-[var(--text-heading)] font-semibold text-sm">ðŸ“‹ Student Roster - {selectedClass.name}</h3>
+                  <p className="text-xs text-[var(--text-muted)]">List of students registered in this section.</p>
                 </div>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     placeholder="Search student..."
-                    className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-amber-500"
+                    className="bg-[var(--bg-main)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-heading)] placeholder-slate-600 focus:outline-none focus:border-[var(--primary)]"
                   />
                 </div>
               </div>
@@ -197,7 +197,7 @@ export default function ClassesPage() {
                     {students.map((student) => (
                       <tr key={student.rollNo}>
                         <td className="font-mono text-xs">{student.rollNo}</td>
-                        <td className="font-medium text-white">{student.name}</td>
+                        <td className="font-medium text-[var(--text-heading)]">{student.name}</td>
                         <td>{student.attendance}%</td>
                         <td>{student.grade}%</td>
                         <td>
@@ -211,7 +211,7 @@ export default function ClassesPage() {
                           <div className="flex gap-2">
                             <button className="text-xs font-medium text-amber-400 hover:underline">Edit</button>
                             <span className="text-slate-700">|</span>
-                            <button className="text-xs font-medium text-slate-400 hover:text-white">Report</button>
+                            <button className="text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-heading)]">Report</button>
                           </div>
                         </td>
                       </tr>
@@ -222,19 +222,19 @@ export default function ClassesPage() {
             </div>
 
             {/* Class Stats & Highlights */}
-            <div className="glass rounded-2xl p-6 flex flex-col justify-between">
+            <div className="theme-card p-6 flex flex-col justify-between">
               <div>
-                <h3 className="text-white font-semibold text-sm mb-4">🏫 Section Details</h3>
+                <h3 className="text-[var(--text-heading)] font-semibold text-sm mb-4">ðŸ« Section Details</h3>
                 
                 <div className="space-y-4">
-                  <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                    <div className="text-xs text-slate-500">Syllabus Curriculum</div>
-                    <div className="text-xs text-white font-semibold mt-1">{selectedClass.syllabus}</div>
+                  <div className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-3.5 rounded-xl border border-[var(--border)]">
+                    <div className="text-xs text-[var(--text-muted)]">Syllabus Curriculum</div>
+                    <div className="text-xs text-[var(--text-heading)] font-semibold mt-1">{selectedClass.syllabus}</div>
                   </div>
 
-                  <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                    <div className="text-xs text-slate-500">Active Syllabus Progress</div>
-                    <div className="flex items-center justify-between text-xs text-white mt-1 mb-1.5 font-semibold">
+                  <div className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-3.5 rounded-xl border border-[var(--border)]">
+                    <div className="text-xs text-[var(--text-muted)]">Active Syllabus Progress</div>
+                    <div className="flex items-center justify-between text-xs text-[var(--text-heading)] mt-1 mb-1.5 font-semibold">
                       <span>Term 1 Curriculum</span>
                       <span>68% Complete</span>
                     </div>
@@ -243,21 +243,21 @@ export default function ClassesPage() {
                     </div>
                   </div>
 
-                  <div className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                    <div className="text-xs text-slate-500">Homework Submissions Rate</div>
-                    <div className="text-xs text-white font-semibold mt-1">{selectedClass.homeworkRate}%</div>
+                  <div className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-3.5 rounded-xl border border-[var(--border)]">
+                    <div className="text-xs text-[var(--text-muted)]">Homework Submissions Rate</div>
+                    <div className="text-xs text-[var(--text-heading)] font-semibold mt-1">{selectedClass.homeworkRate}%</div>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-6 pt-4 border-t border-slate-800">
-                <div className="text-xs text-slate-400 mb-3 font-medium">Quick Tasks</div>
+              <div className="mt-6 pt-4 border-t border-[var(--border)]">
+                <div className="text-xs text-[var(--text-muted)] mb-3 font-medium">Quick Tasks</div>
                 <div className="grid grid-cols-2 gap-2">
-                  <button className="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-750 text-xs font-semibold text-white transition-colors text-center border border-slate-700/50">
-                    📅 Attendance
+                  <button className="py-2 px-3 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-heading)] transition-colors text-center border border-[var(--border)]/50">
+                    ðŸ“… Attendance
                   </button>
-                  <button className="py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-750 text-xs font-semibold text-white transition-colors text-center border border-slate-700/50">
-                    📝 View Grades
+                  <button className="py-2 px-3 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-heading)] transition-colors text-center border border-[var(--border)]/50">
+                    ðŸ“ View Grades
                   </button>
                 </div>
               </div>
@@ -269,36 +269,36 @@ export default function ClassesPage() {
       {/* Add Class Modal */}
       {showAddModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass rounded-2xl w-full max-w-md border border-slate-800 overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
-              <h3 className="text-white font-semibold text-base">➕ Add New Class</h3>
+          <div className="theme-card w-full max-w-md border border-[var(--border)] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="px-6 py-4 border-b border-[var(--border)] flex justify-between items-center">
+              <h3 className="text-[var(--text-heading)] font-semibold text-base">âž• Add New Class</h3>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-500 hover:text-white text-lg transition-colors"
+                className="text-[var(--text-muted)] hover:text-[var(--text-heading)] text-lg transition-colors"
               >
-                ✕
+                âœ•
               </button>
             </div>
 
             <form onSubmit={handleAddClass} className="p-6 space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1.5">Class Name (e.g. Class 11C)</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Class Name (e.g. Class 11C)</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Class 11C"
                   value={newClassName}
                   onChange={(e) => setNewClassName(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white placeholder-slate-650 focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm text-[var(--text-heading)] placeholder-slate-650 focus:outline-none focus:border-[var(--primary)] transition-colors"
                 />
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1.5">Subject</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Subject</label>
                 <select
                   value={newClassSubject}
                   onChange={(e) => setNewClassSubject(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 >
                   <option>Mathematics</option>
                   <option>Science</option>
@@ -308,11 +308,11 @@ export default function ClassesPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1.5">Syllabus Curriculum</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Syllabus Curriculum</label>
                 <select
                   value={newClassSyllabus}
                   onChange={(e) => setNewClassSyllabus(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 >
                   <option>TN Board (Samacheer Kalvi)</option>
                   <option>CBSE Curriculum</option>
@@ -321,14 +321,14 @@ export default function ClassesPage() {
               </div>
 
               <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1.5">Estimated Student Count</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Estimated Student Count</label>
                 <input
                   type="number"
                   min="1"
                   max="60"
                   value={newClassStudents}
                   onChange={(e) => setNewClassStudents(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-sm text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 />
               </div>
 
@@ -336,13 +336,13 @@ export default function ClassesPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+                  className="flex-1 py-2.5 rounded-xl border border-[var(--border)] text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:bg-[var(--bg-card)] transition-all"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-xs font-semibold text-white transition-all"
+                  className="flex-1 py-2.5 rounded-xl bg-[var(--primary)] hover:bg-amber-600 text-xs font-semibold text-[var(--text-heading)] transition-all"
                 >
                   Create Class
                 </button>
@@ -354,3 +354,4 @@ export default function ClassesPage() {
     </PortalLayout>
   );
 }
+

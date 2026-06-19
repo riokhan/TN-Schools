@@ -64,20 +64,20 @@ export default function SubjectAnalyticsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Chapters and Syllabus progress */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 border border-slate-800">
+        <div className="lg:col-span-2 theme-card p-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <h2 className="text-base font-semibold text-white">📚 Chapter Coverage Directory</h2>
+            <h2 className="text-base font-semibold text-[var(--text-heading)]">📚 Chapter Coverage Directory</h2>
             
             {/* Category tabs filters */}
-            <div className="flex gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-xl">
+            <div className="flex gap-1.5 p-1 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl">
               {(["All", "Physics", "Chemistry", "Biology"] as const).map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     activeCategory === cat
-                      ? "bg-amber-500 text-slate-950 font-bold"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                      ? "bg-[var(--primary)] text-white shadow-sm font-bold"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:bg-[var(--bg-card-hover)]"
                   }`}
                 >
                   {cat}
@@ -88,11 +88,11 @@ export default function SubjectAnalyticsPage() {
 
           <div className="space-y-4">
             {filteredChapters.map((chapter) => (
-              <div key={chapter.id} className="p-4 bg-slate-900/60 rounded-xl border border-slate-800/80">
+              <div key={chapter.id} className="p-4 bg-[var(--bg-card)] rounded-2xl border border-[var(--border)] hover-lift">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">{chapter.category}</span>
-                    <h3 className="text-sm font-bold text-white mt-0.5">{chapter.name}</h3>
+                    <span className="text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider">{chapter.category}</span>
+                    <h3 className="text-sm font-bold text-[var(--text-heading)] mt-0.5">{chapter.name}</h3>
                   </div>
                   <span className={`badge ${
                     chapter.status === "Completed"
@@ -108,17 +108,17 @@ export default function SubjectAnalyticsPage() {
                 <div className="flex items-center gap-3">
                   <div className="flex-1 progress-bar">
                     <div
-                      className="progress-fill bg-gradient-to-r from-amber-500 to-orange-500"
+                      className="progress-fill bg-[var(--primary)]"
                       style={{ width: `${chapter.progress}%` }}
                     />
                   </div>
-                  <span className="text-xs font-bold text-slate-300 w-10 text-right">{chapter.progress}%</span>
+                  <span className="text-xs font-bold text-[var(--text-heading)] w-10 text-right">{chapter.progress}%</span>
                 </div>
 
                 {chapter.progress > 0 && (
-                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-slate-800 text-[11px] text-slate-500">
+                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-[var(--border-light)] text-[11px] text-[var(--text-muted)]">
                     <span>Class Performance Average:</span>
-                    <span className="font-bold text-emerald-400 text-xs">{chapter.avgScore}%</span>
+                    <span className="font-bold text-emerald-500 dark:text-emerald-400 text-xs">{chapter.avgScore}%</span>
                   </div>
                 )}
               </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
@@ -94,12 +94,12 @@ export default function AnalyticsPage() {
     >
       <div className="flex flex-col gap-6">
         {/* Filter Controls Bar */}
-        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 bg-slate-900/40 p-4 rounded-2xl border border-slate-800">
+        <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-4 rounded-2xl border border-[var(--border)]">
           <div className="flex gap-2">
             <button
               onClick={() => setSelectedClassId("10a")}
               className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                selectedClassId === "10a" ? "bg-amber-500 text-white" : "bg-slate-900 text-slate-400 hover:bg-slate-850"
+                selectedClassId === "10a" ? "bg-[var(--primary)] text-[var(--text-heading)]" : "bg-[var(--bg-main)] text-[var(--text-muted)] hover:bg-slate-850"
               }`}
             >
               Class 10A - Maths
@@ -107,14 +107,14 @@ export default function AnalyticsPage() {
             <button
               onClick={() => setSelectedClassId("10b")}
               className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                selectedClassId === "10b" ? "bg-amber-500 text-white" : "bg-slate-900 text-slate-400 hover:bg-slate-850"
+                selectedClassId === "10b" ? "bg-[var(--primary)] text-[var(--text-heading)]" : "bg-[var(--bg-main)] text-[var(--text-muted)] hover:bg-slate-850"
               }`}
             >
               Class 10B - Maths
             </button>
           </div>
 
-          <div className="text-xs text-slate-500 font-medium">
+          <div className="text-xs text-[var(--text-muted)] font-medium">
             Data sync: <span className="text-emerald-400">Live (5 minutes ago)</span>
           </div>
         </div>
@@ -122,18 +122,18 @@ export default function AnalyticsPage() {
         {/* KPI Summaries Row */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Class Average Score", value: `${summary.avgScore}%`, icon: "📈", color: "text-amber-400", desc: "Term average" },
-            { label: "Mean Attendance", value: `${summary.attendance}%`, icon: "📅", color: "text-emerald-400", desc: "This semester" },
-            { label: "Homework Completes", value: `${summary.hwRate}%`, icon: "📝", color: "text-blue-400", desc: "Last 5 tasks" },
-            { label: "Interventions Flashed", value: `${summary.riskCount}`, icon: "⚠️", color: "text-red-400", desc: "Action required" },
+            { label: "Class Average Score", value: `${summary.avgScore}%`, icon: "ðŸ“ˆ", color: "text-amber-400", desc: "Term average" },
+            { label: "Mean Attendance", value: `${summary.attendance}%`, icon: "ðŸ“…", color: "text-emerald-400", desc: "This semester" },
+            { label: "Homework Completes", value: `${summary.hwRate}%`, icon: "ðŸ“", color: "text-blue-400", desc: "Last 5 tasks" },
+            { label: "Interventions Flashed", value: `${summary.riskCount}`, icon: "âš ï¸", color: "text-red-400", desc: "Action required" },
           ].map((kpi) => (
             <div key={kpi.label} className="kpi-card">
-              <div className="flex items-center justify-between mb-3 text-xs text-slate-500">
+              <div className="flex items-center justify-between mb-3 text-xs text-[var(--text-muted)]">
                 <span>{kpi.label}</span>
                 <span className="text-lg">{kpi.icon}</span>
               </div>
               <div className={`text-2xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
-              <div className="text-[10px] text-slate-500">{kpi.desc}</div>
+              <div className="text-[10px] text-[var(--text-muted)]">{kpi.desc}</div>
             </div>
           ))}
         </div>
@@ -141,8 +141,8 @@ export default function AnalyticsPage() {
         {/* Charts & Mastery Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Grade Distribution Chart */}
-          <div className="glass rounded-2xl p-6">
-            <h3 className="text-white font-semibold text-xs mb-6 uppercase tracking-wider">📊 Grade Distribution</h3>
+          <div className="theme-card p-6">
+            <h3 className="text-[var(--text-heading)] font-semibold text-xs mb-6 uppercase tracking-wider">ðŸ“Š Grade Distribution</h3>
             
             <div className="flex items-end justify-between h-40 gap-3 px-2">
               {activeAnalytics.distribution.map((d) => (
@@ -154,7 +154,7 @@ export default function AnalyticsPage() {
                     className="w-full bg-gradient-to-t from-amber-600/70 to-amber-400 rounded-t-lg transition-all group-hover:scale-x-105"
                     style={{ height: d.height }}
                   />
-                  <div className="text-[10px] text-slate-500 font-mono text-center truncate w-full mt-1">
+                  <div className="text-[10px] text-[var(--text-muted)] font-mono text-center truncate w-full mt-1">
                     {d.grade.split(" ")[0]}
                   </div>
                 </div>
@@ -163,17 +163,17 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Subject Mastery checklist */}
-          <div className="lg:col-span-2 glass rounded-2xl p-6">
-            <h3 className="text-white font-semibold text-xs mb-5 uppercase tracking-wider">🎯 Concept Mastery Index</h3>
+          <div className="lg:col-span-2 theme-card p-6">
+            <h3 className="text-[var(--text-heading)] font-semibold text-xs mb-5 uppercase tracking-wider">ðŸŽ¯ Concept Mastery Index</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeAnalytics.mastery.map((m) => (
                 <div
                   key={m.topic}
-                  className="bg-slate-900/60 p-3.5 rounded-xl border border-slate-850 flex justify-between items-center"
+                  className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-3.5 rounded-xl border border-[var(--border)] flex justify-between items-center"
                 >
                   <div>
-                    <div className="text-xs text-white font-semibold">{m.topic}</div>
+                    <div className="text-xs text-[var(--text-heading)] font-semibold">{m.topic}</div>
                     <div className="flex items-center gap-1.5 mt-1.5">
                       <div className="progress-bar w-24">
                         <div
@@ -184,7 +184,7 @@ export default function AnalyticsPage() {
                           }}
                         />
                       </div>
-                      <span className="text-[10px] text-slate-500">{m.score}%</span>
+                      <span className="text-[10px] text-[var(--text-muted)]">{m.score}%</span>
                     </div>
                   </div>
                   <span className={`badge ${
@@ -199,10 +199,10 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Students Detailed performance table */}
-        <div className="glass rounded-2xl p-6">
+        <div className="theme-card p-6">
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
             <div>
-              <h3 className="text-white font-semibold text-sm">📋 Student Diagnostics Directory</h3>
+              <h3 className="text-[var(--text-heading)] font-semibold text-sm">ðŸ“‹ Student Diagnostics Directory</h3>
               <p className="text-xs text-slate-550">Review performance details and key concept gaps of each pupil.</p>
             </div>
 
@@ -212,16 +212,16 @@ export default function AnalyticsPage() {
                 placeholder="Search name/roll..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-amber-500"
+                className="bg-[var(--bg-main)] border border-[var(--border)] rounded-lg px-3 py-1.5 text-xs text-[var(--text-heading)] placeholder-slate-650 focus:outline-none focus:border-[var(--primary)]"
               />
 
-              <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+              <div className="flex bg-[var(--bg-main)] border border-[var(--border)] rounded-lg p-0.5">
                 {(["All", "Good", "Average", "Risk"] as const).map((opt) => (
                   <button
                     key={opt}
                     onClick={() => setStatusFilter(opt)}
                     className={`px-3 py-1 rounded-md text-[10px] font-semibold transition-all ${
-                      statusFilter === opt ? "bg-amber-500 text-white" : "text-slate-400 hover:text-white"
+                      statusFilter === opt ? "bg-[var(--primary)] text-[var(--text-heading)]" : "text-[var(--text-muted)] hover:text-[var(--text-heading)]"
                     }`}
                   >
                     {opt}
@@ -248,14 +248,14 @@ export default function AnalyticsPage() {
                 {filteredStudents.map((st) => (
                   <tr key={st.rollNo}>
                     <td className="font-mono text-xs">{st.rollNo}</td>
-                    <td className="font-semibold text-white">{st.name}</td>
+                    <td className="font-semibold text-[var(--text-heading)]">{st.name}</td>
                     <td>
                       <span className={`font-semibold ${st.attendance >= 90 ? "text-emerald-400" : "text-amber-400"}`}>
                         {st.attendance}%
                       </span>
                     </td>
                     <td>{st.homeworkRate}%</td>
-                    <td className="font-bold text-white">{st.avgScore}%</td>
+                    <td className="font-bold text-[var(--text-heading)]">{st.avgScore}%</td>
                     <td>
                       {st.weakTopics.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -280,7 +280,7 @@ export default function AnalyticsPage() {
                 ))}
                 {filteredStudents.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="text-center text-slate-500 text-xs py-8">
+                    <td colSpan={7} className="text-center text-[var(--text-muted)] text-xs py-8">
                       No student records match your query.
                     </td>
                   </tr>
@@ -293,3 +293,4 @@ export default function AnalyticsPage() {
     </PortalLayout>
   );
 }
+

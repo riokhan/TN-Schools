@@ -114,9 +114,9 @@ export default function CommunicationPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-190px)]">
         {/* Chat sidebar contacts */}
-        <div className="lg:col-span-1 glass rounded-2xl p-4 flex flex-col gap-4 overflow-y-auto">
-          <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-            <h3 className="text-white font-semibold text-xs uppercase tracking-wider">💬 Inbox Chats</h3>
+        <div className="lg:col-span-1 theme-card p-4 flex flex-col gap-4 overflow-y-auto">
+          <div className="flex justify-between items-center border-b border-[var(--border)] pb-3">
+            <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider">💬 Inbox Chats</h3>
             <span className="badge badge-yellow">
               {parents.reduce((sum, p) => sum + p.unreadCount, 0)} New
             </span>
@@ -135,16 +135,16 @@ export default function CommunicationPage() {
                   }}
                   className={`w-full text-left p-3.5 rounded-xl border transition-all text-xs relative ${
                     isSelected
-                      ? "border-amber-500/80 bg-amber-500/5"
-                      : "border-slate-800 hover:bg-slate-800/40"
+                      ? "border-[var(--primary)] bg-[var(--primary)]/5"
+                      : "border-[var(--border)] hover:bg-[var(--bg-card-hover)]"
                   }`}
                 >
                   <div className="flex justify-between items-start mb-1.5">
-                    <span className="font-semibold text-white truncate max-w-[120px]">{p.name}</span>
-                    <span className="text-[9px] text-slate-500 font-medium">({p.studentName})</span>
+                    <span className="font-semibold text-[var(--text-heading)] truncate max-w-[120px]">{p.name}</span>
+                    <span className="text-[9px] text-[var(--text-muted)] font-medium">({p.studentName})</span>
                   </div>
 
-                  <p className="text-[10px] text-slate-450 truncate">{p.lastMessage}</p>
+                  <p className="text-[10px] text-[var(--text-muted)] truncate">{p.lastMessage}</p>
 
                   {p.unreadCount > 0 && (
                     <span className="absolute top-3.5 right-3.5 w-4 h-4 bg-red-500 rounded-full text-white text-[9px] flex items-center justify-center font-bold">
@@ -158,23 +158,23 @@ export default function CommunicationPage() {
         </div>
 
         {/* Messaging Box */}
-        <div className="lg:col-span-2 flex flex-col glass rounded-2xl overflow-hidden border border-slate-800">
+        <div className="lg:col-span-2 flex flex-col theme-card overflow-hidden">
           {/* Active parent header */}
-          <div className="flex items-center justify-between px-5 py-4 border-b border-slate-850 bg-slate-900/20">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] bg-[var(--bg-main)]">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-full bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-sm font-bold text-amber-500">
+              <div className="w-9 h-9 rounded-full bg-[var(--primary)]/10 border border-[var(--primary)]/20 flex items-center justify-center text-sm font-bold text-[var(--primary)]">
                 {selectedParent.name[0]}
               </div>
               <div>
-                <h4 className="text-white font-semibold text-xs">{selectedParent.name}</h4>
-                <p className="text-[9px] text-slate-500">Parent of {selectedParent.studentName} ({selectedParent.studentRoll})</p>
+                <h4 className="text-[var(--text-heading)] font-semibold text-xs">{selectedParent.name}</h4>
+                <p className="text-[9px] text-[var(--text-muted)]">Parent of {selectedParent.studentName} ({selectedParent.studentRoll})</p>
               </div>
             </div>
             <span className="badge badge-green text-[9px]">Active chat</span>
           </div>
 
           {/* Conversation history list */}
-          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 bg-[var(--bg-card)]">
             {messages.map((msg, i) => {
               const isTeacher = msg.sender === "teacher";
               return (
@@ -182,12 +182,12 @@ export default function CommunicationPage() {
                   <div
                     className={`max-w-[80%] rounded-xl px-3.5 py-2.5 text-xs leading-relaxed ${
                       isTeacher
-                        ? "bg-amber-500 text-slate-950 font-medium rounded-tr-none"
-                        : "bg-slate-800 text-slate-200 rounded-tl-none border border-slate-700/50"
+                        ? "bg-[var(--primary)] text-white shadow-md rounded-tr-none"
+                        : "bg-[var(--bg-main)] text-[var(--text-heading)] rounded-tl-none border border-[var(--border-light)]"
                     }`}
                   >
                     <div>{msg.text}</div>
-                    <div className={`text-[8px] text-right mt-1.5 ${isTeacher ? "text-slate-900" : "text-slate-500"}`}>
+                    <div className={`text-[8px] text-right mt-1.5 ${isTeacher ? "text-indigo-100" : "text-[var(--text-muted)]"}`}>
                       {msg.time}
                     </div>
                   </div>
@@ -197,7 +197,7 @@ export default function CommunicationPage() {
           </div>
 
           {/* Message input controls */}
-          <div className="p-4 border-t border-slate-850 bg-slate-950/20 space-y-2">
+          <div className="p-4 border-t border-[var(--border)] bg-[var(--bg-main)] space-y-2">
             <div className="flex gap-2">
               <input
                 type="text"
@@ -205,11 +205,11 @@ export default function CommunicationPage() {
                 value={chatInput}
                 onChange={(e) => setChatInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                className="flex-1 bg-slate-900 border border-slate-750 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                className="flex-1 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3.5 py-2.5 text-xs text-[var(--text-heading)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--primary)] shadow-sm"
               />
               <button
                 onClick={handleSendMessage}
-                className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-colors"
+                className="btn-primary py-2.5 px-6 font-bold text-xs shadow-none hover:shadow-[var(--primary-shadow-1)] rounded-xl"
               >
                 Send
               </button>
@@ -218,25 +218,25 @@ export default function CommunicationPage() {
         </div>
 
         {/* AI Helper Column */}
-        <div className="lg:col-span-1 glass rounded-2xl p-4 flex flex-col justify-between">
+        <div className="lg:col-span-1 theme-card p-4 flex flex-col justify-between">
           <div>
-            <div className="border-b border-slate-850 pb-3 mb-4">
-              <h3 className="text-white font-semibold text-xs uppercase tracking-wider flex items-center gap-1.5">
+            <div className="border-b border-[var(--border)] pb-3 mb-4">
+              <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider flex items-center gap-1.5">
                 <span>🤖</span> AI Smart Composer
               </h3>
-              <p className="text-[10px] text-slate-500 mt-0.5">Generate translation-ready bilingual updates</p>
+              <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Generate translation-ready bilingual updates</p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-semibold text-slate-400 block mb-1.5 uppercase tracking-wider">Update Topic</label>
+                <label className="text-[10px] font-semibold text-[var(--text-muted)] block mb-1.5 uppercase tracking-wider">Update Topic</label>
                 <div className="grid grid-cols-3 gap-1">
                   {(["performance", "attendance", "general"] as const).map((type) => (
                     <button
                       key={type}
                       onClick={() => setDraftType(type)}
                       className={`py-1.5 rounded-lg text-[9px] font-bold capitalize transition-all border ${
-                        draftType === type ? "bg-amber-500 border-amber-500 text-white" : "bg-slate-900 border-slate-800 text-slate-400"
+                        draftType === type ? "bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm" : "bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:bg-[var(--bg-card-hover)]"
                       }`}
                     >
                       {type}
@@ -246,14 +246,14 @@ export default function CommunicationPage() {
               </div>
 
               <div>
-                <label className="text-[10px] font-semibold text-slate-400 block mb-1.5 uppercase tracking-wider">Message Tone</label>
+                <label className="text-[10px] font-semibold text-[var(--text-muted)] block mb-1.5 uppercase tracking-wider">Message Tone</label>
                 <div className="grid grid-cols-3 gap-1">
                   {(["supportive", "urgent", "encouraging"] as const).map((tone) => (
                     <button
                       key={tone}
                       onClick={() => setDraftTone(tone)}
                       className={`py-1.5 rounded-lg text-[9px] font-bold capitalize transition-all border ${
-                        draftTone === tone ? "bg-amber-500 border-amber-500 text-white" : "bg-slate-900 border-slate-800 text-slate-400"
+                        draftTone === tone ? "bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm" : "bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:bg-[var(--bg-card-hover)]"
                       }`}
                     >
                       {tone}
@@ -267,11 +267,11 @@ export default function CommunicationPage() {
           <div className="space-y-3 mt-6">
             <button
               onClick={handleGenerateAIDraft}
-              className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-750 text-xs font-semibold text-white border border-slate-700/50 flex items-center justify-center gap-1"
+              className="w-full py-2.5 rounded-xl bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-heading)] border border-[var(--border)] flex items-center justify-center gap-1 shadow-sm transition-all"
             >
               ⚡ Insert AI Draft
             </button>
-            <div className="p-3 bg-slate-900/40 border border-slate-850 rounded-xl text-[10px] text-slate-500 leading-relaxed italic">
+            <div className="p-3 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl text-[10px] text-[var(--text-muted)] leading-relaxed italic">
               📢 AI generates messages both in **Tamil** and **English** so parents can select their preferred reading medium.
             </div>
           </div>

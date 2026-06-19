@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -62,28 +62,28 @@ export default function AddMaterialsPage() {
     <PortalLayout title="Study Materials & Resources" subtitle="Upload study documents, links, and worksheets.">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Upload form */}
-        <div className="glass rounded-2xl p-6 border border-slate-800">
-          <h2 className="text-base font-semibold text-white mb-4">📚 Upload New Resource</h2>
+        <div className="theme-card p-6 border border-[var(--border)]">
+          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">ðŸ“š Upload New Resource</h2>
           <form onSubmit={handleUpload} className="space-y-4">
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Resource Title</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Resource Title</label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Periodic Table Reference Guide"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-slate-400 mb-1.5 font-medium">Category</label>
+                <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Category</label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as Material["category"])}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 >
                   <option value="Notes">Notes</option>
                   <option value="Worksheet">Worksheet</option>
@@ -93,11 +93,11 @@ export default function AddMaterialsPage() {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1.5 font-medium">Class Section</label>
+                <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Class Section</label>
                 <select
                   value={targetClass}
                   onChange={(e) => setTargetClass(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 >
                   <option value="Class 10A">Class 10A</option>
                   <option value="Class 9B">Class 9B</option>
@@ -108,23 +108,23 @@ export default function AddMaterialsPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">File Attachment</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">File Attachment</label>
               <div
                 onClick={handleSimulatedFileSelect}
-                className="border-2 border-dashed border-slate-750 hover:border-amber-500/50 hover:bg-slate-900/40 rounded-2xl p-6 text-center cursor-pointer transition-all"
+                className="border-2 border-dashed border-[var(--border)] hover:border-[var(--primary)]/50 hover:bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-2xl p-6 text-center cursor-pointer transition-all"
               >
-                <span className="text-3xl block mb-2">📁</span>
-                <span className="text-xs text-slate-400 font-medium block">
+                <span className="text-3xl block mb-2">ðŸ“</span>
+                <span className="text-xs text-[var(--text-muted)] font-medium block">
                   {simulatedFile ? simulatedFile : "Click to select study resource file"}
                 </span>
-                <span className="text-[10px] text-slate-500 mt-1 block">Supports PDF, Doc, PPT up to 15MB</span>
+                <span className="text-[10px] text-[var(--text-muted)] mt-1 block">Supports PDF, Doc, PPT up to 15MB</span>
               </div>
             </div>
 
             <button
               type="submit"
               disabled={!title || !simulatedFile}
-              className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-[var(--primary)] hover:bg-amber-600 disabled:bg-[var(--bg-card)] disabled:text-[var(--text-muted)] text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
             >
               Upload & Distribute to Students
             </button>
@@ -132,19 +132,19 @@ export default function AddMaterialsPage() {
         </div>
 
         {/* Directory details */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 border border-slate-800">
+        <div className="lg:col-span-2 theme-card p-6 border border-[var(--border)]">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-            <h2 className="text-base font-semibold text-white">🗂️ Study Materials Directory</h2>
+            <h2 className="text-base font-semibold text-[var(--text-heading)]">ðŸ—‚ï¸ Study Materials Directory</h2>
             
-            <div className="flex flex-wrap gap-1.5 p-1 bg-slate-900 border border-slate-800 rounded-xl">
+            <div className="flex flex-wrap gap-1.5 p-1 bg-[var(--bg-main)] border border-[var(--border)] rounded-xl">
               {(["All", "Notes", "Worksheet", "Video Reference", "Exam Prep"] as const).map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     activeTab === tab
-                      ? "bg-amber-500 text-slate-950 font-bold"
-                      : "text-slate-400 hover:text-white hover:bg-slate-800"
+                      ? "bg-[var(--primary)] text-white shadow-sm font-bold"
+                      : "text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:bg-[var(--bg-card)]"
                   }`}
                 >
                   {tab}
@@ -158,36 +158,36 @@ export default function AddMaterialsPage() {
               filteredMaterials.map((m) => (
                 <div
                   key={m.id}
-                  className="p-4 bg-slate-900/60 rounded-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                  className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
                   <div>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="text-xs font-bold px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-md">
+                      <span className="text-xs font-bold px-2 py-0.5 bg-[var(--primary)]/10 text-amber-400 border border-[var(--primary)]/20 rounded-md">
                         {m.category}
                       </span>
-                      <span className="text-xs font-bold text-slate-500">{m.class}</span>
+                      <span className="text-xs font-bold text-[var(--text-muted)]">{m.class}</span>
                     </div>
-                    <h3 className="text-sm font-bold text-white mb-0.5">{m.title}</h3>
-                    <div className="text-[10px] text-slate-500 font-semibold">
-                      Format: <span className="text-slate-400">{m.format}</span> · Size: <span className="text-slate-400">{m.size}</span> · Uploaded: <span className="text-slate-400">{m.date}</span>
+                    <h3 className="text-sm font-bold text-[var(--text-heading)] mb-0.5">{m.title}</h3>
+                    <div className="text-[10px] text-[var(--text-muted)] font-semibold">
+                      Format: <span className="text-[var(--text-muted)]">{m.format}</span> Â· Size: <span className="text-[var(--text-muted)]">{m.size}</span> Â· Uploaded: <span className="text-[var(--text-muted)]">{m.date}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <button className="p-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs transition-colors border border-slate-700">
-                      ⬇ Download
+                    <button className="p-2 bg-[var(--bg-card)] hover:bg-slate-700 text-[var(--text-heading)] rounded-lg text-xs transition-colors border border-[var(--border)]">
+                      â¬‡ Download
                     </button>
                     <button
                       onClick={() => handleDelete(m.id)}
                       className="p-2 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 text-red-400 rounded-lg text-xs transition-colors"
                     >
-                      ✕ Delete
+                      âœ• Delete
                     </button>
                   </div>
                 </div>
               ))
             ) : (
-              <div className="p-12 text-center text-slate-500 text-xs italic">
+              <div className="p-12 text-center text-[var(--text-muted)] text-xs italic">
                 No materials uploaded in this category.
               </div>
             )}
@@ -197,3 +197,4 @@ export default function AddMaterialsPage() {
     </PortalLayout>
   );
 }
+

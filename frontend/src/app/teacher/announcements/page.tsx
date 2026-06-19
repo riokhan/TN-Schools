@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -73,7 +73,7 @@ export default function AnnouncementsPage() {
     setTitle("");
     setBody("");
     setPinToTop(false);
-    setToast("🎉 Announcement broadcasted! Parent notification feeds updated.");
+    setToast("ðŸŽ‰ Announcement broadcasted! Parent notification feeds updated.");
     setTimeout(() => {
       setToast(null);
     }, 4500);
@@ -87,27 +87,27 @@ export default function AnnouncementsPage() {
     <PortalLayout title="Announcements & Circulars" subtitle="Broadcast updates to classes or review administration circulars.">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Broadcast Form */}
-        <div className="glass rounded-2xl p-6 border border-slate-800 h-fit">
-          <h2 className="text-base font-semibold text-white mb-4">📢 Compose Announcement</h2>
+        <div className="theme-card p-6 border border-[var(--border)] h-fit">
+          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">ðŸ“¢ Compose Announcement</h2>
           <form onSubmit={handleBroadcast} className="space-y-4">
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Topic / Title</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Topic / Title</label>
               <input
                 type="text"
                 required
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Science Fair Submission Rules"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Target Audience</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Target Audience</label>
               <select
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               >
                 <option value="Class 10A Parents">Class 10A Parents</option>
                 <option value="Class 9B Parents">Class 9B Parents</option>
@@ -117,14 +117,14 @@ export default function AnnouncementsPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Message Body</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Message Body</label>
               <textarea
                 required
                 rows={4}
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
                 placeholder="Provide detailed instructions..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors resize-none"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors resize-none"
               />
             </div>
 
@@ -136,23 +136,23 @@ export default function AnnouncementsPage() {
                 onChange={(e) => setPinToTop(e.target.checked)}
                 className="accent-amber-500 cursor-pointer"
               />
-              <label htmlFor="pin-announcement" className="text-xs text-slate-400 cursor-pointer select-none">
+              <label htmlFor="pin-announcement" className="text-xs text-[var(--text-muted)] cursor-pointer select-none">
                 Pin to the top of the dashboard
               </label>
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-[var(--primary)] hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
             >
-              📢 Broadcast Announcement
+              ðŸ“¢ Broadcast Announcement
             </button>
           </form>
         </div>
 
         {/* Board feed */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 border border-slate-800 space-y-5">
-          <h2 className="text-base font-semibold text-white">📋 Active Announcement Board</h2>
+        <div className="lg:col-span-2 theme-card p-6 border border-[var(--border)] space-y-5">
+          <h2 className="text-base font-semibold text-[var(--text-heading)]">ðŸ“‹ Active Announcement Board</h2>
 
           {toast && (
             <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-xl">
@@ -164,13 +164,13 @@ export default function AnnouncementsPage() {
             {announcements.map((ann) => (
               <div
                 key={ann.id}
-                className={`p-4 bg-slate-900/60 rounded-xl border flex flex-col justify-between gap-3 relative ${
-                  ann.pinned ? "border-amber-500/30" : "border-slate-800"
+                className={`p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border flex flex-col justify-between gap-3 relative ${
+                  ann.pinned ? "border-[var(--primary)]/30" : "border-[var(--border)]"
                 }`}
               >
                 {ann.pinned && (
-                  <span className="absolute top-3 right-3 text-[10px] bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded-full font-bold">
-                    📌 Pinned
+                  <span className="absolute top-3 right-3 text-[10px] bg-[var(--primary)]/10 text-amber-400 border border-[var(--primary)]/20 px-2 py-0.5 rounded-full font-bold">
+                    ðŸ“Œ Pinned
                   </span>
                 )}
 
@@ -179,14 +179,14 @@ export default function AnnouncementsPage() {
                     <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md">
                       {ann.target}
                     </span>
-                    <span className="text-[10px] text-slate-500 font-semibold">{ann.date}</span>
-                    <span className="text-[10px] text-slate-600 font-semibold">· By {ann.sender}</span>
+                    <span className="text-[10px] text-[var(--text-muted)] font-semibold">{ann.date}</span>
+                    <span className="text-[10px] text-slate-600 font-semibold">Â· By {ann.sender}</span>
                   </div>
-                  <h3 className="text-sm font-bold text-white mb-2">{ann.title}</h3>
-                  <p className="text-xs text-slate-300 leading-relaxed">{ann.body}</p>
+                  <h3 className="text-sm font-bold text-[var(--text-heading)] mb-2">{ann.title}</h3>
+                  <p className="text-xs text-[var(--text-main)] leading-relaxed">{ann.body}</p>
                 </div>
 
-                <div className="flex justify-between items-center pt-3 border-t border-slate-800 text-[11px] text-slate-500">
+                <div className="flex justify-between items-center pt-3 border-t border-[var(--border)] text-[11px] text-[var(--text-muted)]">
                   <span>{ann.readReceipts ? `Read receipts: ${ann.readReceipts}` : "Received"}</span>
                   {ann.sender.startsWith("You") && (
                     <button
@@ -205,3 +205,4 @@ export default function AnnouncementsPage() {
     </PortalLayout>
   );
 }
+

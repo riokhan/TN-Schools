@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
@@ -24,10 +24,10 @@ const initialAssignments: Assignment[] = [
 const mockSubmissions = [
   { rollNo: "10A01", name: "Aarthi V.", status: "submitted", score: "9/10", date: "Today, 8:40 AM" },
   { rollNo: "10A02", name: "Balaji R.", status: "submitted", score: "7/10", date: "Yesterday, 3:15 PM" },
-  { rollNo: "10A03", name: "Kavitha R.", status: "pending", score: "—", date: "—" },
+  { rollNo: "10A03", name: "Kavitha R.", status: "pending", score: "â€”", date: "â€”" },
   { rollNo: "10A04", name: "Manoj K.", status: "submitted", score: "10/10", date: "Today, 9:02 AM" },
   { rollNo: "10A05", name: "Priya S.", status: "submitted", score: "8/10", date: "Yesterday, 6:00 PM" },
-  { rollNo: "10A06", name: "Rajesh M.", status: "pending", score: "—", date: "—" },
+  { rollNo: "10A06", name: "Rajesh M.", status: "pending", score: "â€”", date: "â€”" },
 ];
 
 export default function HomeworkPage() {
@@ -96,15 +96,15 @@ export default function HomeworkPage() {
       subtitle="Track submissions, send automated parent reminders, and generate AI homework exercises"
     >
       {toastMessage && (
-        <div className="fixed top-5 right-5 bg-emerald-500 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2">
-          <span>✅</span> {toastMessage}
+        <div className="fixed top-5 right-5 bg-emerald-500 text-[var(--text-heading)] text-xs font-bold px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2">
+          <span>âœ…</span> {toastMessage}
         </div>
       )}
 
       <div className="flex flex-col gap-6">
         {/* Header Toolbar */}
-        <div className="flex justify-between items-center bg-slate-900/40 p-4 rounded-2xl border border-slate-800">
-          <div className="flex bg-slate-900 border border-slate-800 rounded-lg p-0.5">
+        <div className="flex justify-between items-center bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-4 rounded-2xl border border-[var(--border)]">
+          <div className="flex bg-[var(--bg-main)] border border-[var(--border)] rounded-lg p-0.5">
             {(["active", "draft", "completed"] as const).map((tab) => (
               <button
                 key={tab}
@@ -115,7 +115,7 @@ export default function HomeworkPage() {
                   if (firstHwOfTab) setSelectedHwId(firstHwOfTab.id);
                 }}
                 className={`px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-                  activeTab === tab ? "bg-amber-500 text-white" : "text-slate-450 hover:text-white"
+                  activeTab === tab ? "bg-[var(--primary)] text-[var(--text-heading)]" : "text-[var(--text-muted)] hover:text-[var(--text-heading)]"
                 }`}
               >
                 {tab}
@@ -125,9 +125,9 @@ export default function HomeworkPage() {
 
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 transition-colors"
+            className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-heading)] bg-[var(--primary)] hover:bg-amber-600 transition-colors"
           >
-            ➕ Create Assignment
+            âž• Create Assignment
           </button>
         </div>
 
@@ -135,8 +135,8 @@ export default function HomeworkPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Homework Cards List */}
           <div className="space-y-4">
-            <h3 className="text-white font-semibold text-xs uppercase tracking-wider mb-1">
-              📝 Assignments ({activeAssignments.length})
+            <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider mb-1">
+              ðŸ“ Assignments ({activeAssignments.length})
             </h3>
             
             {activeAssignments.map((hw) => {
@@ -146,22 +146,22 @@ export default function HomeworkPage() {
                 <div
                   key={hw.id}
                   onClick={() => setSelectedHwId(hw.id)}
-                  className={`glass rounded-2xl p-4 border text-left cursor-pointer transition-all hover:scale-[1.01] ${
-                    isSelected ? "border-amber-500 bg-amber-500/5" : "border-slate-800 hover:border-slate-750"
+                  className={`theme-card p-4 border text-left cursor-pointer transition-all hover:scale-[1.01] ${
+                    isSelected ? "border-[var(--primary)] bg-[var(--primary)]/5" : "border-[var(--border)] hover:border-[var(--border)]"
                   }`}
                 >
                   <div className="flex justify-between items-start mb-2">
-                    <h4 className="text-white font-bold text-xs truncate max-w-[180px]">{hw.title}</h4>
+                    <h4 className="text-[var(--text-heading)] font-bold text-xs truncate max-w-[180px]">{hw.title}</h4>
                     <span className="text-[10px] text-slate-550">{hw.dueDate}</span>
                   </div>
 
-                  <div className="text-[10px] text-slate-450">{hw.className}</div>
+                  <div className="text-[10px] text-[var(--text-muted)]">{hw.className}</div>
                   
                   {hw.status !== "draft" && (
                     <div className="mt-4 space-y-1.5">
-                      <div className="flex justify-between items-center text-[9px] text-slate-450">
+                      <div className="flex justify-between items-center text-[9px] text-[var(--text-muted)]">
                         <span>Submissions Progress</span>
-                        <span className="font-semibold text-white">{hw.submittedCount}/{hw.totalStudents} ({percent}%)</span>
+                        <span className="font-semibold text-[var(--text-heading)]">{hw.submittedCount}/{hw.totalStudents} ({percent}%)</span>
                       </div>
                       <div className="progress-bar w-full">
                         <div className="progress-fill" style={{ width: `${percent}%`, background: "#f59e0b" }} />
@@ -173,7 +173,7 @@ export default function HomeworkPage() {
             })}
 
             {activeAssignments.length === 0 && (
-              <div className="glass rounded-2xl p-8 border border-dashed border-slate-800 text-center text-xs text-slate-500">
+              <div className="theme-card p-8 border border-dashed border-[var(--border)] text-center text-xs text-[var(--text-muted)]">
                 No assignments found in this status category.
               </div>
             )}
@@ -183,34 +183,34 @@ export default function HomeworkPage() {
           {selectedHw && (
             <div className="lg:col-span-2 space-y-6">
               {/* Info panel */}
-              <div className="glass rounded-2xl p-6 border border-slate-800">
+              <div className="theme-card p-6 border border-[var(--border)]">
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-white font-bold text-base leading-snug">{selectedHw.title}</h3>
-                    <p className="text-xs text-slate-450 mt-1">{selectedHw.className} · Due on {selectedHw.dueDate}</p>
+                    <h3 className="text-[var(--text-heading)] font-bold text-base leading-snug">{selectedHw.title}</h3>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">{selectedHw.className} Â· Due on {selectedHw.dueDate}</p>
                   </div>
                   
                   {selectedHw.status === "active" && (
                     <button
                       onClick={handleSendReminder}
-                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-amber-400 border border-amber-500/20 hover:bg-amber-500/10 transition-all flex items-center gap-1.5"
+                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-amber-400 border border-[var(--primary)]/20 hover:bg-[var(--primary)]/10 transition-all flex items-center gap-1.5"
                     >
-                      <span>🔔</span> Send Parent Reminders
+                      <span>ðŸ””</span> Send Parent Reminders
                     </button>
                   )}
                 </div>
 
-                <div className="p-4 bg-slate-900/60 border border-slate-850 rounded-xl text-xs text-slate-350 leading-relaxed">
-                  <span className="font-semibold text-white block mb-1">Homework Guidelines:</span>
+                <div className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-xl text-xs text-slate-350 leading-relaxed">
+                  <span className="font-semibold text-[var(--text-heading)] block mb-1">Homework Guidelines:</span>
                   {selectedHw.description}
                 </div>
               </div>
 
               {/* Roster & submissions checklist */}
               {selectedHw.status !== "draft" && (
-                <div className="glass rounded-2xl p-6 border border-slate-800">
-                  <h3 className="text-white font-semibold text-xs uppercase tracking-wider mb-4">
-                    📋 Submission Roster
+                <div className="theme-card p-6 border border-[var(--border)]">
+                  <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider mb-4">
+                    ðŸ“‹ Submission Roster
                   </h3>
 
                   <div className="overflow-x-auto">
@@ -229,19 +229,19 @@ export default function HomeworkPage() {
                         {mockSubmissions.map((sub) => (
                           <tr key={sub.rollNo}>
                             <td className="font-mono text-xs">{sub.rollNo}</td>
-                            <td className="font-medium text-white">{sub.name}</td>
+                            <td className="font-medium text-[var(--text-heading)]">{sub.name}</td>
                             <td>
                               <span className={`badge ${sub.status === "submitted" ? "badge-green" : "badge-yellow"}`}>
                                 {sub.status}
                               </span>
                             </td>
                             <td>{sub.date}</td>
-                            <td className="font-bold font-mono text-white">{sub.score}</td>
+                            <td className="font-bold font-mono text-[var(--text-heading)]">{sub.score}</td>
                             <td>
                               {sub.status === "submitted" ? (
                                 <button className="text-xs text-amber-400 hover:underline">Grade Sheet</button>
                               ) : (
-                                <button className="text-xs text-slate-500 hover:text-white">Poke Parent</button>
+                                <button className="text-xs text-[var(--text-muted)] hover:text-[var(--text-heading)]">Poke Parent</button>
                               )}
                             </td>
                           </tr>
@@ -259,32 +259,32 @@ export default function HomeworkPage() {
       {/* Create Homework Dialog */}
       {showCreateModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="glass rounded-2xl w-full max-w-lg border border-slate-800 overflow-hidden shadow-2xl">
-            <div className="px-6 py-4 border-b border-slate-850 flex justify-between items-center">
-              <h3 className="text-white font-semibold text-base">➕ Assign Homework</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-550 hover:text-white text-lg">✕</button>
+          <div className="theme-card w-full max-w-lg border border-[var(--border)] overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 border-b border-[var(--border)] flex justify-between items-center">
+              <h3 className="text-[var(--text-heading)] font-semibold text-base">âž• Assign Homework</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-550 hover:text-[var(--text-heading)] text-lg">âœ•</button>
             </div>
 
             <form onSubmit={handleCreateHomework} className="p-6 space-y-4">
               <div>
-                <label className="text-xs font-semibold text-slate-400 block mb-1.5">Homework Topic / Title</label>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Homework Topic / Title</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Pythagoras Theorem Homework 1"
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] placeholder-slate-650 focus:outline-none focus:border-[var(--primary)]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs font-semibold text-slate-400 block mb-1.5">Class Section</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Class Section</label>
                   <select
                     value={newClass}
                     onChange={(e) => setNewClass(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
                   >
                     <option>10A - Mathematics</option>
                     <option>10B - Mathematics</option>
@@ -293,27 +293,27 @@ export default function HomeworkPage() {
                 </div>
 
                 <div>
-                  <label className="text-xs font-semibold text-slate-400 block mb-1.5">Due Date</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Due Date</label>
                   <input
                     type="text"
                     required
                     value={newDueDate}
                     onChange={(e) => setNewDueDate(e.target.value)}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1.5">
-                  <label className="text-xs font-semibold text-slate-400">Assignment Content / Prompts</label>
+                  <label className="text-xs font-semibold text-[var(--text-muted)]">Assignment Content / Prompts</label>
                   <button
                     type="button"
                     onClick={triggerAIRecipes}
                     disabled={isGeneratingAI}
                     className="text-[10px] text-amber-400 hover:text-amber-350 flex items-center gap-1 font-semibold"
                   >
-                    <span>⚡</span> {isGeneratingAI ? "Drafting..." : "Draft Homework with AI"}
+                    <span>âš¡</span> {isGeneratingAI ? "Drafting..." : "Draft Homework with AI"}
                   </button>
                 </div>
 
@@ -322,7 +322,7 @@ export default function HomeworkPage() {
                   placeholder="Enter questions or guidelines for students..."
                   value={newDesc}
                   onChange={(e) => setNewDesc(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-amber-500 min-h-[120px]"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl p-3 text-xs text-[var(--text-heading)] placeholder-slate-650 focus:outline-none focus:border-[var(--primary)] min-h-[120px]"
                 />
               </div>
 
@@ -330,13 +330,13 @@ export default function HomeworkPage() {
                 <button
                   type="button"
                   onClick={() => setShowCreateModal(false)}
-                  className="flex-1 py-2.5 rounded-xl border border-slate-700 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-850"
+                  className="flex-1 py-2.5 rounded-xl border border-[var(--border)] text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-heading)] hover:bg-slate-850"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-xs font-semibold text-white"
+                  className="flex-1 py-2.5 rounded-xl bg-[var(--primary)] hover:bg-amber-600 text-xs font-semibold text-[var(--text-heading)]"
                 >
                   Assign to Students
                 </button>
@@ -348,3 +348,4 @@ export default function HomeworkPage() {
     </PortalLayout>
   );
 }
+

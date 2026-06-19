@@ -93,16 +93,16 @@ export default function QuestionGeneratorPage() {
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Settings Column */}
-        <div className="glass rounded-2xl p-6 h-fit">
-          <h2 className="text-white font-semibold text-sm mb-4">⚙️ Generator Configuration</h2>
+        <div className="theme-card p-6 h-fit">
+          <h2 className="text-[var(--text-heading)] font-semibold text-sm mb-4">⚙️ Generator Configuration</h2>
 
           <form onSubmit={handleGenerate} className="space-y-4">
             <div>
-              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Class / Grade</label>
+              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Class / Grade</label>
               <select
                 value={grade}
                 onChange={(e) => setGrade(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
               >
                 <option>Grade 8</option>
                 <option>Grade 9</option>
@@ -113,11 +113,11 @@ export default function QuestionGeneratorPage() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Subject</label>
+              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Subject</label>
               <select
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
               >
                 <option>Mathematics</option>
                 <option>Science</option>
@@ -127,19 +127,19 @@ export default function QuestionGeneratorPage() {
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Topic / Concept</label>
+              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Topic / Concept</label>
               <input
                 type="text"
                 required
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
                 placeholder="e.g. Algebra, Trigonometry"
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
+                className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
               />
             </div>
 
             <div>
-              <label className="text-xs font-semibold text-slate-400 block mb-1.5">Difficulty Level</label>
+              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Difficulty Level</label>
               <div className="grid grid-cols-3 gap-2">
                 {(["easy", "medium", "hard"] as const).map((diff) => (
                   <button
@@ -148,8 +148,8 @@ export default function QuestionGeneratorPage() {
                     onClick={() => setDifficulty(diff)}
                     className={`py-2 rounded-xl text-xs font-bold capitalize border transition-all ${
                       difficulty === diff
-                        ? "bg-amber-500 border-amber-500 text-white"
-                        : "bg-slate-900 border-slate-800 text-slate-450 hover:bg-slate-800"
+                        ? "bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm"
+                        : "bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)]"
                     }`}
                   >
                     {diff}
@@ -158,35 +158,35 @@ export default function QuestionGeneratorPage() {
               </div>
             </div>
 
-            <hr className="border-slate-850 my-2" />
+            <hr className="border-[var(--border)] my-2" />
 
             <div>
-              <label className="text-xs font-semibold text-slate-400 block mb-2">Question Breakdown</label>
+              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-2">Question Breakdown</label>
               <div className="space-y-2 text-xs">
-                <div className="flex justify-between items-center bg-slate-900/60 p-2 rounded-xl border border-slate-850">
-                  <span className="text-slate-400 font-medium">Multiple Choice (MCQ)</span>
+                <div className="flex justify-between items-center bg-[var(--bg-main)] p-2 rounded-xl border border-[var(--border)]">
+                  <span className="text-[var(--text-muted)] font-medium">Multiple Choice (MCQ)</span>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setMcqCount(Math.max(0, mcqCount - 1))} className="px-2 py-0.5 bg-slate-800 rounded text-white">-</button>
-                    <span className="w-5 text-center text-white font-semibold">{mcqCount}</span>
-                    <button type="button" onClick={() => setMcqCount(mcqCount + 1)} className="px-2 py-0.5 bg-slate-800 rounded text-white">+</button>
+                    <button type="button" onClick={() => setMcqCount(Math.max(0, mcqCount - 1))} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">-</button>
+                    <span className="w-5 text-center text-[var(--text-heading)] font-semibold">{mcqCount}</span>
+                    <button type="button" onClick={() => setMcqCount(mcqCount + 1)} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">+</button>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center bg-slate-900/60 p-2 rounded-xl border border-slate-850">
-                  <span className="text-slate-400 font-medium">Short Answer</span>
+                <div className="flex justify-between items-center bg-[var(--bg-main)] p-2 rounded-xl border border-[var(--border)]">
+                  <span className="text-[var(--text-muted)] font-medium">Short Answer</span>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setShortCount(Math.max(0, shortCount - 1))} className="px-2 py-0.5 bg-slate-800 rounded text-white">-</button>
-                    <span className="w-5 text-center text-white font-semibold">{shortCount}</span>
-                    <button type="button" onClick={() => setShortCount(shortCount + 1)} className="px-2 py-0.5 bg-slate-800 rounded text-white">+</button>
+                    <button type="button" onClick={() => setShortCount(Math.max(0, shortCount - 1))} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">-</button>
+                    <span className="w-5 text-center text-[var(--text-heading)] font-semibold">{shortCount}</span>
+                    <button type="button" onClick={() => setShortCount(shortCount + 1)} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">+</button>
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center bg-slate-900/60 p-2 rounded-xl border border-slate-850">
-                  <span className="text-slate-400 font-medium">Long Answer</span>
+                <div className="flex justify-between items-center bg-[var(--bg-main)] p-2 rounded-xl border border-[var(--border)]">
+                  <span className="text-[var(--text-muted)] font-medium">Long Answer</span>
                   <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setLongCount(Math.max(0, longCount - 1))} className="px-2 py-0.5 bg-slate-800 rounded text-white">-</button>
-                    <span className="w-5 text-center text-white font-semibold">{longCount}</span>
-                    <button type="button" onClick={() => setLongCount(longCount + 1)} className="px-2 py-0.5 bg-slate-800 rounded text-white">+</button>
+                    <button type="button" onClick={() => setLongCount(Math.max(0, longCount - 1))} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">-</button>
+                    <span className="w-5 text-center text-[var(--text-heading)] font-semibold">{longCount}</span>
+                    <button type="button" onClick={() => setLongCount(longCount + 1)} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">+</button>
                   </div>
                 </div>
               </div>
@@ -195,7 +195,7 @@ export default function QuestionGeneratorPage() {
             <button
               type="submit"
               disabled={isGenerating}
-              className="w-full mt-2 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:bg-amber-800 text-xs font-semibold text-white transition-colors flex items-center justify-center gap-2"
+              className="w-full mt-2 py-3 rounded-xl bg-[var(--primary)] hover:opacity-90 disabled:opacity-50 text-xs font-semibold text-white shadow-sm transition-opacity flex items-center justify-center gap-2"
             >
               {isGenerating ? "Synthesizing Questions..." : "⚡ Generate Questions"}
             </button>
@@ -205,20 +205,20 @@ export default function QuestionGeneratorPage() {
         {/* Output Column */}
         <div className="lg:col-span-2 flex flex-col min-h-[400px]">
           {!isGenerating && !showQuestions && (
-            <div className="glass rounded-2xl p-8 flex-1 flex flex-col items-center justify-center text-center border border-dashed border-slate-800">
+            <div className="theme-card p-8 flex-1 flex flex-col items-center justify-center text-center border-dashed">
               <span className="text-4xl mb-4">❓</span>
-              <h3 className="text-white font-semibold text-sm">No Questions Generated</h3>
-              <p className="text-xs text-slate-500 max-w-sm mt-1">
+              <h3 className="text-[var(--text-heading)] font-semibold text-sm">No Questions Generated</h3>
+              <p className="text-xs text-[var(--text-muted)] max-w-sm mt-1">
                 Configure your grade, subject, and question distribution metrics, then trigger the generator to construct exam content.
               </p>
             </div>
           )}
 
           {isGenerating && (
-            <div className="glass rounded-2xl p-8 flex-1 flex flex-col items-center justify-center text-center">
-              <div className="w-12 h-12 rounded-full border-4 border-amber-500/20 border-t-amber-500 animate-spin mb-6" />
-              <h3 className="text-white font-semibold text-sm mb-2">Analyzing Topic Syllabus...</h3>
-              <p className="text-xs text-slate-500 max-w-xs">
+            <div className="theme-card p-8 flex-1 flex flex-col items-center justify-center text-center">
+              <div className="w-12 h-12 rounded-full border-4 border-[var(--primary)]/20 border-t-[var(--primary)] animate-spin mb-6" />
+              <h3 className="text-[var(--text-heading)] font-semibold text-sm mb-2">Analyzing Topic Syllabus...</h3>
+              <p className="text-xs text-[var(--text-muted)] max-w-xs">
                 Generating questions according to cognitive level taxonomy.
               </p>
             </div>
@@ -227,20 +227,20 @@ export default function QuestionGeneratorPage() {
           {showQuestions && !isGenerating && (
             <div className="space-y-4 flex-1 flex flex-col">
               {/* Toolbar */}
-              <div className="glass rounded-2xl p-4 border border-slate-800 flex justify-between items-center bg-slate-900/40">
-                <div className="text-xs text-slate-400">
-                  Total Questions: <span className="text-white font-semibold">{questions.length}</span> · Difficulty: <span className="text-amber-400 font-bold capitalize">{difficulty}</span>
+              <div className="theme-card p-4 flex justify-between items-center bg-[var(--bg-main)]">
+                <div className="text-xs text-[var(--text-muted)]">
+                  Total Questions: <span className="text-[var(--text-heading)] font-semibold">{questions.length}</span> · Difficulty: <span className="text-[var(--primary)] font-bold capitalize">{difficulty}</span>
                 </div>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowAnswers(!showAnswers)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                      showAnswers ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400" : "bg-slate-800 border-slate-700/55 text-slate-400 hover:text-white"
+                      showAnswers ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400" : "bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-heading)]"
                     }`}
                   >
                     {showAnswers ? "Hide Answers" : "Show Answers"}
                   </button>
-                  <button className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-750 text-xs font-semibold text-white border border-slate-700/50">
+                  <button className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-heading)] border border-[var(--border)] shadow-sm">
                     📋 Copy Test Paper
                   </button>
                 </div>
@@ -249,13 +249,13 @@ export default function QuestionGeneratorPage() {
               {/* Questions List */}
               <div className="space-y-4 overflow-y-auto max-h-[500px]">
                 {questions.map((q, idx) => (
-                  <div key={q.id} className="glass rounded-2xl p-5 border border-slate-800 space-y-3 relative group">
+                  <div key={q.id} className="theme-card p-5 space-y-3 relative group">
                     {/* Header */}
                     <div className="flex justify-between items-center">
                       <span className="badge badge-blue text-[10px]">
                         Q{idx + 1} · {q.type.toUpperCase()}
                       </span>
-                      <span className="text-xs text-slate-500 font-medium">{q.marks} Mark{q.marks > 1 ? "s" : ""}</span>
+                      <span className="text-xs text-[var(--text-muted)] font-medium">{q.marks} Mark{q.marks > 1 ? "s" : ""}</span>
                     </div>
 
                     {/* Question Content */}
@@ -264,32 +264,32 @@ export default function QuestionGeneratorPage() {
                         <textarea
                           value={editingText}
                           onChange={(e) => setEditingText(e.target.value)}
-                          className="w-full bg-slate-900 border border-slate-750 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-amber-500 min-h-[80px]"
+                          className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl p-3 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] min-h-[80px]"
                         />
                         <div className="flex gap-2 justify-end">
                           <button
                             onClick={() => setEditingId(null)}
-                            className="px-2.5 py-1 rounded bg-slate-800 text-[10px] text-slate-400 hover:text-white"
+                            className="px-2.5 py-1 rounded bg-[var(--bg-card)] border border-[var(--border)] text-[10px] text-[var(--text-muted)] hover:text-[var(--text-heading)]"
                           >
                             Cancel
                           </button>
                           <button
                             onClick={() => handleSaveEdit(q.id)}
-                            className="px-2.5 py-1 rounded bg-amber-500 text-[10px] text-white"
+                            className="px-2.5 py-1 rounded bg-[var(--primary)] text-[10px] text-white shadow-sm hover:opacity-90"
                           >
                             Save
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-xs text-white font-medium leading-relaxed">{q.text}</div>
+                      <div className="text-xs text-[var(--text-heading)] font-medium leading-relaxed">{q.text}</div>
                     )}
 
                     {/* Options (if MCQ) */}
                     {q.type === "mcq" && q.options && (
                       <div className="grid grid-cols-2 gap-2 pl-2">
                         {q.options.map((opt) => (
-                          <div key={opt} className="text-xs text-slate-400 font-mono">
+                          <div key={opt} className="text-xs text-[var(--text-muted)] font-mono">
                             {opt}
                           </div>
                         ))}
@@ -299,23 +299,23 @@ export default function QuestionGeneratorPage() {
                     {/* Answer Key */}
                     {showAnswers && (
                       <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl mt-3 text-xs">
-                        <span className="text-emerald-400 font-bold block mb-1">Answer / Solved:</span>
-                        <span className="text-slate-300 leading-relaxed font-mono">{q.answer}</span>
+                        <span className="text-emerald-500 dark:text-emerald-400 font-bold block mb-1">Answer / Solved:</span>
+                        <span className="text-[var(--text-main)] leading-relaxed font-mono">{q.answer}</span>
                       </div>
                     )}
 
                     {/* Actions Bar (Hover) */}
                     {editingId !== q.id && (
-                      <div className="flex gap-3 justify-end pt-2 border-t border-slate-850/60 opacity-60 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-3 justify-end pt-2 border-t border-[var(--border-light)] opacity-60 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleEdit(q)}
-                          className="text-[10px] font-semibold text-slate-400 hover:text-amber-400 flex items-center gap-1"
+                          className="text-[10px] font-semibold text-[var(--text-muted)] hover:text-[var(--primary)] flex items-center gap-1"
                         >
                           ✏️ Edit
                         </button>
                         <button
                           onClick={() => handleRegenerateItem(q.id)}
-                          className="text-[10px] font-semibold text-slate-400 hover:text-amber-400 flex items-center gap-1"
+                          className="text-[10px] font-semibold text-[var(--text-muted)] hover:text-[var(--primary)] flex items-center gap-1"
                         >
                           🔄 Regenerate
                         </button>

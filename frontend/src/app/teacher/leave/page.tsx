@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -53,7 +53,7 @@ export default function LeaveRequestsPage() {
     setReason("");
     setStartDate("");
     setEndDate("");
-    setToast("✓ Leave request submitted successfully! Proxy teacher and Headmaster notified.");
+    setToast("âœ“ Leave request submitted successfully! Proxy teacher and Headmaster notified.");
     setTimeout(() => {
       setToast(null);
     }, 4500);
@@ -66,19 +66,19 @@ export default function LeaveRequestsPage() {
         {quotas.map((q) => {
           const pct = Math.round((q.remaining / q.total) * 100);
           return (
-            <div key={q.label} className="bg-slate-900/60 rounded-2xl p-5 border border-slate-800 flex flex-col justify-between gap-4">
+            <div key={q.label} className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-2xl p-5 border border-[var(--border)] flex flex-col justify-between gap-4">
               <div>
-                <span className="text-[10px] uppercase font-extrabold text-slate-500 tracking-wider">{q.label}</span>
+                <span className="text-[10px] uppercase font-extrabold text-[var(--text-muted)] tracking-wider">{q.label}</span>
                 <div className="flex items-baseline gap-1 mt-2">
                   <span className={`text-3xl font-black ${q.color}`}>{q.remaining}</span>
-                  <span className="text-slate-500 text-xs font-semibold">/ {q.total} Days Left</span>
+                  <span className="text-[var(--text-muted)] text-xs font-semibold">/ {q.total} Days Left</span>
                 </div>
               </div>
               <div className="space-y-1">
                 <div className="progress-bar">
                   <div className={`progress-fill bg-gradient-to-r from-amber-500 to-orange-500`} style={{ width: `${pct}%` }} />
                 </div>
-                <div className="flex justify-between text-[10px] text-slate-500">
+                <div className="flex justify-between text-[10px] text-[var(--text-muted)]">
                   <span>Used: {q.total - q.remaining} days</span>
                   <span>{pct}% Remaining</span>
                 </div>
@@ -90,15 +90,15 @@ export default function LeaveRequestsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Leave application form */}
-        <div className="glass rounded-2xl p-6 border border-slate-800 h-fit">
-          <h2 className="text-base font-semibold text-white mb-4">📄 Request Leave</h2>
+        <div className="theme-card p-6 border border-[var(--border)] h-fit">
+          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">ðŸ“„ Request Leave</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Leave Category</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Leave Category</label>
               <select
                 value={leaveType}
                 onChange={(e) => setLeaveType(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               >
                 <option value="Casual Leave">Casual Leave</option>
                 <option value="Medical Leave">Medical Leave</option>
@@ -109,32 +109,32 @@ export default function LeaveRequestsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-xs text-slate-400 mb-1.5 font-medium">Start Date</label>
+                <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Start Date</label>
                 <input
                   type="date"
                   required
                   value={startDate}
                   onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-1.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1.5 font-medium">End Date</label>
+                <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">End Date</label>
                 <input
                   type="date"
                   value={endDate}
                   onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-1.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Proxy Teacher Assignment</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Proxy Teacher Assignment</label>
               <select
                 value={proxy}
                 onChange={(e) => setProxy(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               >
                 <option value="Mrs. Kavitha S. (Tamil)">Mrs. Kavitha S. (Tamil)</option>
                 <option value="Mr. Rajan K. (Science)">Mr. Rajan K. (Science)</option>
@@ -144,20 +144,20 @@ export default function LeaveRequestsPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Reason for Absence</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Reason for Absence</label>
               <textarea
                 required
                 rows={3}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Explain the reason briefly..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors resize-none"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors resize-none"
               />
             </div>
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-[var(--primary)] hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
             >
               Submit Leave Request
             </button>
@@ -165,8 +165,8 @@ export default function LeaveRequestsPage() {
         </div>
 
         {/* History Panel */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 border border-slate-800 space-y-5">
-          <h2 className="text-base font-semibold text-white">📋 Previous Request History</h2>
+        <div className="lg:col-span-2 theme-card p-6 border border-[var(--border)] space-y-5">
+          <h2 className="text-base font-semibold text-[var(--text-heading)]">ðŸ“‹ Previous Request History</h2>
 
           {toast && (
             <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-xl">
@@ -188,9 +188,9 @@ export default function LeaveRequestsPage() {
               <tbody>
                 {requests.map((req) => (
                   <tr key={req.id}>
-                    <td className="font-bold text-white text-xs">{req.type}</td>
+                    <td className="font-bold text-[var(--text-heading)] text-xs">{req.type}</td>
                     <td>{req.duration}</td>
-                    <td className="text-slate-400 text-xs max-w-[150px] truncate">{req.reason}</td>
+                    <td className="text-[var(--text-muted)] text-xs max-w-[150px] truncate">{req.reason}</td>
                     <td>{req.proxy}</td>
                     <td>
                       <span className={`badge ${
@@ -213,3 +213,4 @@ export default function LeaveRequestsPage() {
     </PortalLayout>
   );
 }
+

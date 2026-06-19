@@ -95,48 +95,64 @@ export default function ScienceLabsPage() {
     <PortalLayout title="Science Labs Manager" subtitle="Manage experimental sessions, lab manuals, and safety compliance.">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Lab Sessions */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 border border-slate-800">
+        <div className="lg:col-span-2 theme-card p-6">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-base font-semibold text-white">🧪 Experimental Lab Sessions</h2>
-            <span className="text-xs text-slate-500">Active: {experiments.filter(e => e.status === "active").length}</span>
+            <h2 className="text-base font-semibold text-[var(--text-heading)]">🧪 Experimental Lab Sessions</h2>
+            <span className="text-xs font-medium text-[var(--text-muted)] bg-[var(--bg-main)] px-2.5 py-1 rounded-full">
+              Active: {experiments.filter(e => e.status === "active").length}
+            </span>
           </div>
 
           <div className="space-y-4">
             {experiments.map((exp) => (
               <div
                 key={exp.id}
-                className="p-4 bg-slate-900/60 rounded-xl border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4 hover-lift ${
+                  exp.status === "active" 
+                    ? "bg-[var(--bg-card)] border-[var(--primary)] shadow-[0_4px_20px_rgba(79,70,229,0.15)] dark:shadow-[0_4px_20px_rgba(129,140,248,0.15)]"
+                    : "bg-[var(--bg-card)] border-[var(--border)] hover:border-[var(--primary)]"
+                }`}
               >
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-sm font-bold text-white">{exp.name}</span>
-                    <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                      exp.status === "active"
-                        ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
-                        : exp.status === "scheduled"
-                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                        : "bg-slate-500/20 text-slate-400 border border-slate-500/30"
-                    }`}>
-                      {exp.status}
-                    </span>
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                    exp.status === "active" ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400" : 
+                    exp.status === "completed" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" : 
+                    "bg-slate-50 text-slate-500 dark:bg-slate-500/10 dark:text-slate-400"
+                  }`}>
+                    {exp.status === "active" ? "🔥" : exp.status === "completed" ? "✅" : "📅"}
                   </div>
-                  <div className="text-xs text-slate-400">
-                    Target: <strong className="text-slate-300">{exp.class}</strong> · Scheduled: <span className="text-slate-400">{exp.date}</span>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-bold text-[var(--text-heading)]">{exp.name}</span>
+                      <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full ${
+                        exp.status === "active"
+                          ? "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400"
+                          : exp.status === "scheduled"
+                          ? "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400"
+                          : "bg-slate-50 text-slate-500 border border-slate-200 dark:bg-slate-500/10 dark:border-slate-500/20 dark:text-slate-400"
+                      }`}>
+                        {exp.status}
+                      </span>
+                    </div>
+                    <div className="text-xs text-[var(--text-main)]">
+                      Target: <strong className="text-[var(--text-heading)]">{exp.class}</strong> · Scheduled: <span>{exp.date}</span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => toggleSafety(exp.id)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 border transition-all ${
+                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 border transition-all ${
                       exp.safetyCheck
-                        ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
-                        : "bg-red-500/10 border-red-500/30 text-red-400"
+                        ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+                        : "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20"
                     }`}
                   >
-                    {exp.safetyCheck ? "🛡️ Safety Approved" : "⚠️ Safety Unverified"}
+                    <span className={`w-2 h-2 rounded-full ${exp.safetyCheck ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`}></span>
+                    {exp.safetyCheck ? "Safety Approved" : "Safety Unverified"}
                   </button>
-                  <button className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs transition-colors">
+                  <button className="btn-primary py-1.5 text-[11px] px-4 shadow-none hover:shadow-[var(--primary-shadow-1)]">
                     Start Session
                   </button>
                 </div>

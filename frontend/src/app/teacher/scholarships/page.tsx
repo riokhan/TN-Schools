@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -34,7 +34,7 @@ export default function ScholarshipsPage() {
       );
       const studentName = records.find((rec) => rec.id === id)?.name;
       setVerifyingId(null);
-      setToastMessage(`✓ ${studentName}'s EMIS profile and Bank Details successfully verified! Status updated to Approved.`);
+      setToastMessage(`âœ“ ${studentName}'s EMIS profile and Bank Details successfully verified! Status updated to Approved.`);
       setTimeout(() => {
         setToastMessage(null);
       }, 4000);
@@ -46,10 +46,10 @@ export default function ScholarshipsPage() {
       {/* Metrics Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
-          { label: "Eligible Students", value: "32", icon: "👨‍🎓", color: "text-amber-400", sub: "Across all classes" },
-          { label: "Approved Grants", value: "24", icon: "✅", color: "text-emerald-400", sub: "Disbursals active" },
-          { label: "Action Needed", value: "8", icon: "⚠️", color: "text-red-400", sub: "Pending verifications" },
-          { label: "Fund Value Rate", value: "₹24,000", icon: "💰", color: "text-cyan-400", sub: "Estimated Monthly" },
+          { label: "Eligible Students", value: "32", icon: "ðŸ‘¨â€ðŸŽ“", color: "text-amber-400", sub: "Across all classes" },
+          { label: "Approved Grants", value: "24", icon: "âœ…", color: "text-emerald-400", sub: "Disbursals active" },
+          { label: "Action Needed", value: "8", icon: "âš ï¸", color: "text-red-400", sub: "Pending verifications" },
+          { label: "Fund Value Rate", value: "â‚¹24,000", icon: "ðŸ’°", color: "text-cyan-400", sub: "Estimated Monthly" },
         ].map((kpi) => (
           <div key={kpi.label} className="kpi-card">
             <div className="flex items-center justify-between mb-3">
@@ -57,16 +57,16 @@ export default function ScholarshipsPage() {
               <span className={`text-[10px] font-bold ${kpi.color}`}>{kpi.sub}</span>
             </div>
             <div className={`text-2xl font-extrabold ${kpi.color} mb-1`}>{kpi.value}</div>
-            <div className="text-xs text-slate-500 font-semibold">{kpi.label}</div>
+            <div className="text-xs text-[var(--text-muted)] font-semibold">{kpi.label}</div>
           </div>
         ))}
       </div>
 
       {/* Main content table */}
-      <div className="glass rounded-2xl p-6 border border-slate-800 mb-6">
+      <div className="theme-card p-6 border border-[var(--border)] mb-6">
         <div className="flex justify-between items-center mb-5">
-          <h2 className="text-base font-semibold text-white">📋 Scheme Applicants & Verifications</h2>
-          <button className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition-colors">
+          <h2 className="text-base font-semibold text-[var(--text-heading)]">ðŸ“‹ Scheme Applicants & Verifications</h2>
+          <button className="px-3.5 py-1.5 bg-[var(--bg-card)] hover:bg-slate-700 text-[var(--text-heading)] rounded-lg text-xs font-semibold transition-colors">
             Export Roster Details
           </button>
         </div>
@@ -92,14 +92,14 @@ export default function ScholarshipsPage() {
             <tbody>
               {records.map((rec) => (
                 <tr key={rec.id}>
-                  <td className="font-medium text-white">{rec.name}</td>
+                  <td className="font-medium text-[var(--text-heading)]">{rec.name}</td>
                   <td>{rec.class}</td>
                   <td>
-                    <span className="text-slate-300 font-semibold text-xs">{rec.scheme}</span>
+                    <span className="text-[var(--text-main)] font-semibold text-xs">{rec.scheme}</span>
                   </td>
                   <td>
-                    <span className="text-slate-200 font-semibold text-xs">
-                      {rec.amount > 0 ? `₹${rec.amount}/mo` : "Material Distribution"}
+                    <span className="text-[var(--text-heading)] font-semibold text-xs">
+                      {rec.amount > 0 ? `â‚¹${rec.amount}/mo` : "Material Distribution"}
                     </span>
                   </td>
                   <td>
@@ -120,12 +120,12 @@ export default function ScholarshipsPage() {
                       <button
                         onClick={() => handleVerify(rec.id)}
                         disabled={verifyingId === rec.id}
-                        className="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 disabled:bg-slate-800 disabled:text-slate-500 text-slate-950 font-bold rounded-lg text-[10px] transition-colors"
+                        className="px-2.5 py-1 bg-[var(--primary)] hover:bg-amber-600 disabled:bg-[var(--bg-card)] disabled:text-[var(--text-muted)] text-slate-950 font-bold rounded-lg text-[10px] transition-colors"
                       >
                         {verifyingId === rec.id ? "Checking EMIS..." : "Verify EMIS"}
                       </button>
                     ) : (
-                      <span className="text-[10px] text-slate-500 italic">Verified ✓</span>
+                      <span className="text-[10px] text-[var(--text-muted)] italic">Verified âœ“</span>
                     )}
                   </td>
                 </tr>
@@ -136,23 +136,24 @@ export default function ScholarshipsPage() {
       </div>
 
       {/* Guidelines details */}
-      <div className="glass rounded-2xl p-6 border border-slate-800">
-        <h2 className="text-base font-semibold text-white mb-3 font-semibold">🏛️ Tamil Nadu Government Scheme Notes</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs text-slate-400">
-          <div className="p-4 bg-slate-900/60 rounded-xl border border-slate-850">
-            <h4 className="text-sm font-bold text-slate-200 mb-1">Pudhumai Penn Scheme</h4>
-            <p className="leading-relaxed">Eligible for all girl students who studied classes 6-12 in govt schools, providing ₹1,000/month upon entering higher education.</p>
+      <div className="theme-card p-6 border border-[var(--border)]">
+        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-3 font-semibold">ðŸ›ï¸ Tamil Nadu Government Scheme Notes</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs text-[var(--text-muted)]">
+          <div className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border)]">
+            <h4 className="text-sm font-bold text-[var(--text-heading)] mb-1">Pudhumai Penn Scheme</h4>
+            <p className="leading-relaxed">Eligible for all girl students who studied classes 6-12 in govt schools, providing â‚¹1,000/month upon entering higher education.</p>
           </div>
-          <div className="p-4 bg-slate-900/60 rounded-xl border border-slate-850">
-            <h4 className="text-sm font-bold text-slate-200 mb-1">Tamil Puthalvan Scheme</h4>
-            <p className="leading-relaxed">Financial assistance of ₹1,000/month for boy students from government schools enrolling in higher education courses.</p>
+          <div className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border)]">
+            <h4 className="text-sm font-bold text-[var(--text-heading)] mb-1">Tamil Puthalvan Scheme</h4>
+            <p className="leading-relaxed">Financial assistance of â‚¹1,000/month for boy students from government schools enrolling in higher education courses.</p>
           </div>
-          <div className="p-4 bg-slate-900/60 rounded-xl border border-slate-850">
-            <h4 className="text-sm font-bold text-slate-200 mb-1">NMMS Scholarship</h4>
-            <p className="leading-relaxed">National Means-cum-Merit Scholarship providing financial help of ₹6,000/annum for selected students from Class 9.</p>
+          <div className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border)]">
+            <h4 className="text-sm font-bold text-[var(--text-heading)] mb-1">NMMS Scholarship</h4>
+            <p className="leading-relaxed">National Means-cum-Merit Scholarship providing financial help of â‚¹6,000/annum for selected students from Class 9.</p>
           </div>
         </div>
       </div>
     </PortalLayout>
   );
 }
+

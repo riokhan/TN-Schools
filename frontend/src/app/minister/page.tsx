@@ -1,7 +1,6 @@
 "use client";
 import PortalLayout from "@/components/PortalLayout";
 
-
 const stateKpis = [
   { label: "10th Pass %", value: "87.4%", target: "90%", trend: "+2.1%", status: "on-track", icon: "📘" },
   { label: "12th Pass %", value: "81.2%", target: "85%", trend: "+1.8%", status: "on-track", icon: "📗" },
@@ -15,59 +14,59 @@ export default function MinisterDashboard() {
   return (
     <PortalLayout>
       {/* Executive Live State View */}
-      <div className="glass rounded-2xl p-6 mb-6 fade-in" style={{ borderColor: "rgba(239,68,68,0.3)" }}>
+      <div className="theme-card bg-white rounded-2xl p-6 mb-6 fade-in border-t-4 border-t-red-500">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <h2 className="text-base font-semibold text-white">🏛️ Tamil Nadu Education — Live State View</h2>
-            <p className="text-xs text-slate-500 mt-0.5">Real-time data as of June 18, 2025 · 10:30 AM IST</p>
+            <h2 className="text-base font-bold text-gray-800">🏛️ Tamil Nadu Education — Live State View</h2>
+            <p className="text-xs text-gray-500 mt-0.5">Real-time data as of June 18, 2025 · 10:30 AM IST</p>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="pulse-dot"></span>
-            <span className="text-xs text-slate-400">Live Feed</span>
+          <div className="flex items-center gap-2 bg-green-50 px-3 py-1.5 rounded-full border border-green-100">
+            <span className="w-2 h-2 rounded-full bg-green-500"></span>
+            <span className="text-xs font-bold text-green-700">Live Feed</span>
           </div>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Total Students", value: "47,20,400", icon: "👨‍🎓", color: "text-red-400" },
-            { label: "Attendance Today", value: "88.4%", icon: "📅", color: "text-emerald-400" },
-            { label: "Learning Index", value: "74.2", icon: "📈", color: "text-amber-400" },
-            { label: "Dropout Forecast", value: "12,800", icon: "⚠️", color: "text-orange-400" },
+            { label: "Total Students", value: "47,20,400", icon: "👨‍🎓", color: "text-red-600", bg: "bg-red-50", border: "border-red-100" },
+            { label: "Attendance Today", value: "88.4%", icon: "📅", color: "text-green-600", bg: "bg-green-50", border: "border-green-100" },
+            { label: "Learning Index", value: "74.2", icon: "📈", color: "text-blue-600", bg: "bg-blue-50", border: "border-blue-100" },
+            { label: "Dropout Forecast", value: "12,800", icon: "⚠️", color: "text-orange-600", bg: "bg-orange-50", border: "border-orange-100" },
           ].map((s) => (
-            <div key={s.label} className="bg-slate-900/80 rounded-xl p-5 text-center border border-slate-700/50">
-              <div className="text-3xl mb-2">{s.icon}</div>
+            <div key={s.label} className={`rounded-xl p-5 text-center border ${s.border} ${s.bg}`}>
+              <div className="text-3xl mb-2 flex justify-center">{s.icon}</div>
               <div className={`text-2xl font-extrabold ${s.color} mb-1`}>{s.value}</div>
-              <div className="text-xs text-slate-500">{s.label}</div>
+              <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{s.label}</div>
             </div>
           ))}
         </div>
       </div>
 
       {/* KPI Monitoring Table */}
-      <div className="glass rounded-2xl p-6 mb-6 fade-in-2">
+      <div className="theme-card bg-white rounded-2xl p-6 mb-6 fade-in-2 border-t-4 border-t-blue-500">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-base font-semibold text-white">📊 State KPI Monitoring</h2>
+          <h2 className="text-base font-bold text-gray-800 flex items-center gap-2"><span className="text-blue-500">📊</span> State KPI Monitoring</h2>
           <div className="flex gap-2">
-            <span className="badge badge-green">On Track: 4</span>
-            <span className="badge badge-yellow">At Risk: 2</span>
+            <span className="text-[10px] font-bold text-green-700 bg-green-100 border border-green-200 px-2 py-0.5 rounded-full">ON TRACK: 4</span>
+            <span className="text-[10px] font-bold text-orange-700 bg-orange-100 border border-orange-200 px-2 py-0.5 rounded-full">AT RISK: 2</span>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {stateKpis.map((kpi) => (
             <div
               key={kpi.label}
-              className={`p-5 rounded-xl border ${kpi.status === "on-track" ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/20 bg-amber-500/5"}`}
+              className={`p-5 rounded-xl border transition-shadow hover:shadow-md ${kpi.status === "on-track" ? "border-green-200 bg-green-50/50" : "border-orange-200 bg-orange-50/50"}`}
             >
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xl">{kpi.icon}</span>
-                <span className={`badge ${kpi.status === "on-track" ? "badge-green" : "badge-yellow"}`}>
-                  {kpi.status === "on-track" ? "On Track" : "At Risk"}
+                <span className="text-2xl">{kpi.icon}</span>
+                <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${kpi.status === "on-track" ? "text-green-700 bg-green-100 border-green-200" : "text-orange-700 bg-orange-100 border-orange-200"}`}>
+                  {kpi.status === "on-track" ? "ON TRACK" : "AT RISK"}
                 </span>
               </div>
-              <div className="text-2xl font-extrabold text-white mb-0.5">{kpi.value}</div>
-              <div className="text-xs text-slate-400 mb-2">{kpi.label}</div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-600">Target: {kpi.target}</span>
-                <span className={kpi.trend.startsWith("+") ? "text-emerald-400" : "text-red-400"}>{kpi.trend} YoY</span>
+              <div className="text-2xl font-extrabold text-gray-800 mb-1">{kpi.value}</div>
+              <div className="text-xs font-semibold text-gray-500 mb-3">{kpi.label}</div>
+              <div className="flex justify-between text-[10px] font-medium border-t border-gray-200 pt-2">
+                <span className="text-gray-500">Target: {kpi.target}</span>
+                <span className={kpi.trend.startsWith("+") ? "text-green-600 font-bold" : "text-red-600 font-bold"}>{kpi.trend} YoY</span>
               </div>
             </div>
           ))}
@@ -76,29 +75,31 @@ export default function MinisterDashboard() {
 
       {/* AI Governance Predictions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 fade-in-3">
-        <div className="glass rounded-2xl p-6">
-          <h2 className="text-base font-semibold text-white mb-4">🤖 AI Governance Predictions</h2>
+        <div className="theme-card bg-white rounded-2xl p-6 border-t-4 border-t-purple-500">
+          <h2 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2"><span className="text-purple-500">🤖</span> AI Governance Predictions</h2>
           <div className="space-y-3">
             {[
               { label: "Dropout Prediction (Next Year)", value: "~14,200 students", severity: "red", icon: "📉" },
               { label: "10th Board Pass % Prediction", value: "88.9%", severity: "green", icon: "📊" },
               { label: "12th Board Pass % Prediction", value: "83.1%", severity: "green", icon: "📊" },
-              { label: "Teacher Shortage by 2026", value: "4,200 positions", severity: "yellow", icon: "👩‍🏫" },
-              { label: "Infrastructure Investment Needed", value: "₹820 Crore", severity: "yellow", icon: "🏗️" },
+              { label: "Teacher Shortage by 2026", value: "4,200 positions", severity: "orange", icon: "👩‍🏫" },
+              { label: "Infrastructure Investment Needed", value: "₹820 Crore", severity: "orange", icon: "🏗️" },
             ].map((p) => (
-              <div key={p.label} className={`flex items-center justify-between p-3 rounded-xl border ${p.severity === "red" ? "border-red-500/20 bg-red-500/5" : p.severity === "green" ? "border-emerald-500/20 bg-emerald-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
-                <div className="flex items-center gap-2 text-xs">
-                  <span>{p.icon}</span>
-                  <span className="text-slate-400">{p.label}</span>
+              <div key={p.label} className={`flex items-center justify-between p-3 rounded-xl border bg-white shadow-sm ${p.severity === "red" ? "border-red-200" : p.severity === "green" ? "border-green-200" : "border-orange-200"}`}>
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-600">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${p.severity === "red" ? "bg-red-50 text-red-600" : p.severity === "green" ? "bg-green-50 text-green-600" : "bg-orange-50 text-orange-600"}`}>
+                     {p.icon}
+                  </div>
+                  <span>{p.label}</span>
                 </div>
-                <span className={`text-sm font-bold ${p.severity === "red" ? "text-red-400" : p.severity === "green" ? "text-emerald-400" : "text-amber-400"}`}>{p.value}</span>
+                <span className={`text-sm font-bold ${p.severity === "red" ? "text-red-600" : p.severity === "green" ? "text-green-600" : "text-orange-600"}`}>{p.value}</span>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="glass rounded-2xl p-6">
-          <h2 className="text-base font-semibold text-white mb-4">💡 Policy Intelligence</h2>
+        <div className="theme-card bg-white rounded-2xl p-6 border-t-4 border-t-amber-500">
+          <h2 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2"><span className="text-amber-500">💡</span> Policy Intelligence</h2>
           <div className="space-y-3">
             {[
               {
@@ -117,15 +118,15 @@ export default function MinisterDashboard() {
                 title: "Digital Lab Expansion",
                 desc: "38% of rural schools lack internet access. PM-SHRI and EMIS integration recommended.",
                 priority: "MEDIUM",
-                color: "yellow",
+                color: "orange",
               },
             ].map((p) => (
-              <div key={p.title} className={`p-4 rounded-xl border ${p.color === "red" ? "border-red-500/20 bg-red-500/5" : "border-amber-500/20 bg-amber-500/5"}`}>
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <span className="text-sm font-semibold text-white">{p.title}</span>
-                  <span className={`badge ${p.color === "red" ? "badge-red" : "badge-yellow"}`}>{p.priority}</span>
+              <div key={p.title} className={`p-4 rounded-xl border shadow-sm bg-white ${p.color === "red" ? "border-red-200" : "border-orange-200"}`}>
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <span className="text-sm font-bold text-gray-800">{p.title}</span>
+                  <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${p.color === "red" ? "text-red-700 bg-red-100 border-red-200" : "text-orange-700 bg-orange-100 border-orange-200"}`}>{p.priority}</span>
                 </div>
-                <p className="text-xs text-slate-400 leading-relaxed">{p.desc}</p>
+                <p className="text-xs text-gray-500 leading-relaxed">{p.desc}</p>
               </div>
             ))}
           </div>

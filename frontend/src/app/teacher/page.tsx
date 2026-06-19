@@ -1,133 +1,148 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import PortalLayout from "@/components/PortalLayout";
 
-
-const classData = [
-  { class: "10A - Science", students: 42, attendance: 94, homeworkRate: 88, avgScore: 76, risk: 2 },
-  { class: "9B - Science", students: 40, attendance: 89, homeworkRate: 82, avgScore: 71, risk: 4 },
-  { class: "8A - Science", students: 45, attendance: 96, homeworkRate: 91, avgScore: 82, risk: 1 },
+const kpiData = [
+  { title: "ACTIVE ALUMNI", value: "2,840+", subtitle: "â†‘ 14% this year", icon: "ðŸ‘¥", color: "blue", subColor: "text-blue-500", iconBg: "bg-blue-100 dark:bg-blue-500/15", iconColor: "text-blue-600 dark:text-blue-400", borderColor: "border-t-blue-500" },
+  { title: "EMPLOYMENT RATE", value: "94.2%", subtitle: "Global top tier", icon: "ðŸ’¼", color: "green", subColor: "text-green-500", iconBg: "bg-green-100 dark:bg-green-500/15", iconColor: "text-green-600 dark:text-green-400", borderColor: "border-t-green-500" },
+  { title: "FUNDS DONATED", value: "$342.5K", subtitle: "For library upgrade", icon: "ðŸª™", color: "orange", subColor: "text-orange-500", iconBg: "bg-orange-100 dark:bg-orange-500/15", iconColor: "text-orange-600 dark:text-orange-400", borderColor: "border-t-orange-500" },
+  { title: "ACTIVE MENTORS", value: "187 Staff", subtitle: "Providing career prep", icon: "ðŸŽ“", color: "pink", subColor: "text-pink-500", iconBg: "bg-pink-100 dark:bg-pink-500/15", iconColor: "text-pink-600 dark:text-pink-400", borderColor: "border-t-pink-500" },
 ];
 
-const riskStudents = [
-  { name: "Murugan S.", class: "10A", issue: "Failing Science Unit Tests", risk: "high" },
-  { name: "Kavitha R.", class: "9B", issue: "Lab reports missing", risk: "medium" },
-  { name: "Senthil K.", class: "8A", issue: "Low participation in Science projects", risk: "high" },
+const notices = [
+  { id: 1, initials: "PJ", bg: "bg-indigo-600", badge: "CRITICAL", badgeColor: "text-pink-600 bg-pink-100 border-pink-200 dark:text-pink-400 dark:bg-pink-500/15 dark:border-pink-500/30", category: "Administrative", date: "May 20, 2026 Â· Today", title: "School Closure Due to Weather", desc: "Due to severe weather conditions, the school will remain closed on Monday, May 25th. All classes and activities are cancelled.", author: "By Principal Johnson" },
+  { id: 2, initials: "SD", bg: "bg-green-500", badge: "MEDIUM", badgeColor: "text-orange-600 bg-orange-100 border-orange-200 dark:text-orange-400 dark:bg-orange-500/15 dark:border-orange-500/30", category: "Events", date: "May 18, 2026 Â· 2 days ago", title: "Annual Sports Day Schedule", desc: "The annual sports day will be held on June 15th. All students are required to participate in at least one event. Registration closes...", author: "By Sports Dept" },
 ];
 
 export default function TeacherDashboard() {
   return (
     <PortalLayout
-      title="Teacher Dashboard"
-      subtitle="Mr. Ramesh · Science Specialist · GHS Coimbatore"
+      title="Dashboard 2"
+      subtitle=""
     >
-      {/* Subject Focus Header */}
-      <div className="glass rounded-2xl p-4 mb-6 flex justify-between items-center border border-emerald-500/30 bg-emerald-900/10 fade-in">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center text-xl">🔬</div>
-          <div>
-            <h3 className="text-emerald-400 font-bold text-sm">Subject Focus Mode Active</h3>
-            <p className="text-slate-400 text-xs">Currently viewing analytics and tasks for: Science</p>
-          </div>
-        </div>
-        <button className="px-3 py-1.5 bg-slate-800 border border-slate-600 rounded-lg text-xs text-white hover:bg-slate-700">Switch Subject</button>
-      </div>
-
-      {/* KPI Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in-2">
-        {[
-          { label: "Total Students", value: "127", icon: "👨‍🎓", color: "text-amber-400", sub: "Across 3 classes" },
-          { label: "Subject Avg", value: "76%", icon: "📊", color: "text-emerald-400", sub: "Science Average" },
-          { label: "Labs Pending", value: "2", icon: "🧪", color: "text-blue-400", sub: "Needs grading" },
-          { label: "Science Risk", value: "3", icon: "⚠️", color: "text-red-400", sub: "Needs attention" },
-        ].map((kpi) => (
-          <div key={kpi.label} className="kpi-card">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-2xl">{kpi.icon}</span>
-              <span className={`text-xs font-medium ${kpi.color}`}>{kpi.sub}</span>
+      {/* Top KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        {kpiData.map((kpi, i) => (
+          <div key={i} className={`theme-card border-t-4 ${kpi.borderColor} p-6 flex justify-between items-start relative overflow-hidden group`}>
+            <div>
+              <p className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2">{kpi.title}</p>
+              <h3 className="text-3xl font-bold text-[var(--text-heading)] mb-2">{kpi.value}</h3>
+              <p className={`text-xs ${kpi.subColor}`}>{kpi.subtitle}</p>
             </div>
-            <div className={`text-3xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
-            <div className="text-xs text-slate-500">{kpi.label}</div>
-          </div>
-        ))}
-      </div>
-
-      {/* AI Tools */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 fade-in-3">
-        {[
-          { icon: "📋", label: "Smart Lesson Plan", desc: "Generate Science plans", color: "from-amber-600 to-orange-600" },
-          { icon: "🧪", label: "Lab Experiment Gen", desc: "Safe experiments for kids", color: "from-violet-600 to-purple-600" },
-          { icon: "📄", label: "Worksheet Generator", desc: "Printable worksheets", color: "from-blue-600 to-cyan-600" },
-          { icon: "✅", label: "AI Evaluation", desc: "Auto-grade Science answers", color: "from-emerald-600 to-teal-600" },
-        ].map((tool, i) => (
-          <button
-            key={i}
-            className="glass rounded-2xl p-5 text-left hover:-translate-y-1 transition-all hover:shadow-xl group"
-          >
-            <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tool.color} flex items-center justify-center text-xl mb-3 group-hover:scale-110 transition-transform`}>
-              {tool.icon}
+            <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${kpi.iconBg} ${kpi.iconColor} group-hover:scale-110 transition-transform`}>
+              {kpi.icon}
             </div>
-            <div className="text-sm font-semibold text-white mb-1">{tool.label}</div>
-            <div className="text-xs text-slate-500">{tool.desc}</div>
-          </button>
+          </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Class Overview */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 fade-in-4">
-          <h2 className="text-base font-semibold text-white mb-5">🏫 Science Class Overview</h2>
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Class</th>
-                <th>Students</th>
-                <th>Attendance</th>
-                <th>Lab Work</th>
-                <th>Avg Score</th>
-                <th>At Risk</th>
-              </tr>
-            </thead>
-            <tbody>
-              {classData.map((c) => (
-                <tr key={c.class}>
-                  <td className="font-medium text-white">{c.class}</td>
-                  <td>{c.students}</td>
-                  <td>
-                    <span className={`badge ${c.attendance >= 90 ? "badge-green" : "badge-yellow"}`}>{c.attendance}%</span>
-                  </td>
-                  <td>{c.homeworkRate}%</td>
-                  <td>{c.avgScore}%</td>
-                  <td>
-                    <span className={`badge ${c.risk <= 2 ? "badge-green" : "badge-red"}`}>{c.risk} students</span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        {/* Student Attendance */}
+        <div className="lg:col-span-1 theme-card p-6 flex flex-col">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold text-[var(--text-heading)] flex items-center gap-2">
+              <span className="text-blue-500">ðŸ‘¤</span> Student Attendance
+            </h2>
+            <button className="text-xs bg-[var(--input-bg)] hover:bg-[var(--bg-card-hover)] text-[var(--text-main)] px-3 py-1.5 rounded-md font-medium border border-[var(--input-border)] flex items-center gap-1">
+              All Classes <span>â–¼</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3 mb-8">
+            <div className="bg-green-50 dark:bg-green-500/10 rounded-xl p-3 text-center border border-green-100 dark:border-green-500/20">
+              <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">Present</p>
+              <h3 className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1 flex items-center justify-center gap-1">
+                <span>âœ“</span> 342
+              </h3>
+              <p className="text-xs text-green-500 dark:text-green-400/70">89%</p>
+            </div>
+            <div className="bg-red-50 dark:bg-red-500/10 rounded-xl p-3 text-center border border-red-100 dark:border-red-500/20">
+              <p className="text-xs font-semibold text-red-600 dark:text-red-400 mb-1">Absent</p>
+              <h3 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-1 flex items-center justify-center gap-1">
+                <span>âœ•</span> 18
+              </h3>
+              <p className="text-xs text-red-500 dark:text-red-400/70">5%</p>
+            </div>
+            <div className="bg-orange-50 dark:bg-orange-500/10 rounded-xl p-3 text-center border border-orange-100 dark:border-orange-500/20">
+              <p className="text-xs font-semibold text-orange-600 dark:text-orange-400 mb-1">Late</p>
+              <h3 className="text-2xl font-bold text-orange-600 dark:text-orange-400 mb-1 flex items-center justify-center gap-1">
+                <span>â±</span> 24
+              </h3>
+              <p className="text-xs text-orange-500 dark:text-orange-400/70">6%</p>
+            </div>
+          </div>
+
+          {/* Chart Placeholder */}
+          <div className="flex-1 min-h-[200px] relative mt-auto border-b border-l border-[var(--border-light)]">
+             {/* Mock Chart Lines */}
+             <div className="absolute left-0 bottom-[20%] w-full border-t border-[var(--border)]"></div>
+             <div className="absolute left-0 bottom-[40%] w-full border-t border-[var(--border)]"></div>
+             <div className="absolute left-0 bottom-[60%] w-full border-t border-[var(--border)]"></div>
+             <div className="absolute left-0 bottom-[80%] w-full border-t border-[var(--border)]"></div>
+             
+             {/* Y Axis labels */}
+             <div className="absolute -left-8 bottom-[18%] text-[10px] text-[var(--text-muted)]">200</div>
+             <div className="absolute -left-8 bottom-[38%] text-[10px] text-[var(--text-muted)]">300</div>
+             <div className="absolute -left-8 bottom-[58%] text-[10px] text-[var(--text-muted)]">400</div>
+
+             {/* SVG Mock Line */}
+             <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
+                <path d="M0,70 Q10,65 20,68 T40,75 T60,65 T80,72 T100,60" fill="none" stroke="#22c55e" strokeWidth="2" />
+                <circle cx="0" cy="70" r="2" fill="#22c55e" />
+                <circle cx="20" cy="68" r="2" fill="#22c55e" />
+                <circle cx="40" cy="75" r="2" fill="#22c55e" />
+                <circle cx="60" cy="65" r="2" fill="#22c55e" />
+                <circle cx="80" cy="72" r="2" fill="#22c55e" />
+                <circle cx="100" cy="60" r="2" fill="#22c55e" />
+             </svg>
+             <div className="absolute bottom-10 -left-12 transform -rotate-90 text-[10px] text-[var(--text-muted)] tracking-widest uppercase">
+               Number of Students
+             </div>
+          </div>
         </div>
 
-        {/* Risk Alerts */}
-        <div className="glass rounded-2xl p-6 fade-in-5">
-          <h2 className="text-base font-semibold text-white mb-4">⚠️ Subject Risk Alerts</h2>
-          <div className="space-y-3">
-            {riskStudents.map((s, i) => (
-              <div
-                key={i}
-                className={`p-3 rounded-xl border text-xs ${s.risk === "high" ? "border-red-500/30 bg-red-500/5" : "border-amber-500/30 bg-amber-500/5"
-                  }`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="font-semibold text-white">{s.name}</div>
-                    <div className="text-slate-500 mt-0.5">{s.class} · {s.issue}</div>
+        {/* Noticeboard */}
+        <div className="lg:col-span-2 theme-card p-0 flex flex-col relative overflow-hidden">
+          <div className="p-6 border-b border-[var(--border)] flex justify-between items-center">
+            <h2 className="text-lg font-bold text-[var(--text-heading)] flex items-center gap-2">
+              <span className="text-blue-500">ðŸ“¢</span> Noticeboard & Announcements
+              <span className="text-[10px] font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-500/10 border border-pink-200 dark:border-pink-500/20 px-2 py-0.5 rounded-full ml-2">4 New</span>
+            </h2>
+            <button className="text-[var(--text-muted)] hover:text-[var(--text-heading)]">
+              <span className="text-xl">â‰¡</span>
+            </button>
+          </div>
+
+          <div className="flex border-b border-[var(--border)]">
+            <button className="flex-1 py-3 text-sm font-bold text-blue-600 dark:text-blue-400 border-b-2 border-blue-600 dark:border-blue-400">All (7)</button>
+            <button className="flex-1 py-3 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-heading)]">Unread (4)</button>
+            <button className="flex-1 py-3 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-heading)]">Urgent (4)</button>
+          </div>
+
+          <div className="p-6 space-y-4">
+            {notices.map((notice) => (
+              <div key={notice.id} className="border border-[var(--border)] rounded-xl p-4 hover:shadow-md transition-shadow bg-[var(--bg-card)] flex gap-4">
+                <div className={`w-10 h-10 rounded-full text-[var(--text-heading)] font-bold flex items-center justify-center shrink-0 ${notice.bg}`}>
+                  {notice.initials}
+                </div>
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${notice.badgeColor}`}>{notice.badge}</span>
+                    <span className="text-xs text-[var(--text-muted)] bg-[var(--input-bg)] px-2 py-0.5 rounded">{notice.category}</span>
+                    <span className="text-xs text-[var(--text-muted)] ml-auto flex items-center gap-1">ðŸ“… {notice.date}</span>
                   </div>
-                  <span className={`badge ${s.risk === "high" ? "badge-red" : "badge-yellow"}`}>{s.risk}</span>
+                  <h4 className="text-sm font-bold text-[var(--text-heading)] mb-1 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer">{notice.title}</h4>
+                  <p className="text-xs text-[var(--text-muted)] leading-relaxed mb-3 line-clamp-2">{notice.desc}</p>
+                  <div className="text-[10px] font-medium text-[var(--text-muted)] flex items-center gap-1">
+                    ðŸ‘¤ {notice.author}
+                  </div>
                 </div>
               </div>
             ))}
           </div>
-          <button className="mt-4 w-full py-2 rounded-xl text-xs font-semibold text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/10 transition-all">
-            Message Parents →
+
+          {/* Floating Action Button */}
+          <button className="absolute bottom-6 right-6 w-12 h-12 bg-purple-600 hover:bg-purple-700 text-[var(--text-heading)] rounded-full shadow-lg flex items-center justify-center text-2xl transition-transform hover:scale-110">
+            +
           </button>
         </div>
       </div>

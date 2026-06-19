@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "./globals.css";
 import NextAuthProvider from "@/providers/NextAuthProvider";
+import ThemeProvider from "@/providers/ThemeProvider";
 
-const inter = Inter({ subsets: ["latin"] });
+const roboto = Roboto({ weight: ['300', '400', '500', '700'], subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "TN Schools AI Smart Learning Ecosystem",
@@ -17,10 +18,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <NextAuthProvider>{children}</NextAuthProvider>
+    <html lang="en" suppressHydrationWarning>
+      <body className={roboto.className}>
+        <ThemeProvider>
+          <NextAuthProvider>{children}</NextAuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
 }
+

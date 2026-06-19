@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -13,23 +13,23 @@ interface RosterStudent {
 
 export default function StudentStatusPage() {
   const [students, setStudents] = useState<RosterStudent[]>([
-    { id: "S01", name: "Arjun Kumar", class: "10A", engagement: "High", badges: ["🔬 Star Scientist", "📝 Homework Pro"] },
-    { id: "S02", name: "Murugan S.", class: "10A", engagement: "Low", badges: ["💬 Active Speaker"] },
-    { id: "S03", name: "Kavitha R.", class: "9B", engagement: "Medium", badges: ["📝 Homework Pro"] },
-    { id: "S04", name: "Senthil K.", class: "8A", engagement: "High", badges: ["🔬 Star Scientist"] },
+    { id: "S01", name: "Arjun Kumar", class: "10A", engagement: "High", badges: ["ðŸ”¬ Star Scientist", "ðŸ“ Homework Pro"] },
+    { id: "S02", name: "Murugan S.", class: "10A", engagement: "Low", badges: ["ðŸ’¬ Active Speaker"] },
+    { id: "S03", name: "Kavitha R.", class: "9B", engagement: "Medium", badges: ["ðŸ“ Homework Pro"] },
+    { id: "S04", name: "Senthil K.", class: "8A", engagement: "High", badges: ["ðŸ”¬ Star Scientist"] },
   ]);
 
   // Award badge state
   const [targetStudentId, setTargetStudentId] = useState("S01");
-  const [selectedBadge, setSelectedBadge] = useState("🔬 Star Scientist");
+  const [selectedBadge, setSelectedBadge] = useState("ðŸ”¬ Star Scientist");
   const [customComment, setCustomComment] = useState("");
   const [awardNotification, setAwardNotification] = useState<string | null>(null);
 
   const availableBadges = [
-    { label: "🔬 Star Scientist", desc: "Awarded for exceptional scientific work" },
-    { label: "📝 Homework Pro", desc: "Awarded for 100% homework submission" },
-    { label: "💬 Active Speaker", desc: "Awarded for healthy class discussions" },
-    { label: "🌟 Mentor Star", desc: "Awarded for helping peers in studies" },
+    { label: "ðŸ”¬ Star Scientist", desc: "Awarded for exceptional scientific work" },
+    { label: "ðŸ“ Homework Pro", desc: "Awarded for 100% homework submission" },
+    { label: "ðŸ’¬ Active Speaker", desc: "Awarded for healthy class discussions" },
+    { label: "ðŸŒŸ Mentor Star", desc: "Awarded for helping peers in studies" },
   ];
 
   const handleAwardBadge = () => {
@@ -38,7 +38,7 @@ export default function StudentStatusPage() {
 
     // Check if student already has this badge
     if (studentObj.badges.includes(selectedBadge)) {
-      setAwardNotification(`⚠️ ${studentObj.name} already has the "${selectedBadge}" badge.`);
+      setAwardNotification(`âš ï¸ ${studentObj.name} already has the "${selectedBadge}" badge.`);
       return;
     }
 
@@ -50,7 +50,7 @@ export default function StudentStatusPage() {
     );
 
     setAwardNotification(
-      `🎉 Successfully awarded "${selectedBadge}" to ${studentObj.name}! Custom remark: "${customComment || "Great work!"}"`
+      `ðŸŽ‰ Successfully awarded "${selectedBadge}" to ${studentObj.name}! Custom remark: "${customComment || "Great work!"}"`
     );
 
     // Clear alert after 4 seconds
@@ -65,8 +65,8 @@ export default function StudentStatusPage() {
     <PortalLayout title="Student Status & Engagement" subtitle="Award virtual badges and monitor student classroom participation metrics.">
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Engagement status board */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 border border-slate-800">
-          <h2 className="text-base font-semibold text-white mb-5">📈 Student Engagement & Badges Roster</h2>
+        <div className="lg:col-span-2 theme-card p-6 border border-[var(--border)]">
+          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-5">ðŸ“ˆ Student Engagement & Badges Roster</h2>
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
@@ -80,7 +80,7 @@ export default function StudentStatusPage() {
               <tbody>
                 {students.map((student) => (
                   <tr key={student.id}>
-                    <td className="font-medium text-white">{student.name}</td>
+                    <td className="font-medium text-[var(--text-heading)]">{student.name}</td>
                     <td>{student.class}</td>
                     <td>
                       <span className={`badge ${
@@ -99,13 +99,13 @@ export default function StudentStatusPage() {
                           student.badges.map((badge, idx) => (
                             <span
                               key={idx}
-                              className="text-[10px] font-bold px-2 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-lg shrink-0 whitespace-nowrap"
+                              className="text-[10px] font-bold px-2 py-0.5 bg-[var(--primary)]/10 text-amber-400 border border-[var(--primary)]/20 rounded-lg shrink-0 whitespace-nowrap"
                             >
                               {badge}
                             </span>
                           ))
                         ) : (
-                          <span className="text-[10px] text-slate-500 italic">No badges awarded</span>
+                          <span className="text-[10px] text-[var(--text-muted)] italic">No badges awarded</span>
                         )}
                       </div>
                     </td>
@@ -117,19 +117,19 @@ export default function StudentStatusPage() {
         </div>
 
         {/* Badge dispatch workspace */}
-        <div className="glass rounded-2xl p-6 border border-slate-800 space-y-5">
+        <div className="theme-card p-6 border border-[var(--border)] space-y-5">
           <div>
-            <h2 className="text-base font-semibold text-white mb-1">🏅 Award Virtual Badges</h2>
-            <p className="text-xs text-slate-500">Reward student achievements. Awarded badges appear directly on the student portal.</p>
+            <h2 className="text-base font-semibold text-[var(--text-heading)] mb-1">ðŸ… Award Virtual Badges</h2>
+            <p className="text-xs text-[var(--text-muted)]">Reward student achievements. Awarded badges appear directly on the student portal.</p>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Select Student</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Select Student</label>
               <select
                 value={targetStudentId}
                 onChange={(e) => setTargetStudentId(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               >
                 {students.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -140,11 +140,11 @@ export default function StudentStatusPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Select Badge</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Select Badge</label>
               <select
                 value={selectedBadge}
                 onChange={(e) => setSelectedBadge(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               >
                 {availableBadges.map((badge, idx) => (
                   <option key={idx} value={badge.label}>
@@ -155,27 +155,27 @@ export default function StudentStatusPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1.5 font-medium">Custom Remark</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Custom Remark</label>
               <textarea
                 value={customComment}
                 onChange={(e) => setCustomComment(e.target.value)}
                 rows={2}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors resize-none"
+                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors resize-none"
                 placeholder="Write a warm note..."
               />
             </div>
 
             <button
               onClick={handleAwardBadge}
-              className="w-full py-2.5 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
+              className="w-full py-2.5 bg-[var(--primary)] hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
             >
-              🏅 Award & Dispatch Badge
+              ðŸ… Award & Dispatch Badge
             </button>
           </div>
 
           {awardNotification && (
             <div className={`p-3.5 rounded-xl text-xs leading-relaxed border ${
-              awardNotification.startsWith("⚠️")
+              awardNotification.startsWith("âš ï¸")
                 ? "bg-red-500/10 border-red-500/20 text-red-300"
                 : "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
             }`}>
@@ -186,13 +186,13 @@ export default function StudentStatusPage() {
       </div>
 
       {/* Badge descriptions registry */}
-      <div className="glass rounded-2xl p-6 border border-slate-800">
-        <h2 className="text-base font-semibold text-white mb-4">🏆 Badge Directory definitions</h2>
+      <div className="theme-card p-6 border border-[var(--border)]">
+        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">ðŸ† Badge Directory definitions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {availableBadges.map((b, idx) => (
-            <div key={idx} className="p-4 bg-slate-900/60 border border-slate-850 rounded-xl">
-              <div className="text-lg font-bold text-white mb-1.5">{b.label}</div>
-              <p className="text-xs text-slate-400 leading-relaxed">{b.desc}</p>
+            <div key={idx} className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-xl">
+              <div className="text-lg font-bold text-[var(--text-heading)] mb-1.5">{b.label}</div>
+              <p className="text-xs text-[var(--text-muted)] leading-relaxed">{b.desc}</p>
             </div>
           ))}
         </div>
@@ -200,3 +200,4 @@ export default function StudentStatusPage() {
     </PortalLayout>
   );
 }
+

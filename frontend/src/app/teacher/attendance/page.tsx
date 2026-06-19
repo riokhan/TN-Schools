@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -45,7 +45,7 @@ export default function AttendancePage() {
     const attendancePercentage = Math.round((presentCount / totalCount) * 100);
 
     setToast(
-      `✓ Attendance for Class ${selectedClass} on ${selectedDate} has been saved! Present: ${presentCount}, Absent: ${absentCount}, Late: ${lateCount} (${attendancePercentage}%). ${absentCount} parent notifications dispatched.`
+      `âœ“ Attendance for Class ${selectedClass} on ${selectedDate} has been saved! Present: ${presentCount}, Absent: ${absentCount}, Late: ${lateCount} (${attendancePercentage}%). ${absentCount} parent notifications dispatched.`
     );
 
     setTimeout(() => {
@@ -61,14 +61,14 @@ export default function AttendancePage() {
   return (
     <PortalLayout title="Daily Attendance Tracker" subtitle="Mark student attendance and dispatch instant parental absence alerts.">
       {/* Top Filter and Actions Row */}
-      <div className="glass rounded-2xl p-5 mb-6 border border-slate-800 flex flex-col md:flex-row justify-between items-center gap-4 fade-in">
+      <div className="theme-card p-5 mb-6 border border-[var(--border)] flex flex-col md:flex-row justify-between items-center gap-4 fade-in">
         <div className="flex gap-4 items-center w-full md:w-auto">
           <div>
-            <label className="block text-[10px] text-slate-500 font-extrabold uppercase mb-1">Class Section</label>
+            <label className="block text-[10px] text-[var(--text-muted)] font-extrabold uppercase mb-1">Class Section</label>
             <select
               value={selectedClass}
               onChange={(e) => setSelectedClass(e.target.value)}
-              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+              className="bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
             >
               <option value="10A">Class 10A</option>
               <option value="9B">Class 9B</option>
@@ -76,12 +76,12 @@ export default function AttendancePage() {
             </select>
           </div>
           <div>
-            <label className="block text-[10px] text-slate-500 font-extrabold uppercase mb-1">Date</label>
+            <label className="block text-[10px] text-[var(--text-muted)] font-extrabold uppercase mb-1">Date</label>
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-500 transition-colors"
+              className="bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-1.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
             />
           </div>
         </div>
@@ -89,15 +89,15 @@ export default function AttendancePage() {
         <div className="flex gap-3 w-full md:w-auto justify-end">
           <button
             onClick={markAllPresent}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 text-xs font-semibold rounded-xl transition-colors"
+            className="px-4 py-2 bg-[var(--bg-card)] hover:bg-slate-700 border border-[var(--border)] text-[var(--text-heading)] text-xs font-semibold rounded-xl transition-colors"
           >
             Mark All Present
           </button>
           <button
             onClick={handleSaveAttendance}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl transition-colors"
+            className="px-4 py-2 bg-[var(--primary)] hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl transition-colors"
           >
-            💾 Save Attendance Sheet
+            ðŸ’¾ Save Attendance Sheet
           </button>
         </div>
       </div>
@@ -105,22 +105,22 @@ export default function AttendancePage() {
       {/* Realtime Attendance Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Total Students", value: students.length, color: "text-slate-200", icon: "👥" },
-          { label: "Present Today", value: presentCount, color: "text-emerald-400", icon: "🟢" },
-          { label: "Absent Today", value: absentCount, color: "text-red-400", icon: "🔴" },
-          { label: "Attendance Rate", value: `${attendanceRate}%`, color: "text-amber-400", icon: "📈" },
+          { label: "Total Students", value: students.length, color: "text-[var(--text-heading)]", icon: "ðŸ‘¥" },
+          { label: "Present Today", value: presentCount, color: "text-emerald-400", icon: "ðŸŸ¢" },
+          { label: "Absent Today", value: absentCount, color: "text-red-400", icon: "ðŸ”´" },
+          { label: "Attendance Rate", value: `${attendanceRate}%`, color: "text-amber-400", icon: "ðŸ“ˆ" },
         ].map((stat, i) => (
-          <div key={i} className="bg-slate-900/60 rounded-xl p-4 border border-slate-800/80 text-center">
+          <div key={i} className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl p-4 border border-[var(--border)] text-center">
             <span className="text-xl block mb-1">{stat.icon}</span>
             <div className={`text-2xl font-black ${stat.color} mb-0.5`}>{stat.value}</div>
-            <div className="text-[10px] text-slate-500 font-bold uppercase">{stat.label}</div>
+            <div className="text-[10px] text-[var(--text-muted)] font-bold uppercase">{stat.label}</div>
           </div>
         ))}
       </div>
 
       {/* Main Roster Table */}
-      <div className="glass rounded-2xl p-6 border border-slate-800">
-        <h2 className="text-base font-semibold text-white mb-5">📋 Roster Checklist</h2>
+      <div className="theme-card p-6 border border-[var(--border)]">
+        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-5">ðŸ“‹ Roster Checklist</h2>
 
         {toast && (
           <div className="mb-5 p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-xl leading-relaxed">
@@ -142,8 +142,8 @@ export default function AttendancePage() {
             <tbody>
               {students.map((student) => (
                 <tr key={student.id}>
-                  <td className="text-slate-400 font-bold text-xs">{student.rollNo}</td>
-                  <td className="font-medium text-white">{student.name}</td>
+                  <td className="text-[var(--text-muted)] font-bold text-xs">{student.rollNo}</td>
+                  <td className="font-medium text-[var(--text-heading)]">{student.name}</td>
                   <td className="text-center">
                     <input
                       type="radio"
@@ -180,3 +180,4 @@ export default function AttendancePage() {
     </PortalLayout>
   );
 }
+
