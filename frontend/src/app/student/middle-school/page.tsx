@@ -19,7 +19,7 @@ export default function MiddleSchoolDashboard() {
   return (
     <PortalLayout>
       {/* KPI Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
           { label: "Attendance Star", value: "98%", icon: "⭐", color: "text-amber-400", sub: "Perfect this week!" },
           { label: "Learning Points", value: "1,250", icon: "🏆", color: "text-emerald-400", sub: "+50 today" },
@@ -48,8 +48,8 @@ export default function MiddleSchoolDashboard() {
           <div className="space-y-5">
             {subjects.map((s) => (
               <div key={s.name} className="flex items-center gap-5 p-3 rounded-2xl hover:bg-slate-800/50 transition-colors">
-                <div className="text-3xl w-12 h-12 bg-slate-800 rounded-full flex items-center justify-center shadow-inner">{s.icon}</div>
-                <div className="flex-1">
+                <div className="text-3xl w-12 h-12 shrink-0 bg-slate-800 rounded-full flex items-center justify-center shadow-inner">{s.icon}</div>
+                <div className="flex-1 min-w-0">
                   <div className="flex justify-between text-sm mb-2">
                     <span className="text-slate-200 font-bold text-base">{s.name}</span>
                     <span className="text-emerald-400 font-bold">{s.progress}%</span>
@@ -68,7 +68,7 @@ export default function MiddleSchoolDashboard() {
         {/* AI Helper for Kids */}
         <div className="glass rounded-3xl p-6 fade-in-3 flex flex-col border border-slate-700/50 shadow-2xl bg-gradient-to-b from-indigo-900/20 to-purple-900/20">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-indigo-500 rounded-full flex items-center justify-center text-2xl animate-bounce shadow-lg shadow-indigo-500/30">🤖</div>
+            <div className="w-12 h-12 shrink-0 bg-indigo-500 rounded-full flex items-center justify-center text-2xl animate-bounce shadow-lg shadow-indigo-500/30">🤖</div>
             <h2 className="text-xl font-bold text-white">AI Learning Buddy</h2>
           </div>
           <div className="flex-1 bg-slate-900/80 rounded-2xl p-5 mb-5 text-sm text-indigo-200 italic border border-indigo-500/30 relative">
