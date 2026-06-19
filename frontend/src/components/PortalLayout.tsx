@@ -178,7 +178,7 @@ export default function PortalLayout({
         </div>
 
         <nav className="flex-1 overflow-y-auto">
-          {navItems.map((item, index) => {
+          {resolvedNavItems.map((item, index) => {
             if (item.label === "---") {
               return <div key={`sep-${index}`} className="my-4 mx-4 border-t border-slate-700/50" />;
             }
