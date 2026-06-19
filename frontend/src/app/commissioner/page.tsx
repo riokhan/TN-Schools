@@ -1,3 +1,4 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
 const navItems = [
@@ -25,15 +26,7 @@ const districts = [
 
 export default function CommissionerDashboard() {
   return (
-    <PortalLayout
-      title="Commissioner Portal"
-      subtitle="Ms. Revathy IAS · Commissioner, School Education, Tamil Nadu"
-      avatarLetter="C"
-      avatarColor="#06b6d4"
-      navItems={navItems}
-      themeClass="theme-commissioner"
-      accentColor="#06b6d4"
-    >
+    <PortalLayout>
       {/* State-level KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

@@ -1,3 +1,4 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
 const navItems = [
@@ -24,15 +25,7 @@ const schools = [
 
 export default function BEODashboard() {
   return (
-    <PortalLayout
-      title="Block Education Officer"
-      subtitle="Mr. Murugesan P. · Coimbatore South Block"
-      avatarLetter="M"
-      avatarColor="#8b5cf6"
-      navItems={navItems}
-      themeClass="theme-beo"
-      accentColor="#8b5cf6"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

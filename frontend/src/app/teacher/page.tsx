@@ -1,3 +1,4 @@
+import Link from "next/link";
 import PortalLayout from "@/components/PortalLayout";
 
 const navItems = [
@@ -147,9 +148,8 @@ export default function TeacherDashboard() {
             {riskStudents.map((s, i) => (
               <div
                 key={i}
-                className={`p-3 rounded-xl border text-xs ${
-                  s.risk === "high" ? "border-red-500/30 bg-red-500/5" : "border-amber-500/30 bg-amber-500/5"
-                }`}
+                className={`p-3 rounded-xl border text-xs ${s.risk === "high" ? "border-red-500/30 bg-red-500/5" : "border-amber-500/30 bg-amber-500/5"
+                  }`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div>

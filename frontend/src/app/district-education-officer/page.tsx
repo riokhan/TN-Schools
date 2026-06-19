@@ -1,3 +1,4 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
 const navItems = [
@@ -25,15 +26,7 @@ const blocks = [
 
 export default function DEODashboard() {
   return (
-    <PortalLayout
-      title="District Education Officer"
-      subtitle="Dr. Annamalai S. · Coimbatore District"
-      avatarLetter="D"
-      avatarColor="#ec4899"
-      navItems={navItems}
-      themeClass="theme-deo"
-      accentColor="#ec4899"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

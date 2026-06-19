@@ -1,79 +1,8 @@
+"use client";
 import Link from "next/link";
+import { useSession, signOut } from "next-auth/react";
 
-const portals = [
-  {
-    href: "/student",
-    label: "Student Portal",
-    icon: "🎓",
-    desc: "AI Tutor, Adaptive Learning, Quizzes, Career Guidance",
-    color: "from-indigo-600 to-purple-600",
-    border: "border-indigo-500/30",
-    bg: "hover:bg-indigo-500/10",
-  },
-  {
-    href: "/parent",
-    label: "Parent Portal",
-    icon: "👨‍👩‍👧",
-    desc: "Child Performance, Notifications, AI Parent Assistant",
-    color: "from-emerald-600 to-teal-600",
-    border: "border-emerald-500/30",
-    bg: "hover:bg-emerald-500/10",
-  },
-  {
-    href: "/teacher",
-    label: "Teacher Portal",
-    icon: "📚",
-    desc: "AI Lesson Planner, Question Generator, Student Analytics",
-    color: "from-amber-600 to-orange-600",
-    border: "border-amber-500/30",
-    bg: "hover:bg-amber-500/10",
-  },
-  {
-    href: "/headmaster",
-    label: "Headmaster Portal",
-    icon: "🏫",
-    desc: "School Management, Staff, Resources, Enrollment",
-    color: "from-blue-600 to-cyan-600",
-    border: "border-blue-500/30",
-    bg: "hover:bg-blue-500/10",
-  },
-  {
-    href: "/block-education-officer",
-    label: "Block Education Officer",
-    icon: "🏢",
-    desc: "School Comparisons, Attendance & Exam Analytics",
-    color: "from-violet-600 to-purple-600",
-    border: "border-violet-500/30",
-    bg: "hover:bg-violet-500/10",
-  },
-  {
-    href: "/district-education-officer",
-    label: "District Education Officer",
-    icon: "🗺️",
-    desc: "District Dashboard, Dropout Heatmap, School Ranking",
-    color: "from-pink-600 to-rose-600",
-    border: "border-pink-500/30",
-    bg: "hover:bg-pink-500/10",
-  },
-  {
-    href: "/commissioner",
-    label: "Commissioner Portal",
-    icon: "⚖️",
-    desc: "State Operations, Policy Monitoring, Budget Utilization",
-    color: "from-cyan-600 to-sky-600",
-    border: "border-cyan-500/30",
-    bg: "hover:bg-cyan-500/10",
-  },
-  {
-    href: "/minister",
-    label: "Minister Dashboard",
-    icon: "🏛️",
-    desc: "Executive Command Center, Live State View, KPI Monitoring",
-    color: "from-red-600 to-orange-600",
-    border: "border-red-500/30",
-    bg: "hover:bg-red-500/10",
-  },
-];
+import { portals } from "@/lib/navConfig";
 
 const stats = [
   { label: "Total Students", value: "47.2L", icon: "👨‍🎓", color: "text-indigo-400" },
@@ -83,6 +12,8 @@ const stats = [
 ];
 
 export default function HomePage() {
+  const { data: session } = useSession();
+
   return (
     <div className="min-h-screen gradient-bg">
       {/* Hero Section */}
@@ -104,9 +35,33 @@ export default function HomePage() {
             <span className="text-white">Ecosystem</span>
           </h1>
 
-          <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-10 fade-in-3">
+          <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-6 fade-in-3">
             State-wide digital learning, governance &amp; student success platform for Tamil Nadu Government Schools, Class 6 – 12.
           </p>
+
+          {/* Authentication State Button */}
+          {session ? (
+            <div className="flex gap-4 justify-center items-center mb-10 fade-in-3">
+              <span className="text-xs text-slate-400 font-medium bg-slate-900/60 border border-slate-800 px-3.5 py-1.5 rounded-full">
+                Welcome back, <strong className="text-white">{(session.user as any)?.name}</strong> ({(session.user as any)?.role})
+              </span>
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-red-400 border border-red-500/20 hover:bg-red-500/10 transition-all"
+              >
+                🚪 Sign Out
+              </button>
+            </div>
+          ) : (
+            <div className="flex justify-center mb-10 fade-in-3">
+              <Link
+                href="/login"
+                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition-all flex items-center gap-1.5 shadow-lg shadow-amber-500/10 hover:-translate-y-0.5"
+              >
+                🔒 Sign In to Portal
+              </Link>
+            </div>
+          )}
 
           {/* Stats Bar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-16 fade-in-4">

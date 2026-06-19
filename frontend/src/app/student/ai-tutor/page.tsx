@@ -2,17 +2,6 @@
 import { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/student", icon: "🏠" },
-  { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
-  { label: "My Subjects", href: "/student/subjects", icon: "📖" },
-  { label: "Homework", href: "/student/homework", icon: "📝" },
-  { label: "Practice Tests", href: "/student/tests", icon: "✅" },
-  { label: "Career Guidance", href: "/student/career", icon: "🚀" },
-  { label: "Digital Portfolio", href: "/student/portfolio", icon: "🗂️" },
-  { label: "Wellness", href: "/student/wellness", icon: "💚" },
-  { label: "Coding Academy", href: "/student/coding", icon: "💻" },
-];
 
 interface Message {
   role: "user" | "assistant";
@@ -67,11 +56,6 @@ export default function AITutorPage() {
     <PortalLayout
       title="AI Tutor"
       subtitle="Your personal bilingual learning assistant"
-      avatarLetter="A"
-      avatarColor="#6366f1"
-      navItems={navItems}
-      themeClass="theme-student"
-      accentColor="#6366f1"
     >
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-180px)]">
         {/* Sidebar Controls */}

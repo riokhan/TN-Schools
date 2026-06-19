@@ -1,3 +1,4 @@
+"use client";
 import PortalLayout from "@/components/PortalLayout";
 
 const navItems = [
@@ -25,15 +26,7 @@ const stateKpis = [
 
 export default function MinisterDashboard() {
   return (
-    <PortalLayout
-      title="Minister Dashboard"
-      subtitle="Hon. Minister for School Education, Tamil Nadu"
-      avatarLetter="M"
-      avatarColor="#ef4444"
-      navItems={navItems}
-      themeClass="theme-minister"
-      accentColor="#ef4444"
-    >
+    <PortalLayout>
       {/* Executive Live State View */}
       <div className="glass rounded-2xl p-6 mb-6 fade-in" style={{ borderColor: "rgba(239,68,68,0.3)" }}>
         <div className="flex items-center justify-between mb-5">
