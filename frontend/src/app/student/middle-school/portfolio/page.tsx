@@ -2,25 +2,6 @@
 
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/student/middle-school", icon: "🏠" },
-  { label: "My Badges", href: "/student/middle-school/badges", icon: "🏅" },
-  { label: "Fun Quizzes", href: "/student/middle-school/quizzes", icon: "🎮" },
-  { label: "Story Books", href: "/student/middle-school/stories", icon: "📚" },
-  { label: "AI Helper", href: "/student/middle-school/ai", icon: "🤖" },
-  
-  // Common Student Menu
-  { label: "---", href: "#", icon: "" },
-  { label: "Common Tools", href: "#", icon: "" },
-  { label: "My Subjects", href: "/student/subjects", icon: "📖" },
-  { label: "Virtual Labs", href: "/student/labs", icon: "🧪" },
-  { label: "Homework", href: "/student/homework", icon: "📝" },
-  { label: "Digital Portfolio", href: "/student/middle-school/portfolio", icon: "🗂️" },
-  { label: "Extracurriculars", href: "/student/activities", icon: "🎭" },
-  { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
-  { label: "Wellness", href: "/student/wellness", icon: "💚" },
-  { label: "Coding Academy", href: "/student/coding", icon: "💻" },
-];
 
 const projects = [
   { title: "Solar System Model", subject: "Science", date: "Last Week", type: "Craft", grade: "Super Star! ⭐", icon: "🪐", color: "#10b981" },
@@ -48,11 +29,6 @@ export default function MiddleSchoolPortfolio() {
     <PortalLayout
       title="My Fun Portfolio 🎨"
       subtitle="Look at all the awesome things you have done, Arjun!"
-      avatarLetter="A"
-      avatarColor="#10b981"
-      navItems={navItems}
-      themeClass="theme-student"
-      accentColor="#10b981"
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Profile Summary */}

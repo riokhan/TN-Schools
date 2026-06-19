@@ -1,23 +1,5 @@
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/student/high-school", icon: "🏠" },
-  { label: "Board Prep", href: "/student/high-school/board-prep", icon: "🎯" },
-  { label: "Mock Tests", href: "/student/high-school/mock-tests", icon: "📝" },
-  { label: "Study Boost", href: "/student/high-school/study-boost", icon: "⚡" },
-  { label: "Career Aptitude", href: "/student/high-school/career", icon: "🧭" },
-
-  // Common Student Menu
-  { label: "Common Tools", href: "#", icon: "" },
-  { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
-  { label: "My Subjects", href: "/student/subjects", icon: "📖" },
-  { label: "Virtual Labs", href: "/student/labs", icon: "🧪" },
-  { label: "Homework", href: "/student/homework", icon: "📝" },
-  { label: "Digital Portfolio", href: "/student/portfolio", icon: "🗂️" },
-  { label: "Extracurriculars", href: "/student/activities", icon: "🎭" },
-  { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
-  { label: "Wellness", href: "/student/wellness", icon: "💚" },
-];
 
 const subjects = [
   { name: "Mathematics", progress: 65, color: "#ef4444", icon: "📐" }, // Low progress to show weakness detector
@@ -35,15 +17,7 @@ const mockTestScores = [
 
 export default function HighSchoolDashboard() {
   return (
-    <PortalLayout
-      title="High School Dashboard (Class 9-10)"
-      subtitle="Welcome, Arjun · Class 10A · Focus Area: SSLC Board Preparation"
-      avatarLetter="A"
-      avatarColor="#ef4444"
-      navItems={navItems}
-      themeClass="theme-student"
-      accentColor="#ef4444"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

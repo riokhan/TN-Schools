@@ -1,23 +1,5 @@
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/student/middle-school", icon: "🏠" },
-  { label: "My Badges", href: "/student/middle-school/badges", icon: "🏅" },
-  { label: "Fun Quizzes", href: "/student/middle-school/quizzes", icon: "🎮" },
-  { label: "Story Books", href: "/student/middle-school/stories", icon: "📚" },
-  { label: "AI Helper", href: "/student/middle-school/ai", icon: "🤖" },
-  
-  // Common Student Menu
-  { label: "Common Tools", href: "#", icon: "" },
-  { label: "My Subjects", href: "/student/subjects", icon: "📖" },
-  { label: "Virtual Labs", href: "/student/labs", icon: "🧪" },
-  { label: "Homework", href: "/student/homework", icon: "📝" },
-  { label: "Digital Portfolio", href: "/student/portfolio", icon: "🗂️" },
-  { label: "Extracurriculars", href: "/student/activities", icon: "🎭" },
-  { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
-  { label: "Wellness", href: "/student/wellness", icon: "💚" },
-  { label: "Coding Academy", href: "/student/coding", icon: "💻" },
-];
 
 const subjects = [
   { name: "Mathematics", progress: 85, color: "#6366f1", icon: "🧮" },
@@ -35,15 +17,7 @@ const recentActivity = [
 
 export default function MiddleSchoolDashboard() {
   return (
-    <PortalLayout
-      title="Middle School Dashboard (Class 6-8)"
-      subtitle="Welcome back, Arjun! · Class 7B · You have 5 new badges waiting! 🌟"
-      avatarLetter="A"
-      avatarColor="#10b981"
-      navItems={navItems}
-      themeClass="theme-student"
-      accentColor="#10b981"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

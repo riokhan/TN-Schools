@@ -3,25 +3,6 @@
 import PortalLayout from "@/components/PortalLayout";
 import { useState } from "react";
 
-const navItems = [
-  { label: "Dashboard", href: "/student/high-school", icon: "🏠" },
-  { label: "Board Prep", href: "/student/high-school/board-prep", icon: "🎯" },
-  { label: "Mock Tests", href: "/student/high-school/mock-tests", icon: "📝" },
-  { label: "Study Boost", href: "/student/high-school/study-boost", icon: "⚡" },
-  { label: "Career Aptitude", href: "/student/high-school/career", icon: "🧭" },
-
-  // Common Student Menu
-  { label: "---", href: "#", icon: "" },
-  { label: "Common Tools", href: "#", icon: "" },
-  { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
-  { label: "My Subjects", href: "/student/subjects", icon: "📖" },
-  { label: "Virtual Labs", href: "/student/labs", icon: "🧪" },
-  { label: "Homework", href: "/student/homework", icon: "📝" },
-  { label: "Digital Portfolio", href: "/student/portfolio", icon: "🗂️" },
-  { label: "Extracurriculars", href: "/student/activities", icon: "🎭" },
-  { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
-  { label: "Wellness", href: "/student/wellness", icon: "💚" },
-];
 
 const syllabusProgress = [
   { subject: "Mathematics", totalChapters: 15, completed: 9, color: "#ef4444" },
@@ -64,11 +45,6 @@ export default function BoardPrepPage() {
     <PortalLayout
       title="SSLC Board Preparation"
       subtitle="Your ultimate command center for scoring 480+ in 10th Boards."
-      avatarLetter="A"
-      avatarColor="#ef4444"
-      navItems={navItems}
-      themeClass="theme-student"
-      accentColor="#ef4444"
     >
       {/* Top Countdown Banner */}
       <div className="glass rounded-2xl p-6 mb-6 fade-in flex flex-col md:flex-row items-center justify-between border-l-4 border-red-500 bg-red-900/10">

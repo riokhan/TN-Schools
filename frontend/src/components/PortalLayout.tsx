@@ -54,7 +54,19 @@ export default function PortalLayout({
   }
 
   // Get active role from NextAuth token
-  const userRole = (session?.user as any)?.role || "STUDENT";
+  let userRole = (session?.user as any)?.role || "STUDENT";
+
+  // Re-map student roles to specialized configurations based on path
+  if (userRole === "STUDENT") {
+    if (pathname.startsWith("/student/middle-school")) {
+      userRole = "STUDENT_MIDDLE";
+    } else if (pathname.startsWith("/student/high-school")) {
+      userRole = "STUDENT_HIGH";
+    } else if (pathname.startsWith("/student/higher-secondary")) {
+      userRole = "STUDENT_HIGHER";
+    }
+  }
+
   const currentConfig = roleConfigs[userRole];
 
   // Resolve configuration falling back to central store
@@ -75,7 +87,7 @@ export default function PortalLayout({
     expectedRole = "TEACHER";
     fallbackPath = "/teacher";
   } else if (pathname.startsWith("/student")) {
-    isAuthorized = userRole === "STUDENT";
+    isAuthorized = userRole === "STUDENT" || userRole === "STUDENT_MIDDLE" || userRole === "STUDENT_HIGH" || userRole === "STUDENT_HIGHER";
     expectedRole = "STUDENT";
     fallbackPath = "/student";
   } else if (pathname.startsWith("/parent")) {
@@ -107,7 +119,7 @@ export default function PortalLayout({
   // Render Access Denied error sheet if unauthorized role tries to access
   if (!isAuthorized) {
     let defaultDest = "/";
-    if (userRole === "STUDENT") defaultDest = "/student";
+    if (userRole === "STUDENT" || userRole === "STUDENT_MIDDLE" || userRole === "STUDENT_HIGH" || userRole === "STUDENT_HIGHER") defaultDest = "/student";
     else if (userRole === "TEACHER") defaultDest = "/teacher";
     else if (userRole === "PARENT") defaultDest = "/parent";
     else if (userRole === "HEADMASTER") defaultDest = "/headmaster";

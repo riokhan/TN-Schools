@@ -4,34 +4,6 @@ import React from "react";
 import PortalLayout from "@/components/PortalLayout";
 import { useParams } from "next/navigation";
 
-const navItems = [
-  { label: "Dashboard", href: "/headmaster", icon: "🏠" },
-
-  { label: "People & Staff", href: "#", icon: "" },
-  { label: "Student Monitoring", href: "/headmaster/students", icon: "👨‍🎓" },
-  { label: "Staff Management", href: "/headmaster/staff", icon: "👩‍🏫" },
-  { label: "Temporary Staff", href: "/headmaster/temporary-staff", icon: "🤝" },
-  { label: "Parents Details", href: "/headmaster/parents", icon: "👪" },
-  { label: "School Alumni", href: "/headmaster/alumni", icon: "🎓" },
-
-  { label: "Academics & Records", href: "#", icon: "" },
-  { label: "Attendance", href: "/headmaster/attendance", icon: "📅" },
-  { label: "Timetable", href: "/headmaster/timetable", icon: "🗓️" },
-  { label: "Exam Schedule", href: "/headmaster/exams", icon: "📋" },
-  { label: "Model Exam Results", href: "/headmaster/model-exams", icon: "📝" },
-
-  { label: "School Admin & Govt", href: "#", icon: "" },
-  { label: "School Resources", href: "/headmaster/resources", icon: "🏗️" },
-  { label: "Mid-Day Meal", href: "/headmaster/midday-meal", icon: "🍛" },
-  { label: "Scholarship", href: "/headmaster/scholarship", icon: "🏅" },
-  { label: "Govt Schemes Update", href: "/headmaster/gov-schemes", icon: "🏛️" },
-
-  { label: "Extra Curricular & Info", href: "#", icon: "" },
-  { label: "School Events", href: "/headmaster/events", icon: "🎉" },
-  { label: "Media Gallery", href: "/headmaster/gallery", icon: "🖼️" },
-  { label: "Rewards & Honors", href: "/headmaster/rewards", icon: "🏆" },
-  { label: "School History", href: "/headmaster/history", icon: "📜" },
-];
 
 export default function HeadmasterPortal() {
   const params = useParams();
@@ -126,7 +98,6 @@ export default function HeadmasterPortal() {
       subtitle="Mr. Venkatesh R. · GHS Coimbatore · DISE: 33012345"
       avatarLetter="V"
       avatarColor="#3b82f6"
-      navItems={navItems}
       themeClass="theme-headmaster"
       accentColor="#3b82f6"
     >

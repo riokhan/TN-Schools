@@ -1,20 +1,6 @@
 "use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/district-education-officer", icon: "🏠" },
-  { label: "District Overview", href: "/district-education-officer/overview", icon: "🗺️" },
-  { label: "School Rankings", href: "/district-education-officer/rankings", icon: "🏆" },
-  { label: "Dropout Heatmap", href: "/district-education-officer/dropout", icon: "🔴" },
-  { label: "Teacher Analytics", href: "/district-education-officer/teachers", icon: "👩‍🏫" },
-  { label: "Scholarship Tracking", href: "/district-education-officer/scholarship", icon: "🎓" },
-  { label: "Learning Outcomes", href: "/district-education-officer/outcomes", icon: "📈" },
-  { label: "Block Comparisons", href: "/district-education-officer/blocks", icon: "📊" },
-  { label: "Schemes Tracking", href: "/district-education-officer/schemes", icon: "📜" },
-  { label: "Infrastructure", href: "/district-education-officer/infrastructure", icon: "🏗️" },
-  { label: "Grievances", href: "/district-education-officer/grievances", icon: "⚖️" },
-  { label: "Circulars", href: "/district-education-officer/circulars", icon: "📢" },
-];
 
 const blocks = [
   { block: "Coimbatore South", schools: 24, students: 22450, attendance: 91, dropouts: 17, rank: 1 },

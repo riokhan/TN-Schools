@@ -1,21 +1,10 @@
 import Link from "next/link";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Portal Home", href: "/student", icon: "🏠" },
-];
 
 export default function StudentDashboard() {
   return (
-    <PortalLayout
-      title="Student Portal Login Simulation"
-      subtitle="Select a student category to view their specific dashboard."
-      avatarLetter="S"
-      avatarColor="#6366f1"
-      navItems={navItems}
-      themeClass="theme-student"
-      accentColor="#6366f1"
-    >
+    <PortalLayout>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 mt-10">
         
         {/* Middle School */}

@@ -1,19 +1,6 @@
 "use client";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/commissioner", icon: "🏠" },
-  { label: "District Comparisons", href: "/commissioner/districts", icon: "🗺️" },
-  { label: "Policy Monitoring", href: "/commissioner/policy", icon: "⚖️" },
-  { label: "Budget Utilization", href: "/commissioner/budget", icon: "💰" },
-  { label: "School Performance", href: "/commissioner/performance", icon: "📊" },
-  { label: "Infrastructure Score", href: "/commissioner/infrastructure", icon: "🏗️" },
-  { label: "State Analytics", href: "/commissioner/analytics", icon: "📈" },
-  { label: "Teacher Deployment", href: "/commissioner/teachers", icon: "👩‍🏫" },
-  { label: "Schemes Overview", href: "/commissioner/schemes", icon: "📜" },
-  { label: "Grievances Redressal", href: "/commissioner/grievances", icon: "⚖️" },
-  { label: "Announcements", href: "/commissioner/announcements", icon: "📢" },
-];
 
 const districts = [
   { name: "Chennai", schools: 820, students: "6.2L", attendance: 93, passRate: 91, score: 94 },

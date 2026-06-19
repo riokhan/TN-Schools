@@ -1,36 +1,6 @@
 import Link from "next/link";
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  // Subject Oriented Menu
-  { label: "My Subjects (Science)", href: "/teacher", icon: "🔬" },
-  { label: "Science Labs", href: "/teacher/labs", icon: "🧪" },
-  { label: "Subject Analytics", href: "/teacher/subject-analytics", icon: "📊" },
-  
-  // Common Menu & Tools
-  { label: "Admin & Tools", href: "#", icon: "" },
-  { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
-  { label: "AI Lesson Planner", href: "/teacher/lesson-planner", icon: "📋" },
-  { label: "Question Generator", href: "/teacher/questions", icon: "❓" },
-  { label: "AI Evaluation", href: "/teacher/evaluation", icon: "✅" },
-  
-  // Student Management
-  { label: "Student Management", href: "#", icon: "" },
-  { label: "Student Profiles", href: "/teacher/student-profiles", icon: "👤" },
-  { label: "Student Status", href: "/teacher/student-status", icon: "📈" },
-  { label: "Validate Homework", href: "/teacher/validate-homework", icon: "✔️" },
-  { label: "Scholarship Details", href: "/teacher/scholarships", icon: "🎓" },
-  { label: "Student Analytics", href: "/teacher/analytics", icon: "📊" },
-  { label: "Risk Alerts", href: "/teacher/risk-alerts", icon: "⚠️" },
-  { label: "Parent Communication", href: "/teacher/communication", icon: "💬" },
-
-  // Resources & Admin
-  { label: "Resources & Admin", href: "#", icon: "" },
-  { label: "Add Materials", href: "/teacher/add-materials", icon: "📚" },
-  { label: "Daily Attendance", href: "/teacher/attendance", icon: "📅" },
-  { label: "Announcements", href: "/teacher/announcements", icon: "📢" },
-  { label: "Leave Requests", href: "/teacher/leave", icon: "📄" },
-];
 
 const classData = [
   { class: "10A - Science", students: 42, attendance: 94, homeworkRate: 88, avgScore: 76, risk: 2 },
@@ -49,11 +19,6 @@ export default function TeacherDashboard() {
     <PortalLayout
       title="Teacher Dashboard"
       subtitle="Mr. Ramesh · Science Specialist · GHS Coimbatore"
-      avatarLetter="R"
-      avatarColor="#10b981"
-      navItems={navItems}
-      themeClass="theme-teacher"
-      accentColor="#10b981"
     >
       {/* Subject Focus Header */}
       <div className="glass rounded-2xl p-4 mb-6 flex justify-between items-center border border-emerald-500/30 bg-emerald-900/10 fade-in">

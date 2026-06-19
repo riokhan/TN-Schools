@@ -1,23 +1,5 @@
 import PortalLayout from "@/components/PortalLayout";
 
-const navItems = [
-  { label: "Dashboard", href: "/student/higher-secondary", icon: "🏠" },
-  { label: "Board Prep", href: "/student/higher-secondary/board-prep", icon: "🎯" },
-  { label: "NEET/JEE Prep", href: "/student/higher-secondary/competitive", icon: "🚀" },
-  { label: "Mock Tests", href: "/student/higher-secondary/mock-tests", icon: "📝" },
-  { label: "College Admissions", href: "/student/higher-secondary/admissions", icon: "🎓" },
-
-  // Common Student Menu
-  { label: "Common Tools", href: "#", icon: "" },
-  { label: "AI Tutor", href: "/student/ai-tutor", icon: "🤖" },
-  { label: "My Subjects", href: "/student/subjects", icon: "📖" },
-  { label: "Virtual Labs", href: "/student/labs", icon: "🧪" },
-  { label: "Homework", href: "/student/homework", icon: "📝" },
-  { label: "Digital Portfolio", href: "/student/portfolio", icon: "🗂️" },
-  { label: "Extracurriculars", href: "/student/activities", icon: "🎭" },
-  { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
-  { label: "Wellness", href: "/student/wellness", icon: "💚" },
-];
 
 const subjects = [
   { name: "Physics", progress: 75, color: "#3b82f6", icon: "⚛️" },
@@ -73,15 +55,7 @@ const streamKnowledge = [
 
 export default function HigherSecondaryDashboard() {
   return (
-    <PortalLayout
-      title="Higher Secondary Dashboard (Class 11-12)"
-      subtitle="Welcome, Arjun · Class 12 Biology Stream · Target: Medical Colleges"
-      avatarLetter="A"
-      avatarColor="#8b5cf6"
-      navItems={navItems}
-      themeClass="theme-student"
-      accentColor="#8b5cf6"
-    >
+    <PortalLayout>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
