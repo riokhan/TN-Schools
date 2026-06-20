@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
@@ -98,16 +98,16 @@ export default function AnalyticsPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setSelectedClassId("10a")}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                selectedClassId === "10a" ? "bg-[var(--primary)] text-[var(--text-heading)]" : "bg-[var(--bg-main)] text-[var(--text-muted)] hover:bg-slate-850"
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                selectedClassId === "10a" ? "bg-[var(--primary)] text-white shadow-sm" : "bg-[var(--bg-main)] text-[var(--text-muted)] hover:bg-slate-850"
               }`}
             >
               Class 10A - Maths
             </button>
             <button
               onClick={() => setSelectedClassId("10b")}
-              className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                selectedClassId === "10b" ? "bg-[var(--primary)] text-[var(--text-heading)]" : "bg-[var(--bg-main)] text-[var(--text-muted)] hover:bg-slate-850"
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                selectedClassId === "10b" ? "bg-[var(--primary)] text-white shadow-sm" : "bg-[var(--bg-main)] text-[var(--text-muted)] hover:bg-slate-850"
               }`}
             >
               Class 10B - Maths
@@ -120,20 +120,20 @@ export default function AnalyticsPage() {
         </div>
 
         {/* KPI Summaries Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[
-            { label: "Class Average Score", value: `${summary.avgScore}%`, icon: "ðŸ“ˆ", color: "text-amber-400", desc: "Term average" },
-            { label: "Mean Attendance", value: `${summary.attendance}%`, icon: "ðŸ“…", color: "text-emerald-400", desc: "This semester" },
-            { label: "Homework Completes", value: `${summary.hwRate}%`, icon: "ðŸ“", color: "text-blue-400", desc: "Last 5 tasks" },
-            { label: "Interventions Flashed", value: `${summary.riskCount}`, icon: "âš ï¸", color: "text-red-400", desc: "Action required" },
+            { label: "Class Average Score", value: `${summary.avgScore}%`, icon: "📈", color: "text-amber-400", desc: "Term average" },
+            { label: "Mean Attendance", value: `${summary.attendance}%`, icon: "📅", color: "text-emerald-400", desc: "This semester" },
+            { label: "Homework Completes", value: `${summary.hwRate}%`, icon: "📝", color: "text-blue-400", desc: "Last 5 tasks" },
+            { label: "Interventions Flashed", value: `${summary.riskCount}`, icon: "⚠️", color: "text-red-400", desc: "Action required" },
           ].map((kpi) => (
             <div key={kpi.label} className="kpi-card">
-              <div className="flex items-center justify-between mb-3 text-xs text-[var(--text-muted)]">
-                <span>{kpi.label}</span>
-                <span className="text-lg">{kpi.icon}</span>
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-2xl">{kpi.icon}</span>
+                <span className={`text-[10px] font-bold ${kpi.color} uppercase`}>{kpi.desc}</span>
               </div>
-              <div className={`text-2xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
-              <div className="text-[10px] text-[var(--text-muted)]">{kpi.desc}</div>
+              <div className={`text-2xl font-extrabold ${kpi.color} mb-1`}>{kpi.value}</div>
+              <div className="text-xs text-slate-500 font-semibold">{kpi.label}</div>
             </div>
           ))}
         </div>
@@ -142,7 +142,7 @@ export default function AnalyticsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Grade Distribution Chart */}
           <div className="theme-card p-6">
-            <h3 className="text-[var(--text-heading)] font-semibold text-xs mb-6 uppercase tracking-wider">ðŸ“Š Grade Distribution</h3>
+            <h3 className="text-[var(--text-heading)] font-semibold text-xs mb-6 uppercase tracking-wider">📊 Grade Distribution</h3>
             
             <div className="flex items-end justify-between h-40 gap-3 px-2">
               {activeAnalytics.distribution.map((d) => (
@@ -164,7 +164,7 @@ export default function AnalyticsPage() {
 
           {/* Subject Mastery checklist */}
           <div className="lg:col-span-2 theme-card p-6">
-            <h3 className="text-[var(--text-heading)] font-semibold text-xs mb-5 uppercase tracking-wider">ðŸŽ¯ Concept Mastery Index</h3>
+            <h3 className="text-[var(--text-heading)] font-semibold text-xs mb-5 uppercase tracking-wider">🎯 Concept Mastery Index</h3>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {activeAnalytics.mastery.map((m) => (
@@ -202,7 +202,7 @@ export default function AnalyticsPage() {
         <div className="theme-card p-6">
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-6">
             <div>
-              <h3 className="text-[var(--text-heading)] font-semibold text-sm">ðŸ“‹ Student Diagnostics Directory</h3>
+              <h3 className="text-[var(--text-heading)] font-semibold text-sm">📋 Student Diagnostics Directory</h3>
               <p className="text-xs text-slate-550">Review performance details and key concept gaps of each pupil.</p>
             </div>
 
@@ -220,8 +220,8 @@ export default function AnalyticsPage() {
                   <button
                     key={opt}
                     onClick={() => setStatusFilter(opt)}
-                    className={`px-3 py-1 rounded-md text-[10px] font-semibold transition-all ${
-                      statusFilter === opt ? "bg-[var(--primary)] text-[var(--text-heading)]" : "text-[var(--text-muted)] hover:text-[var(--text-heading)]"
+                    className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${
+                      statusFilter === opt ? "bg-[var(--primary)] text-white shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-heading)]"
                     }`}
                   >
                     {opt}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
@@ -109,9 +109,9 @@ export default function ClassesPage() {
           </div>
           <button
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-heading)] bg-[var(--primary)] hover:bg-amber-600 transition-colors flex items-center gap-1"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[var(--primary)] hover:bg-amber-600 transition-colors flex items-center gap-1"
           >
-            <span>âž•</span> Add New Class
+            <span>➕</span> Add New Class
           </button>
         </div>
 
@@ -169,7 +169,7 @@ export default function ClassesPage() {
             <div className="lg:col-span-2 theme-card p-6">
               <div className="flex justify-between items-center mb-5">
                 <div>
-                  <h3 className="text-[var(--text-heading)] font-semibold text-sm">ðŸ“‹ Student Roster - {selectedClass.name}</h3>
+                  <h3 className="text-[var(--text-heading)] font-semibold text-sm">📋 Student Roster - {selectedClass.name}</h3>
                   <p className="text-xs text-[var(--text-muted)]">List of students registered in this section.</p>
                 </div>
                 <div className="flex gap-2">
@@ -224,7 +224,7 @@ export default function ClassesPage() {
             {/* Class Stats & Highlights */}
             <div className="theme-card p-6 flex flex-col justify-between">
               <div>
-                <h3 className="text-[var(--text-heading)] font-semibold text-sm mb-4">ðŸ« Section Details</h3>
+                <h3 className="text-[var(--text-heading)] font-semibold text-sm mb-4">🏫 Section Details</h3>
                 
                 <div className="space-y-4">
                   <div className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-3.5 rounded-xl border border-[var(--border)]">
@@ -254,10 +254,10 @@ export default function ClassesPage() {
                 <div className="text-xs text-[var(--text-muted)] mb-3 font-medium">Quick Tasks</div>
                 <div className="grid grid-cols-2 gap-2">
                   <button className="py-2 px-3 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-heading)] transition-colors text-center border border-[var(--border)]/50">
-                    ðŸ“… Attendance
+                    📅 Attendance
                   </button>
                   <button className="py-2 px-3 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-heading)] transition-colors text-center border border-[var(--border)]/50">
-                    ðŸ“ View Grades
+                    📝 View Grades
                   </button>
                 </div>
               </div>
@@ -271,12 +271,12 @@ export default function ClassesPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="theme-card w-full max-w-md border border-[var(--border)] overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <div className="px-6 py-4 border-b border-[var(--border)] flex justify-between items-center">
-              <h3 className="text-[var(--text-heading)] font-semibold text-base">âž• Add New Class</h3>
+              <h3 className="text-[var(--text-heading)] font-semibold text-base">➕ Add New Class</h3>
               <button
                 onClick={() => setShowAddModal(false)}
                 className="text-[var(--text-muted)] hover:text-[var(--text-heading)] text-lg transition-colors"
               >
-                âœ•
+                ✕
               </button>
             </div>
 
@@ -342,7 +342,7 @@ export default function ClassesPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-[var(--primary)] hover:bg-amber-600 text-xs font-semibold text-[var(--text-heading)] transition-all"
+                  className="flex-1 py-2.5 rounded-xl bg-[var(--primary)] hover:bg-amber-600 text-xs font-bold text-white transition-all"
                 >
                   Create Class
                 </button>

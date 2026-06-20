@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -73,7 +73,7 @@ export default function AnnouncementsPage() {
     setTitle("");
     setBody("");
     setPinToTop(false);
-    setToast("ðŸŽ‰ Announcement broadcasted! Parent notification feeds updated.");
+    setToast("🎉 Announcement broadcasted! Parent notification feeds updated.");
     setTimeout(() => {
       setToast(null);
     }, 4500);
@@ -88,7 +88,7 @@ export default function AnnouncementsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Broadcast Form */}
         <div className="theme-card p-6 border border-[var(--border)] h-fit">
-          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">ðŸ“¢ Compose Announcement</h2>
+          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">📢 Compose Announcement</h2>
           <form onSubmit={handleBroadcast} className="space-y-4">
             <div>
               <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Topic / Title</label>
@@ -145,14 +145,14 @@ export default function AnnouncementsPage() {
               type="submit"
               className="w-full py-2.5 bg-[var(--primary)] hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
             >
-              ðŸ“¢ Broadcast Announcement
+              📢 Broadcast Announcement
             </button>
           </form>
         </div>
 
         {/* Board feed */}
         <div className="lg:col-span-2 theme-card p-6 border border-[var(--border)] space-y-5">
-          <h2 className="text-base font-semibold text-[var(--text-heading)]">ðŸ“‹ Active Announcement Board</h2>
+          <h2 className="text-base font-semibold text-[var(--text-heading)]">📋 Active Announcement Board</h2>
 
           {toast && (
             <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-xl">
@@ -170,7 +170,7 @@ export default function AnnouncementsPage() {
               >
                 {ann.pinned && (
                   <span className="absolute top-3 right-3 text-[10px] bg-[var(--primary)]/10 text-amber-400 border border-[var(--primary)]/20 px-2 py-0.5 rounded-full font-bold">
-                    ðŸ“Œ Pinned
+                    📌 Pinned
                   </span>
                 )}
 
@@ -180,7 +180,7 @@ export default function AnnouncementsPage() {
                       {ann.target}
                     </span>
                     <span className="text-[10px] text-[var(--text-muted)] font-semibold">{ann.date}</span>
-                    <span className="text-[10px] text-slate-600 font-semibold">Â· By {ann.sender}</span>
+                    <span className="text-[10px] text-slate-600 font-semibold">· By {ann.sender}</span>
                   </div>
                   <h3 className="text-sm font-bold text-[var(--text-heading)] mb-2">{ann.title}</h3>
                   <p className="text-xs text-[var(--text-main)] leading-relaxed">{ann.body}</p>

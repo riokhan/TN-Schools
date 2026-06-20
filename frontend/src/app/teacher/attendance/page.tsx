@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -45,7 +45,7 @@ export default function AttendancePage() {
     const attendancePercentage = Math.round((presentCount / totalCount) * 100);
 
     setToast(
-      `âœ“ Attendance for Class ${selectedClass} on ${selectedDate} has been saved! Present: ${presentCount}, Absent: ${absentCount}, Late: ${lateCount} (${attendancePercentage}%). ${absentCount} parent notifications dispatched.`
+      `✓ Attendance for Class ${selectedClass} on ${selectedDate} has been saved! Present: ${presentCount}, Absent: ${absentCount}, Late: ${lateCount} (${attendancePercentage}%). ${absentCount} parent notifications dispatched.`
     );
 
     setTimeout(() => {
@@ -97,7 +97,7 @@ export default function AttendancePage() {
             onClick={handleSaveAttendance}
             className="px-4 py-2 bg-[var(--primary)] hover:bg-amber-600 text-slate-950 text-xs font-bold rounded-xl transition-colors"
           >
-            ðŸ’¾ Save Attendance Sheet
+            💾 Save Attendance Sheet
           </button>
         </div>
       </div>
@@ -105,10 +105,10 @@ export default function AttendancePage() {
       {/* Realtime Attendance Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Total Students", value: students.length, color: "text-[var(--text-heading)]", icon: "ðŸ‘¥" },
-          { label: "Present Today", value: presentCount, color: "text-emerald-400", icon: "ðŸŸ¢" },
-          { label: "Absent Today", value: absentCount, color: "text-red-400", icon: "ðŸ”´" },
-          { label: "Attendance Rate", value: `${attendanceRate}%`, color: "text-amber-400", icon: "ðŸ“ˆ" },
+          { label: "Total Students", value: students.length, color: "text-[var(--text-heading)]", icon: "👥" },
+          { label: "Present Today", value: presentCount, color: "text-emerald-400", icon: "🟢" },
+          { label: "Absent Today", value: absentCount, color: "text-red-400", icon: "🔴" },
+          { label: "Attendance Rate", value: `${attendanceRate}%`, color: "text-amber-400", icon: "📈" },
         ].map((stat, i) => (
           <div key={i} className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl p-4 border border-[var(--border)] text-center">
             <span className="text-xl block mb-1">{stat.icon}</span>
@@ -120,7 +120,7 @@ export default function AttendancePage() {
 
       {/* Main Roster Table */}
       <div className="theme-card p-6 border border-[var(--border)]">
-        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-5">ðŸ“‹ Roster Checklist</h2>
+        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-5">📋 Roster Checklist</h2>
 
         {toast && (
           <div className="mb-5 p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-xl leading-relaxed">

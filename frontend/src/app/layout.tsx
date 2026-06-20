@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Open_Sans } from "next/font/google";
 import "./globals.css";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import ThemeProvider from "@/providers/ThemeProvider";
 
-const roboto = Roboto({ weight: ['300', '400', '500', '700'], subsets: ["latin"] });
+const openSans = Open_Sans({ weight: ['300', '400', '600', '700'], subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: "TN Schools AI Smart Learning Ecosystem",
@@ -19,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={roboto.className}>
+      <body className={openSans.className}>
         <ThemeProvider>
           <NextAuthProvider>{children}</NextAuthProvider>
         </ThemeProvider>

@@ -5,6 +5,7 @@ import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
 import { roleConfigs, NavItem } from "@/lib/navConfig";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useTheme } from "next-themes";
 
 interface PortalLayoutProps {
   children: React.ReactNode;
@@ -106,6 +107,13 @@ export default function PortalLayout({
   const [unreadCount, setUnreadCount] = useState(3);
   const [activeStudentLevel, setActiveStudentLevel] = useState("STUDENT_HIGHER");
   const { data: session, status } = useSession();
+  
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (pathname.startsWith("/student/middle-school")) {
@@ -167,7 +175,8 @@ export default function PortalLayout({
   const currentConfig = roleConfigs[userRole];
 
   // Resolve configuration falling back to central store
-  const resolvedAccentColor = accentColor || currentConfig?.accentColor || "#6366f1";
+  const isDark = mounted && theme === "dark";
+  const resolvedAccentColor = isDark ? "#2dce89" : (accentColor || currentConfig?.accentColor || "#6366f1");
   const resolvedThemeClass = themeClass || currentConfig?.themeClass || "theme-student";
   const resolvedNavItems = navItems || currentConfig?.navItems || [];
   const resolvedTitle = title || currentConfig?.title || "Portal Dashboard";
@@ -274,26 +283,31 @@ export default function PortalLayout({
       {/* Sidebar */}
       <aside className={`sidebar ${isMobileMenuOpen ? "open" : ""}`}>
         {/* Logo Section */}
-        <div className="px-6 mb-6 flex justify-center mt-2">
+        <div className="px-6 mb-6 flex items-center gap-3 mt-4">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <span className="text-3xl">🎓</span>
-            <span className="text-2xl font-bold text-[var(--text-heading)]">Smart</span>
+            <span className="text-2xl shrink-0">🏛️</span>
+            <div className="leading-tight text-left">
+              <span className="block text-base font-black text-[var(--text-heading)]">TN Schools</span>
+              <span className="block text-[10px] font-semibold text-[var(--text-muted)] tracking-wider">AI Ecosystem</span>
+            </div>
           </Link>
         </div>
 
         {/* User Profile Section */}
-        <div className="px-4 mb-6 flex flex-col items-center">
-          <div className="relative">
+        <div className="mx-4 p-3 border border-[var(--border)] rounded-2xl flex items-center gap-3 mb-6 bg-slate-50/50 dark:bg-slate-900/20">
+          <div className="relative shrink-0">
              <div
-               className="w-16 h-16 rounded-xl text-white text-xl font-bold flex items-center justify-center mb-3 shadow-md"
-               style={{ background: `linear-gradient(135deg, ${resolvedAccentColor}, ${resolvedAccentColor}99)` }}
+               className="w-10 h-10 rounded-full text-white text-base font-bold flex items-center justify-center shadow-sm"
+               style={{ background: `linear-gradient(135deg, ${resolvedAccentColor}, ${resolvedAccentColor}dd)` }}
              >
                {letter}
              </div>
-             <div className="absolute bottom-2 right-[-5px] w-4 h-4 bg-green-500 border-2 border-[var(--bg-sidebar)] rounded-full"></div>
+             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[var(--bg-sidebar)] rounded-full"></div>
           </div>
-          <div className="text-sm font-semibold text-[var(--text-heading)] text-center">{displayName}</div>
-          <div className="text-xs text-[var(--text-muted)] text-center">{userRole === "TEACHER" ? "Teacher" : "Admin"}</div>
+          <div className="min-w-0 text-left">
+            <div className="text-sm font-bold text-[var(--text-heading)] truncate">{displayName}</div>
+            <div className="text-[10px] text-[var(--text-muted)] truncate">{displayEmail || (userRole === "TEACHER" ? "Teacher" : "Student")}</div>
+          </div>
         </div>
 
         {/* Navigation */}
@@ -359,7 +373,15 @@ export default function PortalLayout({
       )}
 
       {/* Main Content Area */}
-      <div className="main-content">
+      <div className="main-content relative min-h-screen">
+        {/* Argon Header Background Gradient */}
+        <div 
+          className="absolute top-0 left-0 right-0 h-[300px] z-0 transition-all duration-300 pointer-events-none main-content-header-bg"
+          style={{
+            background: `linear-gradient(87deg, ${resolvedAccentColor} 0%, ${resolvedAccentColor}dd 100%)`
+          }}
+        />
+
         {/* Topbar */}
         <div className="topbar mb-6 -mt-2 mx-0 relative z-30 flex items-center justify-between">
           <div className="flex items-center gap-4 flex-1">
@@ -372,24 +394,74 @@ export default function PortalLayout({
             <button className="hidden md:block text-[var(--text-main)] p-2 hover:bg-[var(--sidebar-item-hover-bg)] rounded-lg text-lg">
               ☰
             </button>
-            <div className="relative hidden md:block max-w-md w-full ml-2">
-               <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)]">🔍</span>
-               <input 
-                 type="text" 
-                 placeholder="Search pages, settings or... Ctrl K" 
-                 className="w-full pl-10 pr-4 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-full text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
-               />
-            </div>
+            
+            {/* If title is provided, display title and subtitle like the screenshot, otherwise show search bar */}
+            {resolvedTitle ? (
+              <div className="ml-2 text-left">
+                <h1 className="text-lg md:text-xl font-bold text-[var(--text-heading)] leading-tight">{resolvedTitle}</h1>
+                {resolvedSubtitle && (
+                  <p className="text-xs text-[var(--text-muted)] font-medium mt-0.5">{resolvedSubtitle}</p>
+                )}
+              </div>
+            ) : (
+              <div className="relative hidden md:block max-w-md w-full ml-2">
+                 <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--text-muted)]">🔍</span>
+                 <input 
+                   type="text" 
+                   placeholder="Search pages, settings or... Ctrl K" 
+                   className="w-full pl-10 pr-4 py-2 bg-[var(--input-bg)] border border-[var(--input-border)] rounded-full text-sm text-[var(--text-main)] placeholder:text-[var(--text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--primary)]/20 transition-all"
+                 />
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-3 relative z-50">
             {/* Theme Toggle */}
             <ThemeToggle />
 
-            {/* Expand Icon */}
-            <button className="p-2 text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] rounded-full transition-colors hidden sm:block">
+            {/* Expand Icon - hidden in light theme card design for simplicity, keeping in dark layout */}
+            <button className="p-2 text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] rounded-full transition-colors hidden sm:block dark:block">
               ⛶
             </button>
+
+            {/* Language Selector */}
+            <div className="relative hidden sm:block">
+              <button
+                onClick={() => {
+                  setIsLanguageDropdownOpen(!isLanguageDropdownOpen);
+                  setIsNotificationsOpen(false);
+                  setIsProfileOpen(false);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] rounded-xl text-xs font-semibold text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors"
+                title="Language"
+              >
+                <span className="text-sm">🌐</span>
+                <span>{currentLanguage}</span>
+                <span className="text-[10px] opacity-60">▼</span>
+              </button>
+              {isLanguageDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-32 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-lg z-50 py-1">
+                  <button
+                    onClick={() => {
+                      setCurrentLanguage("English");
+                      setIsLanguageDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-medium text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors"
+                  >
+                    English
+                  </button>
+                  <button
+                    onClick={() => {
+                      setCurrentLanguage("தமிழ்");
+                      setIsLanguageDropdownOpen(false);
+                    }}
+                    className="w-full text-left px-4 py-2 text-xs font-medium text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors"
+                  >
+                    தமிழ்
+                  </button>
+                </div>
+              )}
+            </div>
 
             {/* Notifications Button */}
             <div className="relative">
@@ -404,42 +476,77 @@ export default function PortalLayout({
               >
                 <span className="text-lg">🔔</span>
                 {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold border-2 border-[var(--bg-topbar)]">
+                  <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold border-2 border-[var(--bg-card)]">
                     {unreadCount}
                   </span>
                 )}
               </button>
+              {isNotificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-xl z-50 overflow-hidden">
+                  <div className="p-4 border-b border-[var(--border)] flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/10">
+                    <span className="text-xs font-bold text-[var(--text-heading)]">{t.notificationsTitle}</span>
+                    <button 
+                      onClick={() => setUnreadCount(0)}
+                      className="text-[10px] text-[var(--primary)] hover:underline font-semibold"
+                    >
+                      {t.markAllRead}
+                    </button>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {roleNotifications.length > 0 && unreadCount > 0 ? (
+                      roleNotifications.map((notif: string, i: number) => (
+                        <div key={i} className="p-3.5 text-xs text-[var(--text-main)] border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors">
+                          {notif}
+                        </div>
+                      ))
+                    ) : (
+                      <div className="p-6 text-center text-xs text-[var(--text-muted)]">
+                        {t.noNotifications}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Language Selector */}
-            <div className="relative hidden sm:block">
-              <button
-                onClick={() => {
-                  setIsLanguageDropdownOpen(!isLanguageDropdownOpen);
-                  setIsNotificationsOpen(false);
-                  setIsProfileOpen(false);
-                }}
-                className="flex items-center gap-1.5 p-2 hover:bg-[var(--sidebar-item-hover-bg)] rounded-full transition-colors text-lg"
-                title="Language"
-              >
-                <span>🇺🇸</span>
-              </button>
-            </div>
-
-            {/* User Profile Mini */}
-            <div className="relative ml-2 flex items-center gap-2">
-               <span className="text-sm font-semibold text-[var(--text-heading)] hidden md:block">{displayName}</span>
+            {/* User Profile Avatar Mini */}
+            <div className="relative ml-1 flex items-center">
                <div
-                  className="w-8 h-8 rounded-full text-white text-xs font-bold flex items-center justify-center cursor-pointer shadow-sm border border-[var(--border)]"
-                  style={{ background: `linear-gradient(135deg, ${resolvedAccentColor}, ${resolvedAccentColor}aa)` }}
+                  className="w-9 h-9 rounded-full text-white text-xs font-bold flex items-center justify-center cursor-pointer shadow-sm border border-[var(--border)]"
+                  style={{ background: `linear-gradient(135deg, ${resolvedAccentColor}, ${resolvedAccentColor}dd)` }}
+                  onClick={() => {
+                    setIsProfileOpen(!isProfileOpen);
+                    setIsNotificationsOpen(false);
+                    setIsLanguageDropdownOpen(false);
+                  }}
                >
                   {letter}
                </div>
+               {isProfileOpen && (
+                 <div className="absolute right-0 mt-12 top-0 w-56 bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-xl z-50 py-2">
+                   <div className="px-4 py-2 border-b border-[var(--border)] mb-1">
+                     <div className="text-xs font-bold text-[var(--text-heading)] truncate">{displayName}</div>
+                     <div className="text-[10px] text-[var(--text-muted)] truncate">{displayEmail}</div>
+                   </div>
+                   <Link href="#" className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors">
+                     👤 {t.profileTitle}
+                   </Link>
+                   <Link href="#" className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors">
+                     ⚙️ {t.settings}
+                   </Link>
+                   <Link href="#" className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors">
+                     ❓ {t.help}
+                   </Link>
+                 </div>
+               )}
             </div>
           </div>
         </div>
 
-        {children}
+        {/* Children content relative to sit above absolute background */}
+        <div className="relative z-10">
+          {children}
+        </div>
       </div>
     </div>
   );

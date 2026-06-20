@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
@@ -87,7 +87,7 @@ export default function RiskAlertsPage() {
     >
       {toastMessage && (
         <div className="fixed top-5 right-5 bg-emerald-500 text-[var(--text-heading)] text-xs font-bold px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2">
-          <span>âœ…</span> {toastMessage}
+          <span>✅</span> {toastMessage}
         </div>
       )}
 
@@ -95,7 +95,7 @@ export default function RiskAlertsPage() {
         {/* Risk Metrics list */}
         <div className="lg:col-span-1 space-y-4">
           <div className="flex justify-between items-center bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-4 rounded-xl border border-[var(--border)]">
-            <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider">âš ï¸ Flagged Students</h3>
+            <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider">⚠️ Flagged Students</h3>
             <span className="badge badge-red">{students.length} Alerts</span>
           </div>
 
@@ -120,7 +120,7 @@ export default function RiskAlertsPage() {
                   <div className="flex justify-between items-start mb-2">
                     <div>
                       <h4 className="text-[var(--text-heading)] font-bold text-sm">{st.name}</h4>
-                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Section: {st.className} Â· Parent: {st.parentName}</p>
+                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Section: {st.className} · Parent: {st.parentName}</p>
                     </div>
                     <span className={`badge ${st.riskLevel === "high" ? "badge-red" : "badge-yellow"}`}>
                       {st.riskLevel}
@@ -141,7 +141,7 @@ export default function RiskAlertsPage() {
 
             {students.length === 0 && (
               <div className="theme-card p-8 border border-dashed border-[var(--border)] text-center text-xs text-[var(--text-muted)]">
-                ðŸŽ‰ Great job! No students are currently flagged for academic risk.
+                🎉 Great job! No students are currently flagged for academic risk.
               </div>
             )}
           </div>
@@ -153,14 +153,14 @@ export default function RiskAlertsPage() {
             <div>
               <div className="flex justify-between items-start border-b border-[var(--border)] pb-4 mb-5">
                 <div>
-                  <h3 className="text-[var(--text-heading)] font-bold text-base leading-snug">ðŸ›¡ï¸ Intervention Workspace</h3>
+                  <h3 className="text-[var(--text-heading)] font-bold text-base leading-snug">🛡️ Intervention Workspace</h3>
                   <p className="text-xs text-[var(--text-muted)] mt-1">Design academic countermeasures for {selectedStudent.name}</p>
                 </div>
                 <button
                   onClick={() => handleResolveAlert(selectedStudent.id)}
                   className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/10 transition-all"
                 >
-                  âœ“ Resolve Alert
+                  ✓ Resolve Alert
                 </button>
               </div>
 
@@ -170,21 +170,21 @@ export default function RiskAlertsPage() {
                   onClick={handleGenerateRemedial}
                   className="py-3 px-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] hover:bg-[var(--bg-card)] hover:border-[var(--border)] text-xs font-semibold text-[var(--text-heading)] transition-all text-center flex flex-col items-center gap-1.5"
                 >
-                  <span className="text-lg">ðŸ“„</span>
+                  <span className="text-lg">📄</span>
                   <span>Remedial Tasks</span>
                 </button>
                 <button
                   onClick={handleDraftParent}
                   className="py-3 px-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] hover:bg-[var(--bg-card)] hover:border-[var(--border)] text-xs font-semibold text-[var(--text-heading)] transition-all text-center flex flex-col items-center gap-1.5"
                 >
-                  <span className="text-lg">âœ‰ï¸</span>
+                  <span className="text-lg">✉️</span>
                   <span>Parent Update</span>
                 </button>
                 <button
                   onClick={handleAssignPeer}
                   className="py-3 px-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] hover:bg-[var(--bg-card)] hover:border-[var(--border)] text-xs font-semibold text-[var(--text-heading)] transition-all text-center flex flex-col items-center gap-1.5"
                 >
-                  <span className="text-lg">ðŸ‘¥</span>
+                  <span className="text-lg">👥</span>
                   <span>Peer Tutoring</span>
                 </button>
               </div>
@@ -239,7 +239,7 @@ export default function RiskAlertsPage() {
 
             <div className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] p-4 rounded-2xl flex items-center justify-between text-xs mt-6">
               <div className="flex items-center gap-3">
-                <span className="text-xl">ðŸ’¡</span>
+                <span className="text-xl">💡</span>
                 <p className="text-[var(--text-muted)]">
                   Early remediation results show that students utilizing tutoring improve grades by up to **18%**.
                 </p>

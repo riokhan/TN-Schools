@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -164,7 +164,7 @@ export default function StudentProfilesPage() {
               onClick={() => setSelectedStudent(student)}
               className="w-full py-2 bg-[var(--bg-card)] hover:bg-slate-700 text-[var(--text-heading)] hover:text-[var(--text-heading)] font-bold rounded-xl text-xs transition-colors border border-[var(--border)]"
             >
-              ðŸ” View Full Profile
+              🔍 View Full Profile
             </button>
           </div>
         ))}
@@ -178,7 +178,7 @@ export default function StudentProfilesPage() {
               onClick={() => setSelectedStudent(null)}
               className="absolute top-4 right-4 text-[var(--text-muted)] hover:text-[var(--text-heading)] text-lg p-2"
             >
-              âœ•
+              ✕
             </button>
 
             {/* Modal Header */}
@@ -190,7 +190,7 @@ export default function StudentProfilesPage() {
                 <h2 className="text-lg font-bold text-[var(--text-heading)]">{selectedStudent.name}</h2>
                 <div className="text-xs text-[var(--text-muted)] flex gap-3 mt-1 font-semibold">
                   <span>Class: {selectedStudent.class}</span>
-                  <span>Â·</span>
+                  <span>·</span>
                   <span>EMIS ID: {selectedStudent.emis}</span>
                 </div>
               </div>
@@ -264,7 +264,7 @@ export default function StudentProfilesPage() {
                 Close Profile
               </button>
               <button className="px-5 py-2.5 bg-[var(--primary)] hover:bg-amber-600 text-slate-950 rounded-xl text-xs font-bold transition-colors">
-                ðŸ’¬ Message Parent
+                💬 Message Parent
               </button>
             </div>
           </div>

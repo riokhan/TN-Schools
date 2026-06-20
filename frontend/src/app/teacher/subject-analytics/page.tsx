@@ -44,7 +44,7 @@ export default function SubjectAnalyticsPage() {
   return (
     <PortalLayout title="Subject Analytics" subtitle="Syllabus coverage progress, exam scores, and learning gaps analysis.">
       {/* KPI Overview Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
           { label: "Syllabus Progress", value: "62.5%", icon: "📖", color: "text-amber-400", sub: "Goal: 100% by Dec" },
           { label: "Class Average", value: "74.8%", icon: "📈", color: "text-emerald-400", sub: "State Avg: 68%" },

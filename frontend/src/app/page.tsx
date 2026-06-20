@@ -195,12 +195,12 @@ const staggerContainer = {
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
-  show: { opacity: 1, y: 0, transition: { type: "spring", duration: 1, bounce: 0.3 } }
+  show: { opacity: 1, y: 0, transition: { type: "spring" as const, duration: 1, bounce: 0.3 } }
 };
 
 const fadeInScale = {
   hidden: { opacity: 0, scale: 0.9 },
-  show: { opacity: 1, scale: 1, transition: { type: "spring", duration: 1, bounce: 0.3 } }
+  show: { opacity: 1, scale: 1, transition: { type: "spring" as const, duration: 1, bounce: 0.3 } }
 };
 
 /* ─── Typed Text Effect ─── */
