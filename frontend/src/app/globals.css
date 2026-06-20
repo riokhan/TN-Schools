@@ -137,6 +137,13 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-heading);
 }
 
+/* Landing page dark sections: headings inherit white color from parent inline styles */
+.govt-dark-section h1, .govt-dark-section h2, .govt-dark-section h3,
+.govt-dark-section h4, .govt-dark-section h5, .govt-dark-section h6,
+.govt-dark-section p, .govt-dark-section span:not([class]) {
+  color: inherit !important;
+}
+
 .btn-primary {
   background-color: var(--portal-color, var(--primary));
   color: #ffffff !important;
@@ -418,22 +425,10 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ===================== NAVBAR ===================== */
 .landing-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
   z-index: 100;
-  padding: 1rem 2rem;
   transition: all 0.3s;
 }
 
-.landing-nav.scrolled {
-  background: rgba(10, 14, 26, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  padding: 0.75rem 2rem;
-}
 
 /* ===================== MARQUEE ===================== */
 @keyframes marquee {
