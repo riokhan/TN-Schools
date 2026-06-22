@@ -106,6 +106,7 @@ export default function PortalLayout({
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(3);
   const [activeStudentLevel, setActiveStudentLevel] = useState("STUDENT_HIGHER");
+  const [disabledRoutes, setDisabledRoutes] = useState<Set<string>>(new Set());
   const { data: session, status } = useSession();
   
   const { theme } = useTheme();
@@ -130,6 +131,21 @@ export default function PortalLayout({
       if (stored) setActiveStudentLevel(stored);
     }
   }, [pathname]);
+
+  useEffect(() => {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+    fetch(`${apiUrl}/api/pages`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && Array.isArray(data.data)) {
+          const disabled = new Set<string>(
+            data.data.filter((p: { isEnabled: boolean; route: string }) => !p.isEnabled).map((p: { route: string }) => p.route)
+          );
+          setDisabledRoutes(disabled);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Redirect to sign-in page if not logged in
   useEffect(() => {
@@ -179,6 +195,10 @@ export default function PortalLayout({
   const resolvedAccentColor = isDark ? "#2dce89" : (accentColor || currentConfig?.accentColor || "#6366f1");
   const resolvedThemeClass = themeClass || currentConfig?.themeClass || "theme-student";
   const resolvedNavItems = navItems || currentConfig?.navItems || [];
+  const filteredNavItems: NavItem[] =
+    userRole === "SUPERADMIN"
+      ? resolvedNavItems
+      : resolvedNavItems.filter((item) => item.href === "#" || item.label === "---" || !disabledRoutes.has(item.href));
   const resolvedTitle = title || currentConfig?.title || "Portal Dashboard";
   const resolvedSubtitle = subtitle || currentConfig?.subtitle || "";
   const resolvedAvatarLetter = avatarLetter || currentConfig?.avatarLetter || "P";
@@ -220,6 +240,10 @@ export default function PortalLayout({
     isAuthorized = userRole === "MINISTER";
     expectedRole = "MINISTER";
     fallbackPath = "/minister";
+  } else if (pathname.startsWith("/super-admin")) {
+    isAuthorized = userRole === "SUPERADMIN";
+    expectedRole = "SUPERADMIN";
+    fallbackPath = "/super-admin";
   }
 
   // Render Access Denied error sheet if unauthorized role tries to access
@@ -233,6 +257,7 @@ export default function PortalLayout({
     else if (userRole === "DEO") defaultDest = "/district-education-officer";
     else if (userRole === "COMMISSIONER") defaultDest = "/commissioner";
     else if (userRole === "MINISTER") defaultDest = "/minister";
+    else if (userRole === "SUPERADMIN") defaultDest = "/super-admin";
 
     return (
       <div className="min-h-screen bg-[var(--bg-main)] flex items-center justify-center p-6 text-center">
@@ -315,7 +340,7 @@ export default function PortalLayout({
           <div className="px-5 mb-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
             MAIN
           </div>
-          {resolvedNavItems.map((item, index) => {
+          {filteredNavItems.map((item, index) => {
             if (item.label === "---") {
               return <div key={`sep-${index}`} className="my-4 mx-4 border-t border-[var(--border)]" />;
             }

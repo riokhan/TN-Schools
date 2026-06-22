@@ -18,6 +18,7 @@ enum Role {
   DEO
   COMMISSIONER
   MINISTER
+  SUPERADMIN
 }
 
 enum AttendanceStatus {

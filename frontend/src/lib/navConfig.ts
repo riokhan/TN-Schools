@@ -87,6 +87,15 @@ export const portals = [
     border: "border-red-500/30",
     bg: "hover:bg-red-500/10",
   },
+  {
+    href: "/super-admin",
+    label: "Super Admin",
+    icon: "🛠️",
+    desc: "Manage Custom Pages, Enable/Disable Features, View Logs",
+    color: "from-slate-700 to-slate-900",
+    border: "border-slate-500/30",
+    bg: "hover:bg-slate-500/10",
+  },
 ];
 
 export const roleConfigs: Record<string, PortalConfig> = {
@@ -366,6 +375,22 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Infrastructure Projects", href: "/minister/infrastructure", icon: "🏗️" },
       { label: "Public Grievances", href: "/minister/grievances", icon: "⚖️" },
       { label: "Press & Media", href: "/minister/media", icon: "📰" },
+    ],
+  },
+  SUPERADMIN: {
+    title: "Super Admin Portal",
+    subtitle: "System Management & Dynamic Governance",
+    avatarLetter: "S",
+    avatarColor: "#475569",
+    themeClass: "theme-superadmin",
+    accentColor: "#475569",
+    navItems: [
+      { label: "System Dashboard", href: "/super-admin", icon: "📊" },
+      { label: "Page Management", href: "/super-admin/pages", icon: "📄" },
+      { label: "Feature Toggles", href: "/super-admin/features", icon: "🔧" },
+      { label: "User Roles", href: "/super-admin/users", icon: "👥" },
+      { label: "System Logs", href: "/super-admin/logs", icon: "📋" },
+      { label: "Portal Settings", href: "/super-admin/settings", icon: "⚙️" },
     ],
   },
 };

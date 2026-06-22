@@ -104,7 +104,8 @@
 .dark .theme-beo,
 .dark .theme-deo,
 .dark .theme-commissioner,
-.dark .theme-minister {
+.dark .theme-minister,
+.dark .theme-superadmin {
   --portal-color: #2dce89 !important;
   --portal-light: rgba(45, 206, 137, 0.15) !important;
 }
@@ -746,6 +747,7 @@ h1, h2, h3, h4, h5, h6 {
 .theme-deo          { --portal-color: #f5365c; --portal-light: rgba(245, 54, 92, 0.15); }
 .theme-commissioner { --portal-color: #172b4d; --portal-light: rgba(23, 43, 77, 0.15); }
 .theme-minister     { --portal-color: #f5365c; --portal-light: rgba(245, 54, 92, 0.15); }
+.theme-superadmin   { --portal-color: #475569; --portal-light: rgba(71, 85, 105, 0.15); }
 
 /* ===================== FOOTER GRADIENT ===================== */
 .footer-gradient {

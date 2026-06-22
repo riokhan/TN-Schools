@@ -13,6 +13,7 @@ const demoAccounts = [
   { label: "🗺️ DEO", email: "deo@gmail.com", role: "DEO" },
   { label: "⚖️ Commissioner", email: "commissioner@gmail.com", role: "COMMISSIONER" },
   { label: "🏛️ Minister", email: "minister@gmail.com", role: "MINISTER" },
+  { label: "🛠️ Super Admin", email: "superadmin@gmail.com", role: "SUPERADMIN" },
 ];
 
 export default function LoginPage() {
@@ -53,6 +54,8 @@ export default function LoginPage() {
       else if (lower.includes("deo")) path = "/district-education-officer";
       else if (lower.includes("commissioner")) path = "/commissioner";
       else if (lower.includes("minister")) path = "/minister";
+      else if (lower.includes("superadmin")) path = "/super-admin";
+
 
       router.push(path);
       router.refresh();
@@ -83,6 +86,8 @@ export default function LoginPage() {
       else if (demoEmail.includes("deo")) path = "/district-education-officer";
       else if (demoEmail.includes("commissioner")) path = "/commissioner";
       else if (demoEmail.includes("minister")) path = "/minister";
+      else if (demoEmail.includes("superadmin")) path = "/super-admin";
+
 
       router.push(path);
       router.refresh();

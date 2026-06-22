@@ -43,6 +43,10 @@ const authOptions: NextAuthOptions = {
           if (lowerEmail === "minister@gmail.com") {
             return { id: "minister-1", name: "Minister Dashboard", email: "minister@gmail.com", role: "MINISTER" };
           }
+          if (lowerEmail === "superadmin@gmail.com") {
+            return { id: "superadmin-1", name: "Super Admin", email: "superadmin@gmail.com", role: "SUPERADMIN" };
+          }
+
         }
 
         // Fallback to EMIS ID

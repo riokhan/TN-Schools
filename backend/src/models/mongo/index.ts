@@ -90,3 +90,30 @@ const LearningPathSchema = new Schema<ILearningPath>({
 }, { timestamps: true });
 
 export const LearningPath = mongoose.model<ILearningPath>('LearningPath', LearningPathSchema);
+
+// ─── Super Admin Dynamic Page Management ──────────────────────
+
+export interface IManagedPage extends Document {
+  title: string;
+  route: string;
+  icon: string;
+  roles: string[];
+  portal: string;
+  isEnabled: boolean;
+  description?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const ManagedPageSchema = new Schema<IManagedPage>({
+  title: { type: String, required: true },
+  route: { type: String, required: true, unique: true },
+  icon: { type: String, required: true },
+  roles: { type: [String], default: [] },
+  portal: { type: String, default: 'STUDENT' },
+  isEnabled: { type: Boolean, default: true },
+  description: { type: String },
+}, { timestamps: true });
+
+export const ManagedPage = mongoose.model<IManagedPage>('ManagedPage', ManagedPageSchema);
+
