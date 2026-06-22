@@ -4,7 +4,15 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import PortalLayout from "@/components/PortalLayout";
 import * as XLSX from "xlsx";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+const getApiBase = () => {
+  let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  return url;
+};
+
+const API_BASE = getApiBase();
 
 interface TempStaffMember {
   id?: string;
