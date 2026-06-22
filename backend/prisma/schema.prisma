@@ -205,3 +205,99 @@ model SchoolAsset {
   updatedAt   DateTime @updatedAt
   createdAt   DateTime @default(now())
 }
+
+// ─── Headmaster Portal ─────────────────────────────────────────
+
+model WatchlistStudent {
+  id         String   @id @default(uuid())
+  name       String
+  rollNumber String
+  class      String
+  phone      String   @default("N/A")
+  parentName String   @default("N/A")
+  district   String   @default("N/A")
+  state      String   @default("N/A")
+  city       String   @default("N/A")
+  pincode    String   @default("N/A")
+  risk       String   @default("Medium")  // "High" | "Medium"
+  schoolId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([risk])
+}
+
+model HeadmasterStaff {
+  id          String   @id @default(uuid())
+  name        String
+  emisId      String   @unique
+  subject     String   @default("General")
+  phone       String   @default("N/A")
+  email       String?
+  attendance  Float    @default(100)
+  performance String   @default("Good")   // "Excellent" | "Good" | "Average"
+  leaveUsed   Int      @default(0)
+  password    String   @default("123456")
+  schoolId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model HeadmasterTempStaff {
+  id        String   @id @default(uuid())
+  name      String
+  role      String
+  agency    String   @default("Direct Contract")
+  joined    String   @default("")
+  phone     String   @default("N/A")
+  email     String   @default("N/A")
+  duration  String   @default("12 Months")
+  salary    String   @default("N/A")
+  status    String   @default("Active")
+  password  String   @default("123456")
+  schoolId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model HeadmasterParent {
+  id           String   @id @default(uuid())
+  name         String
+  role         String
+  phone        String
+  email        String?
+  studentName  String   @default("N/A")
+  studentClass String   @default("N/A")
+  term         String
+  password     String   @default("123456")
+  schoolId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model HeadmasterAlumni {
+  id           String   @id @default(uuid())
+  name         String
+  batch        String
+  contribution String
+  role         String
+  phone        String
+  email        String
+  location     String
+  value        String   @default("N/A")
+  schoolId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+
+

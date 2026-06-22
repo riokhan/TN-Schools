@@ -1,12 +1,36 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import * as XLSX from "xlsx";
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
 interface CommitteeMember {
+  id?: string;
   name: string;
   role: string;
   phone: string;
+  email: string;
+  studentName: string;
+  studentClass: string;
+  term: string;
+  password?: string;
+  createdAt?: string;
+}
+
+interface ParsedPreviewPTAMember {
+  id: number;
+  name: string;
+  role: string;
+  phone: string;
+  email: string;
+  studentName: string;
+  studentClass: string;
+  term: string;
+  password: string;
+  isValid: boolean;
+  validationError?: string;
 }
 
 interface Grievance {
@@ -18,13 +42,11 @@ interface Grievance {
 }
 
 export default function ParentsPage() {
-  const [committee, setCommittee] = useState<CommitteeMember[]>([
-    { name: "Mr. R. Kumar", role: "President (Parent)", phone: "+91 98765 43210" },
-    { name: "Mrs. N. Lakshmi", role: "Vice President (Parent)", phone: "+91 98765 43211" },
-    { name: "Mr. Venkatesh R.", role: "Secretary (Headmaster)", phone: "School Office" },
-  ]);
+  const [committee, setCommittee] = useState<CommitteeMember[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
-  const [grievances, setGrievances] = useState<Grievance[]>([
+  const [grievances] = useState<Grievance[]>([
     { topic: "Transport facility delays in Zone B", raisedBy: "12 parents", status: "Under Review", border: "border-amber-500/20", bg: "bg-amber-500/10 text-amber-400" },
     { topic: "Request for extra special classes for 10th", raisedBy: "PTA Committee", status: "Approved", border: "border-emerald-500/20", bg: "bg-emerald-500/10 text-emerald-400" },
     { topic: "RO Water filter service required in block C", raisedBy: "Class 7 Representative", status: "Resolved", border: "border-blue-500/20", bg: "bg-blue-500/10 text-blue-400" },
@@ -34,41 +56,270 @@ export default function ParentsPage() {
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("Committee Member (Parent)");
   const [newPhone, setNewPhone] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [newStudentName, setNewStudentName] = useState("");
+  const [newStudentClass, setNewStudentClass] = useState("Class 10A");
+  const [newTerm, setNewTerm] = useState("2025-26");
+  const [newPassword, setNewPassword] = useState("123456");
 
   const [isUploading, setIsUploading] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [previewMembers, setPreviewMembers] = useState<ParsedPreviewPTAMember[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleManualSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newName || !newPhone) return;
-
-    const newMember: CommitteeMember = {
-      name: newName,
-      role: newRole,
-      phone: newPhone,
-    };
-
-    setCommittee(prev => [...prev, newMember]);
-    setNewName("");
-    setNewPhone("");
-    setIsModalOpen(false);
-    setToast(`🎉 PTA Officer ${newMember.name} successfully registered to committee.`);
-    setTimeout(() => setToast(null), 4000);
+  const showToast = (msg: string, type: "success" | "error" = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 4500);
   };
 
-  const handleExcelSimulate = () => {
+  // ── Fetch PTA committee members from PostgreSQL on mount ──────────
+  const fetchCommittee = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/headmaster/parents`);
+      const json = await res.json();
+      if (json.success) {
+        setCommittee(json.data);
+      } else {
+        showToast("⚠️ Could not load PTA Committee from server.", "error");
+      }
+    } catch {
+      showToast("🔴 Server offline — could not load PTA Committee.", "error");
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCommittee();
+  }, [fetchCommittee]);
+
+  // ── Delete a committee member ────────────────────────────────────
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to remove this PTA officer?")) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/headmaster/parents/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        showToast("🎉 PTA officer removed successfully.");
+        setCommittee(prev => prev.filter(p => p.id !== id));
+      } else {
+        showToast("❌ Failed to remove PTA officer.", "error");
+      }
+    } catch {
+      showToast("🔴 Network error — could not remove PTA officer.", "error");
+    }
+  };
+
+  const downloadExcelTemplate = () => {
+    const headers = [
+      "Parent Name", 
+      "Committee Role", 
+      "Phone Number", 
+      "Email Address", 
+      "Ward Name", 
+      "Ward Class & Section", 
+      "Committee Term",
+      "Password"
+    ];
+    const sampleData = [
+      {
+        "Parent Name": "Mr. R. Kumar",
+        "Committee Role": "President (Parent)",
+        "Phone Number": "+91 98765 43210",
+        "Email Address": "kumar.r@gmail.com",
+        "Ward Name": "K. Ramesh",
+        "Ward Class & Section": "Class 10A",
+        "Committee Term": "2025-26",
+        "Password": "password123"
+      },
+      {
+        "Parent Name": "Mrs. N. Lakshmi",
+        "Committee Role": "Vice President (Parent)",
+        "Phone Number": "+91 98765 43211",
+        "Email Address": "lakshmi.n@gmail.com",
+        "Ward Name": "L. Karthik",
+        "Ward Class & Section": "Class 9B",
+        "Committee Term": "2025-26",
+        "Password": "password123"
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(sampleData, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "PTA Template");
+    XLSX.writeFile(workbook, "pta_committee_template.xlsx");
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) parseFile(file);
+  };
+
+  const parseFile = (file: File) => {
     setIsUploading(true);
-    setTimeout(() => {
-      const excelMembers: CommitteeMember[] = [
-        { name: "Mrs. Chitra J.", role: "Joint Secretary (Parent)", phone: "+91 98765 43212" },
-        { name: "Mr. Nagarajan P.", role: "Treasurer (Parent)", phone: "+91 98765 43213" },
-      ];
-      setCommittee(prev => [...prev, ...excelMembers]);
-      setIsUploading(false);
-      setIsModalOpen(false);
-      setToast("📊 PTA roster parsed successfully! 2 parent officer records appended to committee database.");
-      setTimeout(() => setToast(null), 4000);
-    }, 1500);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = event.target?.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+
+        interface ExcelPTARow {
+          "Parent Name"?: string;
+          "Committee Role"?: string;
+          "Phone Number"?: string;
+          "Email Address"?: string;
+          "Ward Name"?: string;
+          "Ward Class & Section"?: string;
+          "Committee Term"?: string;
+          "Password"?: string;
+        }
+
+        const parsedData = XLSX.utils.sheet_to_json<ExcelPTARow>(sheet);
+
+        const validated: ParsedPreviewPTAMember[] = parsedData.map((row, idx) => {
+          const name = row["Parent Name"]?.toString().trim() || "";
+          const role = row["Committee Role"]?.toString().trim() || "";
+          const phone = row["Phone Number"]?.toString().trim() || "";
+          const email = row["Email Address"]?.toString().trim() || "";
+          const studentName = row["Ward Name"]?.toString().trim() || "";
+          const studentClass = row["Ward Class & Section"]?.toString().trim() || "";
+          const term = row["Committee Term"]?.toString().trim() || "2025-26";
+          const password = row["Password"]?.toString().trim() || "123456";
+
+          const isValid = name !== "" && role !== "" && phone !== "";
+
+          return {
+            id: idx,
+            name,
+            role,
+            phone: phone || "Not Provided",
+            email: email || "Not Provided",
+            studentName: studentName || "N/A",
+            studentClass: studentClass || "N/A",
+            term,
+            password,
+            isValid,
+            validationError: !name 
+              ? "Parent Name is missing" 
+              : !role 
+                ? "Committee Role is missing" 
+                : !phone 
+                  ? "Phone Number is missing"
+                  : undefined
+          };
+        });
+
+        setPreviewMembers(validated);
+        showToast(`📊 Loaded ${validated.length} PTA officers. Review preview in the modal.`);
+      } catch (err) {
+        console.error(err);
+        showToast("❌ Failed to parse file. Make sure it is a valid Excel or CSV sheet.", "error");
+      } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleConfirmImport = async () => {
+    const validMembers = previewMembers.filter(s => s.isValid);
+    if (validMembers.length === 0) {
+      showToast("⚠️ No valid PTA officers to import.", "error");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/headmaster/parents/bulk`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          parents: validMembers.map(m => ({
+            name: m.name,
+            role: m.role,
+            phone: m.phone,
+            email: m.email === "Not Provided" ? null : m.email,
+            studentName: m.studentName,
+            studentClass: m.studentClass,
+            term: m.term,
+            password: m.password,
+          }))
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`🎉 Successfully imported ${json.created} PTA committee officers!`);
+        fetchCommittee();
+        setPreviewMembers([]);
+        setIsModalOpen(false);
+      } else {
+        showToast("❌ Failed to save PTA officers.", "error");
+      }
+    } catch {
+      showToast("🔴 Network error — could not save imported officers.", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleManualSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newName || !newPhone || !newRole) return;
+
+    setIsSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/headmaster/parents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newName,
+          role: newRole,
+          phone: newPhone,
+          email: newEmail || null,
+          studentName: newStudentName || "N/A",
+          studentClass: newStudentClass || "N/A",
+          term: newTerm,
+          password: newPassword || "123456",
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`🎉 PTA Officer ${newName} successfully registered.`);
+        fetchCommittee();
+        setNewName("");
+        setNewPhone("");
+        setNewEmail("");
+        setNewStudentName("");
+        setNewStudentClass("Class 10A");
+        setNewTerm("2025-26");
+        setNewPassword("123456");
+        setIsModalOpen(false);
+      } else {
+        showToast("❌ Failed to save PTA officer.", "error");
+      }
+    } catch {
+      showToast("🔴 Network error — could not save PTA officer.", "error");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -92,16 +343,21 @@ export default function ParentsPage() {
       </div>
 
       {toast && (
-        <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-xl shadow-lg">
-          {toast}
+        <div className={`mb-6 p-4 border text-xs rounded-xl shadow-lg ${
+          toast.type === "error" ? "bg-red-500/10 border-red-500/20 text-red-300" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+        }`}>
+          {toast.msg}
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Core committee */}
-        <div className="glass rounded-2xl p-6 border border-slate-800">
+        <div className="glass rounded-2xl p-6 border border-slate-800 flex flex-col">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-bold text-white">PTA Core Committee Officers</h3>
+            <div className="flex items-center gap-3">
+              <h3 className="text-sm font-bold text-white">PTA Core Committee Officers</h3>
+              {isLoading && <div className="w-4 h-4 rounded-full border-2 border-blue-500/30 border-t-blue-500 animate-spin" />}
+            </div>
             <button
               onClick={() => setIsModalOpen(true)}
               className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl transition-all shadow-md"
@@ -109,16 +365,43 @@ export default function ParentsPage() {
               + Register PTA Officer
             </button>
           </div>
-          <div className="space-y-3">
-            {committee.map((p, i) => (
-              <div key={i} className="flex justify-between items-center p-3.5 border border-slate-800 rounded-xl bg-slate-900/60">
-                <div>
-                  <div className="font-bold text-white text-xs">{p.name}</div>
-                  <div className="text-[10px] text-blue-400 font-semibold mt-0.5">{p.role}</div>
-                </div>
-                <div className="text-xs text-slate-500 font-semibold">{p.phone}</div>
+          <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
+            {committee.length === 0 && !isLoading ? (
+              <div className="text-center py-12 text-slate-500 text-xs bg-slate-900/40 rounded-xl border border-slate-850">
+                No PTA committee officers found. Click "+ Register PTA Officer" to add members.
               </div>
-            ))}
+            ) : (
+              committee.map((p) => (
+                <div 
+                  key={p.id} 
+                  className="p-4 border border-slate-200 rounded-xl bg-white/95 hover:bg-white text-slate-800 shadow-md hover:shadow-lg transition-all duration-200 relative group"
+                >
+                  <div className="flex justify-between items-start pr-16">
+                    <div>
+                      <div className="font-extrabold text-slate-900 text-xs sm:text-sm">{p.name}</div>
+                      <div className="text-[10px] sm:text-xs text-blue-600 font-bold mt-0.5">{p.role}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-[10px] sm:text-xs text-slate-700 font-bold">{p.phone}</div>
+                      {p.email && <div className="text-[9px] sm:text-[10px] text-slate-500 font-medium mt-0.5">{p.email}</div>}
+                    </div>
+                  </div>
+                  <div className="border-t border-slate-100 mt-2.5 pt-2 flex flex-wrap justify-between text-[9px] sm:text-[10px] text-slate-500 font-semibold gap-2">
+                    <span>Ward: {p.studentName !== "N/A" ? `${p.studentName} (${p.studentClass})` : "N/A"}</span>
+                    <span>Pwd: <span className="text-blue-650 font-bold">{p.password || "123456"}</span></span>
+                    <span>Term: {p.term}</span>
+                  </div>
+                  {p.id && (
+                    <button
+                      onClick={() => handleDelete(p.id!)}
+                      className="absolute top-4 right-4 text-[9px] sm:text-[10px] text-red-600 hover:text-red-800 font-bold border border-red-200 hover:border-red-300 px-2 py-0.5 rounded-lg bg-red-50 hover:bg-red-100/50 transition-colors shadow-sm"
+                    >
+                      ✕ Remove
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -143,103 +426,274 @@ export default function ParentsPage() {
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div
-            className="w-full max-w-lg rounded-3xl p-6 space-y-6 relative"
+            className="w-full max-w-4xl rounded-3xl p-6 space-y-6 relative transition-all duration-300"
             style={{
-              background: "#090d16",
-              border: "1px solid rgba(255, 255, 255, 0.15)",
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.95)"
+              background: "#ffffff",
+              border: "1px solid rgba(0, 0, 0, 0.08)",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.15)"
             }}
           >
-            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-white">👪 Register PTA Committee Member</h3>
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-800">
+                {previewMembers.length > 0 ? "📋 Preview PTA Officers Import" : "👪 Register PTA Committee Member"}
+              </h3>
               <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white text-xs"
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setPreviewMembers([]);
+                }}
+                className="text-slate-500 hover:text-slate-800 text-xs font-semibold"
               >
                 ✕ Close
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Form Input */}
-              <form onSubmit={handleManualSubmit} className="space-y-4">
-                <div className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Manual Entry</div>
-                <div>
-                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Parent Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="e.g. Mr. Karthikeyan"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Designated Committee Role</label>
-                  <input
-                    type="text"
-                    required
-                    value={newRole}
-                    onChange={(e) => setNewRole(e.target.value)}
-                    placeholder="e.g. Joint Secretary (Parent)"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Phone Number</label>
-                  <input
-                    type="text"
-                    required
-                    value={newPhone}
-                    onChange={(e) => setNewPhone(e.target.value)}
-                    placeholder="e.g. +91 98765 43212"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2"
-                >
-                  Save Officer Roster
-                </button>
-              </form>
-
-              {/* Excel Import */}
-              <div className="border-l border-slate-800 pl-6 flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Excel Import</div>
-                  <div
-                    onClick={handleExcelSimulate}
-                    className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 bg-slate-900/40 rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3 min-h-[160px]"
-                  >
-                    {isUploading ? (
-                      <>
-                        <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-                        <span className="text-[10px] text-slate-400">Parsing spreadsheet...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-3xl">📊</span>
-                        <span className="text-xs font-bold text-white">Import PTA Roster</span>
-                        <span className="text-[9px] text-slate-500 leading-normal">
-                          Click to simulate dragging <strong>pta_committee.xlsx</strong> into this dropzone
-                        </span>
-                      </>
-                    )}
+            {previewMembers.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-xs">
+                  <div className="font-bold text-emerald-600 uppercase tracking-wider">
+                    Parsed {previewMembers.length} PTA Committee Officers
+                  </div>
+                  <div className="text-slate-500 font-semibold">
+                    {previewMembers.filter(s => !s.isValid).length} invalid rows found
                   </div>
                 </div>
 
-                <div className="text-[10px] text-slate-500 italic leading-relaxed pt-4">
-                  * Integrates with parent phone lists for instant event SMS reminders.
+                <div className="max-h-[300px] overflow-y-auto border border-slate-200 rounded-xl bg-slate-50/50">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-200 bg-slate-100 sticky top-0">
+                        <th className="p-3 text-slate-700 font-semibold">Parent Name</th>
+                        <th className="p-3 text-slate-700 font-semibold">Committee Role</th>
+                        <th className="p-3 text-slate-700 font-semibold">Phone Number</th>
+                        <th className="p-3 text-slate-700 font-semibold">Email Address</th>
+                        <th className="p-3 text-slate-700 font-semibold">Ward Name</th>
+                        <th className="p-3 text-slate-700 font-semibold">Ward Class</th>
+                        <th className="p-3 text-slate-700 font-semibold">Committee Term</th>
+                        <th className="p-3 text-slate-700 font-semibold">Password</th>
+                        <th className="p-3 text-slate-700 font-semibold text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {previewMembers.map((s) => (
+                        <tr 
+                          key={s.id} 
+                          className={s.isValid ? "hover:bg-slate-100/80 text-slate-800" : "bg-red-50/70 hover:bg-red-100/70 text-slate-800"}
+                        >
+                          <td className="p-3 font-semibold text-slate-900">
+                            {s.name || <span className="text-red-500 italic">Name Missing</span>}
+                          </td>
+                          <td className="p-3 text-slate-700">{s.role || <span className="text-red-500 italic">Role Missing</span>}</td>
+                          <td className="p-3 text-slate-800">{s.phone}</td>
+                          <td className="p-3 text-slate-700">{s.email}</td>
+                          <td className="p-3 text-slate-700">{s.studentName}</td>
+                          <td className="p-3 text-slate-700">{s.studentClass}</td>
+                          <td className="p-3 text-slate-700">{s.term}</td>
+                          <td className="p-3 text-slate-700">{s.password}</td>
+                          <td className="p-3 text-right">
+                            {s.isValid ? (
+                              <span className="text-emerald-600 font-medium">✓ Ready</span>
+                            ) : (
+                              <span className="text-red-500 font-semibold" title={s.validationError}>
+                                ⚠️ Invalid
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex space-x-3 pt-2">
+                  <button
+                    onClick={handleConfirmImport}
+                    disabled={isSaving || previewMembers.filter(s => s.isValid).length === 0}
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition-colors shadow-md flex items-center justify-center space-x-2"
+                  >
+                    {isSaving && <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
+                    <span>Confirm Import ({previewMembers.filter(s => s.isValid).length} Officers)</span>
+                  </button>
+                  <button
+                    onClick={() => setPreviewMembers([])}
+                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors border border-slate-200"
+                  >
+                    Discard
+                  </button>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Form Input */}
+                <form onSubmit={handleManualSubmit} className="space-y-3">
+                  <div className="text-xs font-bold text-blue-650 uppercase tracking-wider mb-1">Manual Entry</div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Parent Name</label>
+                      <input
+                        type="text"
+                        required
+                        value={newName}
+                        onChange={(e) => setNewName(e.target.value)}
+                        placeholder="e.g. Mr. Karthikeyan"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Committee Role</label>
+                      <input
+                        type="text"
+                        required
+                        value={newRole}
+                        onChange={(e) => setNewRole(e.target.value)}
+                        placeholder="e.g. Committee Member (Parent)"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Phone Number</label>
+                      <input
+                        type="text"
+                        required
+                        value={newPhone}
+                        onChange={(e) => setNewPhone(e.target.value)}
+                        placeholder="e.g. +91 98765 43212"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Email Address</label>
+                      <input
+                        type="email"
+                        value={newEmail}
+                        onChange={(e) => setNewEmail(e.target.value)}
+                        placeholder="e.g. karthikeyan@gmail.com"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Ward / Student Name</label>
+                      <input
+                        type="text"
+                        value={newStudentName}
+                        onChange={(e) => setNewStudentName(e.target.value)}
+                        placeholder="e.g. K. Ramesh"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Ward Class & Section</label>
+                      <input
+                        type="text"
+                        value={newStudentClass}
+                        onChange={(e) => setNewStudentClass(e.target.value)}
+                        placeholder="e.g. Class 10A"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Committee Term</label>
+                      <input
+                        type="text"
+                        required
+                        value={newTerm}
+                        onChange={(e) => setNewTerm(e.target.value)}
+                        placeholder="e.g. 2025-26"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Default Portal Password</label>
+                      <input
+                        type="text"
+                        required
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="e.g. password123"
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
+                      />
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2 flex items-center justify-center gap-2"
+                  >
+                    {isSaving && <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
+                    <span>Save Officer Roster</span>
+                  </button>
+                </form>
+
+                {/* Excel Import */}
+                <div className="border-l border-slate-200 pl-6 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex justify-between items-center">
+                      <span>Excel Import</span>
+                      <button
+                        onClick={downloadExcelTemplate}
+                        type="button"
+                        className="text-[10px] text-blue-600 hover:text-blue-700 font-bold underline cursor-pointer"
+                      >
+                        📥 Get Template
+                      </button>
+                    </div>
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3 min-h-[160px] border-2 border-dashed ${
+                        isDragging 
+                          ? "border-emerald-500 bg-emerald-50" 
+                          : "border-slate-300 bg-white hover:border-emerald-500"
+                      }`}
+                    >
+                      {isUploading ? (
+                        <>
+                          <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                          <span className="text-[10px] text-slate-500">Parsing spreadsheet...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-4xl">📊</span>
+                          <span className="text-xs font-bold text-slate-800">Import PTA Roster</span>
+                          <span className="text-[9px] text-slate-500 leading-normal">
+                            Drag & drop Excel or click to upload
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) parseFile(file);
+                      }}
+                      accept=".xlsx,.xls,.csv"
+                      className="hidden"
+                    />
+                  </div>
+
+                  <div className="text-[10px] text-slate-400 italic leading-relaxed pt-4">
+                    * Upload template matches EMIS standard schema (Columns: Parent Name, Committee Role, Phone Number, Email Address, Ward Name, Ward Class & Section, Committee Term, Password).
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

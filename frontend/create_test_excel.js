@@ -1,24 +1,54 @@
 const XLSX = require("xlsx");
 
-const headers = ["Student Name", "Class & Section", "Risk Level", "Reason / Note"];
+const headers = [
+  "Student Name", 
+  "Roll Number", 
+  "Class & Section", 
+  "Phone Number", 
+  "Parent Name", 
+  "District", 
+  "State", 
+  "City", 
+  "Pincode", 
+  "Risk Level"
+];
+
 const testData = [
   {
     "Student Name": "Ramesh Kumar",
+    "Roll Number": "HM10105",
     "Class & Section": "Class 10A",
-    "Risk Level": "High",
-    "Reason / Note": "Failed to attend EMIS profile update"
+    "Phone Number": "9876543210",
+    "Parent Name": "Kumarasamy K.",
+    "District": "Coimbatore",
+    "State": "Tamil Nadu",
+    "City": "Coimbatore",
+    "Pincode": "641001",
+    "Risk Level": "High"
   },
   {
     "Student Name": "Anitha S.",
+    "Roll Number": "HM11202",
     "Class & Section": "Class 11B",
-    "Risk Level": "Medium",
-    "Reason / Note": "Repeated absent warnings from teacher"
+    "Phone Number": "9876543212",
+    "Parent Name": "Senthil S.",
+    "District": "Coimbatore",
+    "State": "Tamil Nadu",
+    "City": "Coimbatore",
+    "Pincode": "641003",
+    "Risk Level": "Medium"
   },
   {
     "Student Name": "", // Invalid row (missing name)
+    "Roll Number": "HM12101",
     "Class & Section": "Class 12A",
-    "Risk Level": "Low",
-    "Reason / Note": "Missing name test"
+    "Phone Number": "9876543215",
+    "Parent Name": "Ramasamy A.",
+    "District": "Coimbatore",
+    "State": "Tamil Nadu",
+    "City": "Coimbatore",
+    "Pincode": "641004",
+    "Risk Level": "Medium"
   }
 ];
 
