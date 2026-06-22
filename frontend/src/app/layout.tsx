@@ -1,10 +1,15 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import ThemeProvider from "@/providers/ThemeProvider";
 
-const roboto = Roboto({ weight: ['300', '400', '500', '700'], subsets: ["latin"] });
+const poppins = Poppins({ 
+  weight: ['300', '400', '500', '600', '700', '800'], 
+  subsets: ["latin"], 
+  display: "swap",
+  variable: "--font-poppins"
+});
 
 export const metadata: Metadata = {
   title: "TN Schools AI Smart Learning Ecosystem",
@@ -19,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={roboto.className}>
+      <body className={`${poppins.variable} font-sans`}>
         <ThemeProvider>
           <NextAuthProvider>{children}</NextAuthProvider>
         </ThemeProvider>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -53,7 +53,7 @@ export default function LeaveRequestsPage() {
     setReason("");
     setStartDate("");
     setEndDate("");
-    setToast("âœ“ Leave request submitted successfully! Proxy teacher and Headmaster notified.");
+    setToast("✓ Leave request submitted successfully! Proxy teacher and Headmaster notified.");
     setTimeout(() => {
       setToast(null);
     }, 4500);
@@ -91,7 +91,7 @@ export default function LeaveRequestsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Leave application form */}
         <div className="theme-card p-6 border border-[var(--border)] h-fit">
-          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">ðŸ“„ Request Leave</h2>
+          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">📄 Request Leave</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Leave Category</label>
@@ -166,7 +166,7 @@ export default function LeaveRequestsPage() {
 
         {/* History Panel */}
         <div className="lg:col-span-2 theme-card p-6 border border-[var(--border)] space-y-5">
-          <h2 className="text-base font-semibold text-[var(--text-heading)]">ðŸ“‹ Previous Request History</h2>
+          <h2 className="text-base font-semibold text-[var(--text-heading)]">📋 Previous Request History</h2>
 
           {toast && (
             <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-xl">

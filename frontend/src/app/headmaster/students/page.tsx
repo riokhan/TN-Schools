@@ -1,7 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import * as XLSX from "xlsx";
+
+interface ParsedPreviewStudent {
+  id: number;
+  name: string;
+  class: string;
+  risk: "High" | "Medium";
+  reason: string;
+  isValid: boolean;
+  validationError?: string;
+}
+
+interface ExcelStudentRow {
+  "Student Name"?: string;
+  "Class & Section"?: string;
+  "Risk Level"?: string;
+  "Reason / Note"?: string;
+}
 
 interface ClassStat {
   grade: string;
@@ -43,6 +61,123 @@ export default function StudentsMonitoringPage() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [previewStudents, setPreviewStudents] = useState<ParsedPreviewStudent[]>([]);
+  const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const downloadExcelTemplate = () => {
+    const headers = ["Student Name", "Class & Section", "Risk Level", "Reason / Note"];
+    const sampleData = [
+      {
+        "Student Name": "Arun Kumar",
+        "Class & Section": "Class 10A",
+        "Risk Level": "High",
+        "Reason / Note": "Absent for 10 consecutive days"
+      },
+      {
+        "Student Name": "Priya S.",
+        "Class & Section": "Class 9B",
+        "Risk Level": "Medium",
+        "Reason / Note": "Consistently low marks in mathematics"
+      }
+    ];
+
+    const worksheet = XLSX.utils.json_to_sheet(sampleData, { header: headers });
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Student Template");
+    XLSX.writeFile(workbook, "student_import_template.xlsx");
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) parseFile(file);
+  };
+
+  const parseFile = (file: File) => {
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = event.target?.result;
+        const workbook = XLSX.read(data, { type: "binary" });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const parsedData = XLSX.utils.sheet_to_json<ExcelStudentRow>(sheet);
+
+        const validated: ParsedPreviewStudent[] = parsedData.map((row, idx) => {
+          const name = row["Student Name"]?.toString().trim() || "";
+          const classSection = row["Class & Section"]?.toString().trim() || "";
+          const rawRisk = row["Risk Level"]?.toString().trim() || "";
+          const reason = row["Reason / Note"]?.toString().trim() || "";
+
+          let risk: "High" | "Medium" = "Medium";
+          if (rawRisk.toLowerCase() === "high") {
+            risk = "High";
+          }
+
+          const isValid = name !== "";
+
+          return {
+            id: idx,
+            name,
+            class: classSection || "Not Specified",
+            risk,
+            reason: reason || "Flagged for periodic monitoring.",
+            isValid,
+            validationError: !name ? "Name is missing" : undefined
+          };
+        });
+
+        setPreviewStudents(validated);
+        setToast(`📊 Loaded ${validated.length} students. Review preview in the modal.`);
+        setTimeout(() => setToast(null), 4000);
+      } catch (err) {
+        console.error(err);
+        setToast("❌ Failed to parse file. Make sure it is a valid Excel or CSV sheet.");
+        setTimeout(() => setToast(null), 4000);
+      } finally {
+        setIsUploading(false);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsBinaryString(file);
+  };
+
+  const handleConfirmImport = () => {
+    const validStudents = previewStudents.filter(s => s.isValid);
+    if (validStudents.length === 0) {
+      setToast("⚠️ No valid students to import.");
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    const studentsToAppend: WatchlistStudent[] = validStudents.map(s => ({
+      name: s.name,
+      class: s.class,
+      risk: s.risk,
+      reason: s.reason
+    }));
+
+    setWatchlist(prev => [...studentsToAppend, ...prev]);
+    setToast(`🎉 Successfully imported ${validStudents.length} students into watchlist!`);
+    setTimeout(() => setToast(null), 4000);
+
+    setPreviewStudents([]);
+    setIsModalOpen(false);
+  };
 
   const handleManualSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,7 +194,7 @@ export default function StudentsMonitoringPage() {
     setNewName("");
     setNewReason("");
     setIsModalOpen(false);
-    setToast(`🎉 Student ${newStudent.name} successfully appended to dropout watchlist.`);
+    setToast(`🎉 Student ${newStudent.name} successfully appended to student watchlist.`);
     setTimeout(() => setToast(null), 4000);
   };
 
@@ -73,7 +208,7 @@ export default function StudentsMonitoringPage() {
       setWatchlist(prev => [...excelStudents, ...prev]);
       setIsUploading(false);
       setIsModalOpen(false);
-      setToast("📊 Student roster parsed successfully! 2 students added to dropout watchlist.");
+      setToast("📊 Student roster parsed successfully! 2 students added to student watchlist.");
       setTimeout(() => setToast(null), 4000);
     }, 1500);
   };
@@ -153,7 +288,7 @@ export default function StudentsMonitoringPage() {
 
         {/* Watchlist */}
         <div className="glass rounded-2xl p-6 border border-slate-800">
-          <h2 className="text-base font-semibold text-white mb-4">⚠️ Student Dropout Watchlist</h2>
+          <h2 className="text-base font-semibold text-white mb-4">⚠️ Student List</h2>
           <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1">
             {watchlist.map((s, idx) => (
               <div
@@ -180,7 +315,7 @@ export default function StudentsMonitoringPage() {
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div
-            className="w-full max-w-lg rounded-3xl p-6 space-y-6 relative"
+            className={`w-full ${previewStudents.length > 0 ? "max-w-2xl" : "max-w-lg"} rounded-3xl p-6 space-y-6 relative transition-all duration-300`}
             style={{
               background: "#090d16",
               border: "1px solid rgba(255, 255, 255, 0.15)",
@@ -188,106 +323,212 @@ export default function StudentsMonitoringPage() {
             }}
           >
             <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-              <h3 className="text-sm font-bold text-white">🎓 Register New Student & Flag Risks</h3>
+              <h3 className="text-sm font-bold text-white">
+                {previewStudents.length > 0 ? "📋 Preview Roster Import" : "🎓 Register New Student & Flag Risks"}
+              </h3>
               <button
-                onClick={() => setIsModalOpen(false)}
+                onClick={() => {
+                  setIsModalOpen(false);
+                  setPreviewStudents([]);
+                }}
                 className="text-slate-400 hover:text-white text-xs"
               >
                 ✕ Close
               </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Form Input */}
-              <form onSubmit={handleManualSubmit} className="space-y-4">
-                <div className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Manual Entry</div>
-                <div>
-                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Full Name</label>
-                  <input
-                    type="text"
-                    required
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    placeholder="e.g. Senthil Kumar"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Class & Section</label>
-                  <input
-                    type="text"
-                    required
-                    value={newClass}
-                    onChange={(e) => setNewClass(e.target.value)}
-                    placeholder="e.g. Class 10A"
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 gap-3">
-                  <div>
-                    <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Dropout Risk Rating</label>
-                    <select
-                      value={newRisk}
-                      onChange={(e) => setNewRisk(e.target.value as any)}
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
-                    >
-                      <option value="Medium">Medium Risk</option>
-                      <option value="High">High Risk</option>
-                    </select>
+            {previewStudents.length > 0 ? (
+              <div className="space-y-4">
+                <div className="flex justify-between items-center text-xs">
+                  <div className="font-bold text-emerald-400 uppercase tracking-wider">
+                    Parsed {previewStudents.length} Students
+                  </div>
+                  <div className="text-slate-400 font-semibold">
+                    {previewStudents.filter(s => !s.isValid).length} invalid rows found
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Risk Reason / Note</label>
-                  <textarea
-                    value={newReason}
-                    onChange={(e) => setNewReason(e.target.value)}
-                    placeholder="Absent details, poor math marks..."
-                    rows={2}
-                    className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
-                  />
+                <div className="max-h-[300px] overflow-y-auto border border-slate-800 rounded-xl bg-slate-950/50">
+                  <table className="w-full text-left text-xs border-collapse">
+                    <thead>
+                      <tr className="border-b border-slate-800 bg-slate-900/60 sticky top-0">
+                        <th className="p-3 text-slate-400 font-semibold">Student Name</th>
+                        <th className="p-3 text-slate-400 font-semibold">Class</th>
+                        <th className="p-3 text-slate-400 font-semibold">Risk Level</th>
+                        <th className="p-3 text-slate-400 font-semibold">Reason</th>
+                        <th className="p-3 text-slate-400 font-semibold text-right">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800/50">
+                      {previewStudents.map((s) => (
+                        <tr 
+                          key={s.id} 
+                          className={s.isValid ? "hover:bg-slate-900/30" : "bg-red-950/20 hover:bg-red-950/30"}
+                        >
+                          <td className="p-3 font-semibold text-white">
+                            {s.name || <span className="text-red-400 italic">Name Missing</span>}
+                          </td>
+                          <td className="p-3 text-slate-300">{s.class}</td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              s.risk === "High" ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                            }`}>
+                              {s.risk}
+                            </span>
+                          </td>
+                          <td className="p-3 text-slate-400 max-w-[150px] truncate" title={s.reason}>
+                            {s.reason}
+                          </td>
+                          <td className="p-3 text-right">
+                            {s.isValid ? (
+                              <span className="text-emerald-400 font-medium">✓ Ready</span>
+                            ) : (
+                              <span className="text-red-400 font-semibold" title={s.validationError}>
+                                ⚠️ Invalid
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
 
-                <button
-                  type="submit"
-                  className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2"
-                >
-                  Save Student Record
-                </button>
-              </form>
-
-              {/* Excel Import */}
-              <div className="border-l border-slate-800 pl-6 flex flex-col justify-between">
-                <div className="space-y-4">
-                  <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider">Excel Import</div>
-                  <div
-                    onClick={handleExcelSimulate}
-                    className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 bg-slate-900/40 rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3 min-h-[160px]"
+                <div className="flex space-x-3 pt-2">
+                  <button
+                    onClick={handleConfirmImport}
+                    disabled={previewStudents.filter(s => s.isValid).length === 0}
+                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition-colors shadow-md flex items-center justify-center space-x-2"
                   >
-                    {isUploading ? (
-                      <>
-                        <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-                        <span className="text-[10px] text-slate-400">Parsing spreadsheet...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-3xl">📊</span>
-                        <span className="text-xs font-bold text-white">Import Student Roster</span>
-                        <span className="text-[9px] text-slate-500 leading-normal">
-                          Click to simulate dragging <strong>student_roster.xlsx</strong> into this dropzone
-                        </span>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                <div className="text-[10px] text-slate-500 italic leading-relaxed pt-4">
-                  * Integrates directly into EMIS database to verify community welfare claims.
+                    <span>Confirm Import ({previewStudents.filter(s => s.isValid).length} Students)</span>
+                  </button>
+                  <button
+                    onClick={() => setPreviewStudents([])}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl text-xs transition-colors border border-slate-700"
+                  >
+                    Discard
+                  </button>
                 </div>
               </div>
-            </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Form Input */}
+                <form onSubmit={handleManualSubmit} className="space-y-4">
+                  <div className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2">Manual Entry</div>
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Full Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="e.g. Senthil Kumar"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Class & Section</label>
+                    <input
+                      type="text"
+                      required
+                      value={newClass}
+                      onChange={(e) => setNewClass(e.target.value)}
+                      placeholder="e.g. Class 10A"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    <div>
+                      <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Risk Rating</label>
+                      <select
+                        value={newRisk}
+                        onChange={(e) => setNewRisk(e.target.value as any)}
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500 transition-colors"
+                      >
+                        <option value="Medium">Medium Risk</option>
+                        <option value="High">High Risk</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Risk Reason / Note</label>
+                    <textarea
+                      value={newReason}
+                      onChange={(e) => setNewReason(e.target.value)}
+                      placeholder="Absent details, poor math marks..."
+                      rows={2}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-blue-500 transition-colors resize-none"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2"
+                  >
+                    Save Student Record
+                  </button>
+                </form>
+
+                {/* Excel Import */}
+                <div className="border-l border-slate-800 pl-6 flex flex-col justify-between">
+                  <div className="space-y-4">
+                    <div className="text-xs font-bold text-emerald-400 uppercase tracking-wider flex justify-between items-center">
+                      <span>Excel Import</span>
+                      <button
+                        onClick={downloadExcelTemplate}
+                        type="button"
+                        className="text-[10px] text-blue-400 hover:text-blue-300 font-bold underline cursor-pointer"
+                      >
+                        📥 Get Template
+                      </button>
+                    </div>
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={handleDragOver}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                      className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3 min-h-[160px] ${
+                        isDragging 
+                          ? "border-emerald-500 bg-emerald-500/5" 
+                          : "border-slate-700 hover:border-emerald-500/50 bg-slate-900/40"
+                      }`}
+                    >
+                      {isUploading ? (
+                        <>
+                          <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
+                          <span className="text-[10px] text-slate-400">Parsing spreadsheet...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-3xl">📊</span>
+                          <span className="text-xs font-bold text-white">Import Student Roster</span>
+                          <span className="text-[9px] text-slate-500 leading-normal">
+                            Drag & drop Excel or click to upload
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) parseFile(file);
+                      }}
+                      accept=".xlsx,.xls,.csv"
+                      className="hidden"
+                    />
+                  </div>
+
+                  <div className="text-[10px] text-slate-500 italic leading-relaxed pt-4">
+                    * Integrates directly into EMIS database to verify community welfare claims.
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
@@ -24,10 +24,10 @@ const initialAssignments: Assignment[] = [
 const mockSubmissions = [
   { rollNo: "10A01", name: "Aarthi V.", status: "submitted", score: "9/10", date: "Today, 8:40 AM" },
   { rollNo: "10A02", name: "Balaji R.", status: "submitted", score: "7/10", date: "Yesterday, 3:15 PM" },
-  { rollNo: "10A03", name: "Kavitha R.", status: "pending", score: "â€”", date: "â€”" },
+  { rollNo: "10A03", name: "Kavitha R.", status: "pending", score: "—", date: "—" },
   { rollNo: "10A04", name: "Manoj K.", status: "submitted", score: "10/10", date: "Today, 9:02 AM" },
   { rollNo: "10A05", name: "Priya S.", status: "submitted", score: "8/10", date: "Yesterday, 6:00 PM" },
-  { rollNo: "10A06", name: "Rajesh M.", status: "pending", score: "â€”", date: "â€”" },
+  { rollNo: "10A06", name: "Rajesh M.", status: "pending", score: "—", date: "—" },
 ];
 
 export default function HomeworkPage() {
@@ -97,7 +97,7 @@ export default function HomeworkPage() {
     >
       {toastMessage && (
         <div className="fixed top-5 right-5 bg-emerald-500 text-[var(--text-heading)] text-xs font-bold px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2">
-          <span>âœ…</span> {toastMessage}
+          <span>✅</span> {toastMessage}
         </div>
       )}
 
@@ -115,7 +115,7 @@ export default function HomeworkPage() {
                   if (firstHwOfTab) setSelectedHwId(firstHwOfTab.id);
                 }}
                 className={`px-4 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
-                  activeTab === tab ? "bg-[var(--primary)] text-[var(--text-heading)]" : "text-[var(--text-muted)] hover:text-[var(--text-heading)]"
+                  activeTab === tab ? "bg-[var(--primary)] text-white shadow-sm font-bold" : "text-[var(--text-muted)] hover:text-[var(--text-heading)]"
                 }`}
               >
                 {tab}
@@ -125,9 +125,9 @@ export default function HomeworkPage() {
 
           <button
             onClick={() => setShowCreateModal(true)}
-            className="px-4 py-2 rounded-xl text-xs font-semibold text-[var(--text-heading)] bg-[var(--primary)] hover:bg-amber-600 transition-colors"
+            className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[var(--primary)] hover:bg-amber-600 transition-colors"
           >
-            âž• Create Assignment
+            ➕ Create Assignment
           </button>
         </div>
 
@@ -136,7 +136,7 @@ export default function HomeworkPage() {
           {/* Homework Cards List */}
           <div className="space-y-4">
             <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider mb-1">
-              ðŸ“ Assignments ({activeAssignments.length})
+              📝 Assignments ({activeAssignments.length})
             </h3>
             
             {activeAssignments.map((hw) => {
@@ -187,7 +187,7 @@ export default function HomeworkPage() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-[var(--text-heading)] font-bold text-base leading-snug">{selectedHw.title}</h3>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">{selectedHw.className} Â· Due on {selectedHw.dueDate}</p>
+                    <p className="text-xs text-[var(--text-muted)] mt-1">{selectedHw.className} · Due on {selectedHw.dueDate}</p>
                   </div>
                   
                   {selectedHw.status === "active" && (
@@ -195,7 +195,7 @@ export default function HomeworkPage() {
                       onClick={handleSendReminder}
                       className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-amber-400 border border-[var(--primary)]/20 hover:bg-[var(--primary)]/10 transition-all flex items-center gap-1.5"
                     >
-                      <span>ðŸ””</span> Send Parent Reminders
+                      <span>🔔</span> Send Parent Reminders
                     </button>
                   )}
                 </div>
@@ -210,7 +210,7 @@ export default function HomeworkPage() {
               {selectedHw.status !== "draft" && (
                 <div className="theme-card p-6 border border-[var(--border)]">
                   <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider mb-4">
-                    ðŸ“‹ Submission Roster
+                    📋 Submission Roster
                   </h3>
 
                   <div className="overflow-x-auto">
@@ -261,8 +261,8 @@ export default function HomeworkPage() {
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="theme-card w-full max-w-lg border border-[var(--border)] overflow-hidden shadow-2xl">
             <div className="px-6 py-4 border-b border-[var(--border)] flex justify-between items-center">
-              <h3 className="text-[var(--text-heading)] font-semibold text-base">âž• Assign Homework</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-slate-550 hover:text-[var(--text-heading)] text-lg">âœ•</button>
+              <h3 className="text-[var(--text-heading)] font-semibold text-base">➕ Assign Homework</h3>
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-550 hover:text-[var(--text-heading)] text-lg">✕</button>
             </div>
 
             <form onSubmit={handleCreateHomework} className="p-6 space-y-4">
@@ -313,7 +313,7 @@ export default function HomeworkPage() {
                     disabled={isGeneratingAI}
                     className="text-[10px] text-amber-400 hover:text-amber-350 flex items-center gap-1 font-semibold"
                   >
-                    <span>âš¡</span> {isGeneratingAI ? "Drafting..." : "Draft Homework with AI"}
+                    <span>⚡</span> {isGeneratingAI ? "Drafting..." : "Draft Homework with AI"}
                   </button>
                 </div>
 
@@ -336,7 +336,7 @@ export default function HomeworkPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 rounded-xl bg-[var(--primary)] hover:bg-amber-600 text-xs font-semibold text-[var(--text-heading)]"
+                  className="flex-1 py-2.5 rounded-xl bg-[var(--primary)] hover:bg-amber-600 text-xs font-bold text-white"
                 >
                   Assign to Students
                 </button>

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import { useState, useEffect } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
@@ -63,7 +63,7 @@ export default function LessonPlannerPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Input Form */}
         <div className="theme-card p-6 h-fit">
-          <h2 className="text-[var(--text-heading)] font-semibold text-sm mb-4">ðŸ“‹ Configure Lesson Plan</h2>
+          <h2 className="text-[var(--text-heading)] font-semibold text-sm mb-4">📋 Configure Lesson Plan</h2>
           
           <form onSubmit={handleGenerate} className="space-y-4">
             <div>
@@ -136,9 +136,9 @@ export default function LessonPlannerPage() {
             <button
               type="submit"
               disabled={isGenerating}
-              className="w-full mt-2 py-3 rounded-xl bg-[var(--primary)] hover:bg-amber-600 disabled:bg-amber-800 text-xs font-semibold text-[var(--text-heading)] transition-colors flex items-center justify-center gap-2"
+              className="w-full mt-2 py-3 rounded-xl bg-[var(--primary)] hover:bg-amber-600 disabled:bg-amber-800 text-xs font-bold text-white transition-colors flex items-center justify-center gap-2"
             >
-              {isGenerating ? "Generating..." : "âš¡ Generate AI Lesson Plan"}
+              {isGenerating ? "Generating..." : "⚡ Generate AI Lesson Plan"}
             </button>
           </form>
         </div>
@@ -148,7 +148,7 @@ export default function LessonPlannerPage() {
           {/* Initial State */}
           {!isGenerating && !showPlan && (
             <div className="theme-card p-8 flex-1 flex flex-col items-center justify-center text-center border border-dashed border-[var(--border)]">
-              <span className="text-4xl mb-4">ðŸ“‹</span>
+              <span className="text-4xl mb-4">📋</span>
               <h3 className="text-[var(--text-heading)] font-semibold text-sm">No Plan Generated</h3>
               <p className="text-xs text-[var(--text-muted)] max-w-sm mt-1">
                 Configure your grade, subject, and chapter standards, then trigger the AI engine to generate a comprehensive lesson planner outline.
@@ -169,7 +169,7 @@ export default function LessonPlannerPage() {
                   else if (idx === currentStep) status = "text-amber-400 font-semibold animate-pulse";
                   return (
                     <div key={idx} className={`text-xs text-left flex items-start gap-2 ${status}`}>
-                      <span>{idx < currentStep ? "âœ…" : idx === currentStep ? "â³" : "â—‹"}</span>
+                      <span>{idx < currentStep ? "✅" : idx === currentStep ? "⏳" : "○"}</span>
                       <span>{stepText}</span>
                     </div>
                   );
@@ -184,16 +184,16 @@ export default function LessonPlannerPage() {
               {/* Header Info */}
               <div className="p-6 border-b border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] flex justify-between items-start gap-4">
                 <div>
-                  <span className="badge badge-yellow mb-2">{grade} Â· {subject}</span>
+                  <span className="badge badge-yellow mb-2">{grade} · {subject}</span>
                   <h3 className="text-[var(--text-heading)] font-bold text-base leading-snug">{topic}</h3>
-                  <p className="text-xs text-slate-550 mt-1">{syllabus} Â· Standard Curriculum</p>
+                  <p className="text-xs text-slate-550 mt-1">{syllabus} · Standard Curriculum</p>
                 </div>
                 <div className="flex gap-2">
                   <button className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card)] text-xs font-semibold text-[var(--text-heading)] border border-[var(--border)]/50">
-                    ðŸ“‚ Export PDF
+                    📂 Export PDF
                   </button>
-                  <button className="px-3 py-1.5 rounded-lg bg-[var(--primary)] hover:bg-amber-600 text-xs font-semibold text-[var(--text-heading)]">
-                    ðŸ’¾ Save
+                  <button className="px-3 py-1.5 rounded-lg bg-[var(--primary)] hover:bg-amber-600 text-xs font-bold text-white">
+                    💾 Save
                   </button>
                 </div>
               </div>
@@ -210,7 +210,7 @@ export default function LessonPlannerPage() {
                         : "border-transparent text-[var(--text-muted)] hover:text-[var(--text-heading)]"
                     }`}
                   >
-                    {tab === "outline" ? "ðŸ—ºï¸ Lesson Outline" : tab === "bilingual" ? "ðŸŒ Bilingual Glossary" : "âœï¸ Exit Tickets"}
+                    {tab === "outline" ? "🗺️ Lesson Outline" : tab === "bilingual" ? "🌐 Bilingual Glossary" : "✍️ Exit Tickets"}
                   </button>
                 ))}
               </div>
@@ -220,9 +220,9 @@ export default function LessonPlannerPage() {
                 {activeTab === "outline" && (
                   <div className="space-y-5 text-xs text-[var(--text-main)]">
                     <div>
-                      <h4 className="text-[var(--text-heading)] font-semibold text-xs mb-1.5">ðŸŽ¯ Core Objectives</h4>
+                      <h4 className="text-[var(--text-heading)] font-semibold text-xs mb-1.5">🎯 Core Objectives</h4>
                       <ul className="list-disc list-inside space-y-1 text-[var(--text-muted)]">
-                        <li>Understand the mathematical rationale behind Pythagoras theorem: aÂ² + bÂ² = cÂ²</li>
+                        <li>Understand the mathematical rationale behind Pythagoras theorem: a² + b² = c²</li>
                         <li>Learn to identify Right-angled triangles from coordinate geometry problems.</li>
                         <li>Apply calculations in real-world scenarios like building measurements.</li>
                       </ul>
@@ -231,7 +231,7 @@ export default function LessonPlannerPage() {
                     <hr className="border-[var(--border)]" />
 
                     <div>
-                      <h4 className="text-[var(--text-heading)] font-semibold text-xs mb-3">â° Timeline & Flow ({duration})</h4>
+                      <h4 className="text-[var(--text-heading)] font-semibold text-xs mb-3">⏰ Timeline & Flow ({duration})</h4>
                       <div className="space-y-3">
                         <div className="flex gap-4">
                           <span className="font-mono text-amber-400 font-bold w-14 flex-shrink-0">00-05 Mins</span>
@@ -273,7 +273,7 @@ export default function LessonPlannerPage() {
                   <div className="space-y-4 text-xs">
                     <div className="bg-[var(--primary)]/5 p-3 rounded-xl border border-amber-550/15 mb-4">
                       <p className="text-amber-400 font-medium leading-relaxed">
-                        ðŸ“¢ **Teacher Tip**: Use these Tamil equivalent terms in lecture transitions to assist students from regional media backgrounds in adapting to the math formulas.
+                        📢 **Teacher Tip**: Use these Tamil equivalent terms in lecture transitions to assist students from regional media backgrounds in adapting to the math formulas.
                       </p>
                     </div>
 
@@ -288,27 +288,27 @@ export default function LessonPlannerPage() {
                       <tbody>
                         <tr>
                           <td className="font-semibold text-[var(--text-heading)]">Right-Angled Triangle</td>
-                          <td className="text-amber-400 font-semibold font-tamil">à®šà¯†à®™à¯à®•à¯‹à®£ à®®à¯à®•à¯à®•à¯‹à®£à®®à¯</td>
+                          <td className="text-amber-400 font-semibold font-tamil">செங்கோண முக்கோணம்</td>
                           <td>Sengoana Mukkoanam</td>
                         </tr>
                         <tr>
                           <td className="font-semibold text-[var(--text-heading)]">Hypotenuse</td>
-                          <td className="text-amber-400 font-semibold font-tamil">à®•à®°à¯à®£à®®à¯</td>
+                          <td className="text-amber-400 font-semibold font-tamil">கர்ணம்</td>
                           <td>Karnam</td>
                         </tr>
                         <tr>
                           <td className="font-semibold text-[var(--text-heading)]">Perpendicular side</td>
-                          <td className="text-amber-400 font-semibold font-tamil">à®šà¯†à®™à¯à®•à¯à®¤à¯à®¤à¯à®ªà¯à®ªà®•à¯à®•à®®à¯</td>
+                          <td className="text-amber-400 font-semibold font-tamil">செங்குத்துப்பக்கம்</td>
                           <td>Sengkuthu Pakkam</td>
                         </tr>
                         <tr>
                           <td className="font-semibold text-[var(--text-heading)]">Adjacent side</td>
-                          <td className="text-amber-400 font-semibold font-tamil">à®…à®Ÿà¯à®¤à¯à®¤à¯à®³à¯à®³ à®ªà®•à¯à®•à®®à¯</td>
+                          <td className="text-amber-400 font-semibold font-tamil">அடுத்துள்ள பக்கம்</td>
                           <td>Adhuthulla Pakkam</td>
                         </tr>
                         <tr>
                           <td className="font-semibold text-[var(--text-heading)]">Theorem / Proof</td>
-                          <td className="text-amber-400 font-semibold font-tamil">à®¤à¯‡à®±à¯à®±à®®à¯ / à®¨à®¿à®°à¯‚à®ªà®£à®®à¯</td>
+                          <td className="text-amber-400 font-semibold font-tamil">தேற்றம் / நிரூபணம்</td>
                           <td>Thetram / Niroobanam</td>
                         </tr>
                       </tbody>
@@ -318,7 +318,7 @@ export default function LessonPlannerPage() {
 
                 {activeTab === "assessment" && (
                   <div className="space-y-4 text-xs text-slate-350">
-                    <h4 className="text-[var(--text-heading)] font-semibold text-xs mb-2">ðŸŽ¯ Exit Ticket MCQs & Answers</h4>
+                    <h4 className="text-[var(--text-heading)] font-semibold text-xs mb-2">🎯 Exit Ticket MCQs & Answers</h4>
 
                     <div className="space-y-3.5">
                       <div className="p-3.5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border)]">
@@ -329,7 +329,7 @@ export default function LessonPlannerPage() {
                           <div>C) 12 cm</div>
                           <div>D) 15 cm</div>
                         </div>
-                        <div className="mt-2 text-emerald-400 font-semibold text-[11px]">Correct Answer: A (10 cm). Explanation: 6Â² + 8Â² = 36 + 64 = 100. âˆš100 = 10.</div>
+                        <div className="mt-2 text-emerald-400 font-semibold text-[11px]">Correct Answer: A (10 cm). Explanation: 6² + 8² = 36 + 64 = 100. √100 = 10.</div>
                       </div>
 
                       <div className="p-3.5 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border)]">

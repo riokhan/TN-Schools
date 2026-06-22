@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
@@ -13,23 +13,23 @@ interface RosterStudent {
 
 export default function StudentStatusPage() {
   const [students, setStudents] = useState<RosterStudent[]>([
-    { id: "S01", name: "Arjun Kumar", class: "10A", engagement: "High", badges: ["ðŸ”¬ Star Scientist", "ðŸ“ Homework Pro"] },
-    { id: "S02", name: "Murugan S.", class: "10A", engagement: "Low", badges: ["ðŸ’¬ Active Speaker"] },
-    { id: "S03", name: "Kavitha R.", class: "9B", engagement: "Medium", badges: ["ðŸ“ Homework Pro"] },
-    { id: "S04", name: "Senthil K.", class: "8A", engagement: "High", badges: ["ðŸ”¬ Star Scientist"] },
+    { id: "S01", name: "Arjun Kumar", class: "10A", engagement: "High", badges: ["🔬 Star Scientist", "📝 Homework Pro"] },
+    { id: "S02", name: "Murugan S.", class: "10A", engagement: "Low", badges: ["💬 Active Speaker"] },
+    { id: "S03", name: "Kavitha R.", class: "9B", engagement: "Medium", badges: ["📝 Homework Pro"] },
+    { id: "S04", name: "Senthil K.", class: "8A", engagement: "High", badges: ["🔬 Star Scientist"] },
   ]);
 
   // Award badge state
   const [targetStudentId, setTargetStudentId] = useState("S01");
-  const [selectedBadge, setSelectedBadge] = useState("ðŸ”¬ Star Scientist");
+  const [selectedBadge, setSelectedBadge] = useState("🔬 Star Scientist");
   const [customComment, setCustomComment] = useState("");
   const [awardNotification, setAwardNotification] = useState<string | null>(null);
 
   const availableBadges = [
-    { label: "ðŸ”¬ Star Scientist", desc: "Awarded for exceptional scientific work" },
-    { label: "ðŸ“ Homework Pro", desc: "Awarded for 100% homework submission" },
-    { label: "ðŸ’¬ Active Speaker", desc: "Awarded for healthy class discussions" },
-    { label: "ðŸŒŸ Mentor Star", desc: "Awarded for helping peers in studies" },
+    { label: "🔬 Star Scientist", desc: "Awarded for exceptional scientific work" },
+    { label: "📝 Homework Pro", desc: "Awarded for 100% homework submission" },
+    { label: "💬 Active Speaker", desc: "Awarded for healthy class discussions" },
+    { label: "🌟 Mentor Star", desc: "Awarded for helping peers in studies" },
   ];
 
   const handleAwardBadge = () => {
@@ -38,7 +38,7 @@ export default function StudentStatusPage() {
 
     // Check if student already has this badge
     if (studentObj.badges.includes(selectedBadge)) {
-      setAwardNotification(`âš ï¸ ${studentObj.name} already has the "${selectedBadge}" badge.`);
+      setAwardNotification(`⚠️ ${studentObj.name} already has the "${selectedBadge}" badge.`);
       return;
     }
 
@@ -50,7 +50,7 @@ export default function StudentStatusPage() {
     );
 
     setAwardNotification(
-      `ðŸŽ‰ Successfully awarded "${selectedBadge}" to ${studentObj.name}! Custom remark: "${customComment || "Great work!"}"`
+      `🎉 Successfully awarded "${selectedBadge}" to ${studentObj.name}! Custom remark: "${customComment || "Great work!"}"`
     );
 
     // Clear alert after 4 seconds
@@ -66,7 +66,7 @@ export default function StudentStatusPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Engagement status board */}
         <div className="lg:col-span-2 theme-card p-6 border border-[var(--border)]">
-          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-5">ðŸ“ˆ Student Engagement & Badges Roster</h2>
+          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-5">📈 Student Engagement & Badges Roster</h2>
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
@@ -119,7 +119,7 @@ export default function StudentStatusPage() {
         {/* Badge dispatch workspace */}
         <div className="theme-card p-6 border border-[var(--border)] space-y-5">
           <div>
-            <h2 className="text-base font-semibold text-[var(--text-heading)] mb-1">ðŸ… Award Virtual Badges</h2>
+            <h2 className="text-base font-semibold text-[var(--text-heading)] mb-1">🏅 Award Virtual Badges</h2>
             <p className="text-xs text-[var(--text-muted)]">Reward student achievements. Awarded badges appear directly on the student portal.</p>
           </div>
 
@@ -169,13 +169,13 @@ export default function StudentStatusPage() {
               onClick={handleAwardBadge}
               className="w-full py-2.5 bg-[var(--primary)] hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
             >
-              ðŸ… Award & Dispatch Badge
+              🏅 Award & Dispatch Badge
             </button>
           </div>
 
           {awardNotification && (
             <div className={`p-3.5 rounded-xl text-xs leading-relaxed border ${
-              awardNotification.startsWith("âš ï¸")
+              awardNotification.startsWith("⚠️")
                 ? "bg-red-500/10 border-red-500/20 text-red-300"
                 : "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
             }`}>
@@ -187,7 +187,7 @@ export default function StudentStatusPage() {
 
       {/* Badge descriptions registry */}
       <div className="theme-card p-6 border border-[var(--border)]">
-        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">ðŸ† Badge Directory definitions</h2>
+        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">🏆 Badge Directory definitions</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {availableBadges.map((b, idx) => (
             <div key={idx} className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-xl">
