@@ -6,7 +6,7 @@ import { portals } from "@/lib/navConfig";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ─── Government Color Palette ─── */
-// TN Govt: Navy Blue (#003087), Saffron (#FF6600), Deep Green (#006400), Gold (#FFB800)
+// New Palette: Deep Purple (#3D3580), Lavender (#7B7FC4), Golden Yellow (#F5B800), Warm Orange (#F07800), Red-Orange (#E84400)
 
 /* ─── Translations Dictionary ─── */
 const t = {
@@ -38,10 +38,10 @@ const t = {
     statTitle2: "Across Tamil Nadu",
     statDesc: "Real-time data-driven insights powering the entire state education ecosystem.",
     stats: [
-      { label: "Total Students", value: "47.2L", icon: "👨‍🎓", color: "#003087" },
-      { label: "Government Schools", value: "37,000+", icon: "🏫", color: "#006400" },
-      { label: "Dedicated Teachers", value: "2.1L", icon: "📚", color: "#FF6600" },
-      { label: "Districts Covered", value: "38", icon: "🗺️", color: "#FFB800" },
+      { label: "Total Students", value: "47.2L", icon: "👨‍🎓", color: "#3D3580" },
+      { label: "Government Schools", value: "37,000+", icon: "🏫", color: "#7B7FC4" },
+      { label: "Dedicated Teachers", value: "2.1L", icon: "📚", color: "#F07800" },
+      { label: "Districts Covered", value: "38", icon: "🗺️", color: "#F5B800" },
     ],
 
     featTitleSub: "Platform Features",
@@ -49,12 +49,12 @@ const t = {
     featTitle2: "Education Tools",
     featDesc: "Purpose-built AI and analytics tools for every stakeholder in the Tamil Nadu education ecosystem.",
     features: [
-      { title: "AI-Powered Tutoring", desc: "Personalized adaptive learning pathways using advanced AI for every student across Class 6–12.", icon: "🤖", color: "#003087" },
-      { title: "Real-time Analytics", desc: "Live dashboards tracking attendance, performance, and learning outcomes at every administrative level.", icon: "📊", color: "#006400" },
-      { title: "Adaptive Assessments", desc: "Smart question generation and AI-evaluated tests with instant feedback and personalized guidance.", icon: "🎯", color: "#FF6600" },
-      { title: "Multi-Role Governance", desc: "8 dedicated portals from Student to Minister, each with role-specific insights and controls.", icon: "🛡️", color: "#8b5cf6" },
-      { title: "Live State Monitoring", desc: "Real-time command center for state-wide education health, KPI tracking and policy compliance.", icon: "📡", color: "#0891b2" },
-      { title: "Career & Scholarship", desc: "AI-driven career guidance, college admissions support, scholarship tracking and welfare schemes.", icon: "🎓", color: "#dc2626" },
+      { title: "AI-Powered Tutoring", desc: "Personalized adaptive learning pathways using advanced AI for every student across Class 6–12.", icon: "🤖", color: "#3D3580" },
+      { title: "Real-time Analytics", desc: "Live dashboards tracking attendance, performance, and learning outcomes at every administrative level.", icon: "📊", color: "#7B7FC4" },
+      { title: "Adaptive Assessments", desc: "Smart question generation and AI-evaluated tests with instant feedback and personalized guidance.", icon: "🎯", color: "#F07800" },
+      { title: "Multi-Role Governance", desc: "8 dedicated portals from Student to Minister, each with role-specific insights and controls.", icon: "🛡️", color: "#3D3580" },
+      { title: "Live State Monitoring", desc: "Real-time command center for state-wide education health, KPI tracking and policy compliance.", icon: "📡", color: "#7B7FC4" },
+      { title: "Career & Scholarship", desc: "AI-driven career guidance, college admissions support, scholarship tracking and welfare schemes.", icon: "🎓", color: "#E84400" },
     ],
 
     portalTitleSub: "Role-Based Access",
@@ -113,10 +113,10 @@ const t = {
     statTitle2: "கல்வி மாற்றம்",
     statDesc: "முழு மாநில கல்வி அமைப்பையும் இயக்கும் நிகழ்நேர தரவு உந்துதல் நுண்ணறிவு.",
     stats: [
-      { label: "மொத்த மாணவர்கள்", value: "47.2L", icon: "👨‍🎓", color: "#003087" },
-      { label: "அரசு பள்ளிகள்", value: "37,000+", icon: "🏫", color: "#006400" },
-      { label: "அர்ப்பணிப்புள்ள ஆசிரியர்கள்", value: "2.1L", icon: "📚", color: "#FF6600" },
-      { label: "மாவட்டங்கள்", value: "38", icon: "🗺️", color: "#FFB800" },
+      { label: "மொத்த மாணவர்கள்", value: "47.2L", icon: "👨‍🎓", color: "#3D3580" },
+      { label: "அரசு பள்ளிகள்", value: "37,000+", icon: "🏫", color: "#7B7FC4" },
+      { label: "அர்ப்பணிப்புள்ள ஆசிரியர்கள்", value: "2.1L", icon: "📚", color: "#F07800" },
+      { label: "மாவட்டங்கள்", value: "38", icon: "🗺️", color: "#F5B800" },
     ],
 
     featTitleSub: "தளத்தின் அம்சங்கள்",
@@ -124,12 +124,12 @@ const t = {
     featTitle2: "கல்வி கருவிகள்",
     featDesc: "தமிழ்நாடு கல்வி சூழல்மண்டலத்தில் உள்ள ஒவ்வொரு பங்குதாரருக்கும் AI மற்றும் பகுப்பாய்வு கருவிகள்.",
     features: [
-      { title: "AI-ஆதரவு பயிற்சி", desc: "வகுப்பு 6 முதல் 12 வரையிலான அனைத்து மாணவர்களுக்கும் AI மூலம் தனிப்பயனாக்கப்பட்ட கற்றல் வழிகள்.", icon: "🤖", color: "#003087" },
-      { title: "நிகழ்நேர பகுப்பாய்வு", desc: "ஒவ்வொரு நிலையிலும் வருகை, செயல்திறன் மற்றும் கற்றல் முடிவுகளைக் கண்காணிக்கும் நேரடி டாஷ்போர்டுகள்.", icon: "📊", color: "#006400" },
-      { title: "தழுவல் மதிப்பீடுகள்", desc: "உடனடி கருத்துக்களுடன் AI மதிப்பீடு செய்யும் தேர்வுகள் மற்றும் தனிப்பயன் வழிகாட்டுதல்.", icon: "🎯", color: "#FF6600" },
-      { title: "பல-பங்கு நிர்வாகம்", desc: "மாணவர் முதல் அமைச்சர் வரை 8 பிரத்யேக இணையதளங்கள்.", icon: "🛡️", color: "#8b5cf6" },
-      { title: "நேரடி மாநில கண்காணிப்பு", desc: "மாநில அளவிலான KPI கண்காணிப்பு மற்றும் கொள்கை இணக்கத்திற்கான நிகழ்நேர மையம்.", icon: "📡", color: "#0891b2" },
-      { title: "தொழில் & உதவித்தொகை", desc: "AI வழிகாட்டுதல், கல்லூரி சேர்க்கை ஆதரவு மற்றும் உதவித்தொகை கண்காணிப்பு.", icon: "🎓", color: "#dc2626" },
+      { title: "AI-ஆதரவு பயிற்சி", desc: "வகுப்பு 6 முதல் 12 வரையிலான அனைத்து மாணவர்களுக்கும் AI மூலம் தனிப்பயனாக்கப்பட்ட கற்றல் வழிகள்.", icon: "🤖", color: "#3D3580" },
+      { title: "நிகழ்நேர பகுப்பாய்வு", desc: "ஒவ்வொரு நிலையிலும் வருகை, செயல்திறன் மற்றும் கற்றல் முடிவுகளைக் கண்காணிக்கும் நேரடி டாஷ்போர்டுகள்.", icon: "📊", color: "#7B7FC4" },
+      { title: "தழுவல் மதிப்பீடுகள்", desc: "உடனடி கருத்துக்களுடன் AI மதிப்பீடு செய்யும் தேர்வுகள் மற்றும் தனிப்பயன் வழிகாட்டுதல்.", icon: "🎯", color: "#F07800" },
+      { title: "பல-பங்கு நிர்வாகம்", desc: "மாணவர் முதல் அமைச்சர் வரை 8 பிரத்யேக இணையதளங்கள்.", icon: "🛡️", color: "#3D3580" },
+      { title: "நேரடி மாநில கண்காணிப்பு", desc: "மாநில அளவிலான KPI கண்காணிப்பு மற்றும் கொள்கை இணக்கத்திற்கான நிகழ்நேர மையம்.", icon: "📡", color: "#7B7FC4" },
+      { title: "தொழில் & உதவித்தொகை", desc: "AI வழிகாட்டுதல், கல்லூரி சேர்க்கை ஆதரவு மற்றும் உதவித்தொகை கண்காணிப்பு.", icon: "🎓", color: "#E84400" },
     ],
 
     portalTitleSub: "பங்கு-அடிப்படையிலான அணுகல்",
@@ -163,21 +163,21 @@ const t = {
 };
 
 const testimonials = [
-  { name: "Mrs. Sumathi Devi", role: "Mathematics Teacher, GHS Coimbatore", text: "The AI Lesson Planner has transformed how I prepare classes. My students' engagement has increased by 40% this semester.", avatar: "S", color: "#003087" },
-  { name: "Arjun Kumar", role: "Class 10 Student, GHSS Madurai", text: "The adaptive quizzes and AI tutor helped me understand concepts I struggled with. I scored 95% in my board exams!", avatar: "A", color: "#006400" },
-  { name: "Mr. Rajesh", role: "Parent, Chennai District", text: "I can track my daughter's progress in real-time. The notifications keep me connected with her school activities.", avatar: "R", color: "#FF6600" },
-  { name: "Mr. Venkatesh R.", role: "Headmaster, GHS Coimbatore", text: "Managing 1200+ students has never been this efficient. The dashboard gives me a complete 360° view of the school.", avatar: "V", color: "#8b5cf6" },
+  { name: "Mrs. Sumathi Devi", role: "Mathematics Teacher, GHS Coimbatore", text: "The AI Lesson Planner has transformed how I prepare classes. My students' engagement has increased by 40% this semester.", avatar: "S", color: "#3D3580" },
+  { name: "Arjun Kumar", role: "Class 10 Student, GHSS Madurai", text: "The adaptive quizzes and AI tutor helped me understand concepts I struggled with. I scored 95% in my board exams!", avatar: "A", color: "#7B7FC4" },
+  { name: "Mr. Rajesh", role: "Parent, Chennai District", text: "I can track my daughter's progress in real-time. The notifications keep me connected with her school activities.", avatar: "R", color: "#F07800" },
+  { name: "Mr. Venkatesh R.", role: "Headmaster, GHS Coimbatore", text: "Managing 1200+ students has never been this efficient. The dashboard gives me a complete 360° view of the school.", avatar: "V", color: "#E84400" },
 ];
 
 const portalColors: Record<string, { bg: string; border: string; text: string }> = {
-  "/student": { bg: "#EEF2FF", border: "#6366f1", text: "#4338ca" },
-  "/parent": { bg: "#ECFDF5", border: "#10b981", text: "#065f46" },
-  "/teacher": { bg: "#FFF7ED", border: "#f59e0b", text: "#92400e" },
-  "/headmaster": { bg: "#EFF6FF", border: "#3b82f6", text: "#1d4ed8" },
-  "/block-education-officer": { bg: "#F5F3FF", border: "#8b5cf6", text: "#5b21b6" },
-  "/district-education-officer": { bg: "#FFF1F2", border: "#f43f5e", text: "#be123c" },
-  "/commissioner": { bg: "#ECFEFF", border: "#06b6d4", text: "#0e7490" },
-  "/minister": { bg: "#FEF2F2", border: "#ef4444", text: "#b91c1c" },
+  "/student": { bg: "#EEEDF8", border: "#3D3580", text: "#3D3580" },
+  "/parent": { bg: "#F0F0FA", border: "#7B7FC4", text: "#4a4e9e" },
+  "/teacher": { bg: "#FFF5E8", border: "#F07800", text: "#a05200" },
+  "/headmaster": { bg: "#FDF8E8", border: "#F5B800", text: "#8a6800" },
+  "/block-education-officer": { bg: "#FFF0E5", border: "#F07800", text: "#8a4500" },
+  "/district-education-officer": { bg: "#FDEEE8", border: "#E84400", text: "#c03300" },
+  "/commissioner": { bg: "#F0EFF9", border: "#3D3580", text: "#3D3580" },
+  "/minister": { bg: "#FBF0E8", border: "#E84400", text: "#c03300" },
 };
 
 /* ─── Typed Text Effect ─── */
@@ -211,7 +211,7 @@ function TypedText({ texts, speed = 60, pause = 2000 }: { texts: string[]; speed
   return (
     <span>
       {displayText}
-      <span className="typing-cursor" style={{ background: "#003087" }} />
+      <span className="typing-cursor" style={{ background: "#3D3580" }} />
     </span>
   );
 }
@@ -240,10 +240,10 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div style={{ background: "#f8f9fa", fontFamily: "'Inter', 'Segoe UI', sans-serif", color: "#1a1a2e" }}>
+    <div style={{ background: "#f5f5fb", fontFamily: "'Inter', 'Segoe UI', sans-serif", color: "#1a1a2e" }}>
 
       {/* ═══════ GOVERNMENT TOP STRIP ═══════ */}
-      <div style={{ background: "#003087", color: "#ffffff", padding: "6px 0", fontSize: "11px" }}>
+      <div style={{ background: "#3D3580", color: "#ffffff", padding: "6px 0", fontSize: "11px" }}>
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <span>🇮🇳</span>
@@ -261,7 +261,7 @@ export default function HomePage() {
       </div>
 
       {/* ═══════ ANNOUNCEMENT TICKER ═══════ */}
-      <div style={{ background: "#FF6600", color: "#fff", padding: "8px 0", fontSize: "12px", overflow: "hidden" }}>
+      <div style={{ background: "#F07800", color: "#fff", padding: "8px 0", fontSize: "12px", overflow: "hidden" }}>
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 2rem" }}>
           <span style={{ fontWeight: 500 }}>{text.announcementText}</span>
         </div>
@@ -276,21 +276,21 @@ export default function HomePage() {
           top: 0,
           zIndex: 100,
           background: isNavScrolled ? "rgba(255,255,255,0.98)" : "#ffffff",
-          borderBottom: "2px solid #003087",
+          borderBottom: "2px solid #3D3580",
           padding: "0",
-          boxShadow: isNavScrolled ? "0 2px 16px rgba(0,48,135,0.12)" : "none",
+          boxShadow: isNavScrolled ? "0 2px 16px rgba(61,53,128,0.12)" : "none",
           transition: "all 0.3s"
         }}
       >
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: "68px" }}>
           {/* Logo */}
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "14px", textDecoration: "none" }} id="nav-logo">
-            <div style={{ width: "48px", height: "48px", background: "linear-gradient(135deg, #003087 0%, #1a56db 100%)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", boxShadow: "0 2px 8px rgba(0,48,135,0.3)" }}>
+            <div style={{ width: "48px", height: "48px", background: "linear-gradient(135deg, #3D3580 0%, #7B7FC4 100%)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", boxShadow: "0 2px 8px rgba(61,53,128,0.3)" }}>
               🏛️
             </div>
             <div>
-              <div style={{ fontSize: "16px", fontWeight: 800, color: "#003087", lineHeight: "1.2", letterSpacing: "-0.3px" }}>TN Schools</div>
-              <div style={{ fontSize: "10px", color: "#FF6600", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>AI Smart Ecosystem</div>
+              <div style={{ fontSize: "16px", fontWeight: 800, color: "#3D3580", lineHeight: "1.2", letterSpacing: "-0.3px" }}>TN Schools</div>
+              <div style={{ fontSize: "10px", color: "#F07800", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>AI Smart Ecosystem</div>
             </div>
           </Link>
 
@@ -306,7 +306,7 @@ export default function HomePage() {
                 key={link.href}
                 href={link.href}
                 style={{ fontSize: "13px", color: "#374151", fontWeight: 600, textDecoration: "none", transition: "color 0.2s" }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = "#003087")}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#3D3580")}
                 onMouseLeave={(e) => (e.currentTarget.style.color = "#374151")}
               >
                 {link.label}
@@ -320,11 +320,11 @@ export default function HomePage() {
             <div style={{ display: "flex", background: "#f1f5f9", borderRadius: "8px", border: "1px solid #e2e8f0", overflow: "hidden" }}>
               <button
                 onClick={() => setLang("en")}
-                style={{ fontSize: "12px", padding: "6px 14px", border: "none", cursor: "pointer", fontWeight: 700, background: lang === "en" ? "#003087" : "transparent", color: lang === "en" ? "#fff" : "#64748b", transition: "all 0.2s" }}
+                style={{ fontSize: "12px", padding: "6px 14px", border: "none", cursor: "pointer", fontWeight: 700, background: lang === "en" ? "#3D3580" : "transparent", color: lang === "en" ? "#fff" : "#64748b", transition: "all 0.2s" }}
               >EN</button>
               <button
                 onClick={() => setLang("ta")}
-                style={{ fontSize: "12px", padding: "6px 14px", border: "none", cursor: "pointer", fontWeight: 700, background: lang === "ta" ? "#003087" : "transparent", color: lang === "ta" ? "#fff" : "#64748b", transition: "all 0.2s" }}
+                style={{ fontSize: "12px", padding: "6px 14px", border: "none", cursor: "pointer", fontWeight: 700, background: lang === "ta" ? "#3D3580" : "transparent", color: lang === "ta" ? "#fff" : "#64748b", transition: "all 0.2s" }}
               >தமிழ்</button>
             </div>
 
@@ -332,7 +332,7 @@ export default function HomePage() {
               <>
                 <span style={{ fontSize: "12px", color: "#374151", background: "#f1f5f9", border: "1px solid #e2e8f0", padding: "6px 14px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
                   <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", display: "inline-block" }}></span>
-                  <strong style={{ color: "#003087" }}>{(session.user as any)?.name}</strong>
+                  <strong style={{ color: "#3D3580" }}>{(session.user as any)?.name}</strong>
                 </span>
                 <button
                   id="nav-signout"
@@ -346,7 +346,7 @@ export default function HomePage() {
               <Link
                 href="/login"
                 id="nav-signin"
-                style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff", background: "linear-gradient(135deg, #003087, #1a56db)", padding: "8px 20px", borderRadius: "8px", textDecoration: "none", boxShadow: "0 2px 8px rgba(0,48,135,0.3)", display: "flex", alignItems: "center", gap: "6px" }}
+                style={{ fontSize: "13px", fontWeight: 700, color: "#ffffff", background: "linear-gradient(135deg, #3D3580, #7B7FC4)", padding: "8px 20px", borderRadius: "8px", textDecoration: "none", boxShadow: "0 2px 8px rgba(61,53,128,0.3)", display: "flex", alignItems: "center", gap: "6px" }}
               >
                 🔒 {text.navSignIn}
               </Link>
@@ -359,7 +359,7 @@ export default function HomePage() {
       <section
         id="hero"
         style={{
-          background: "linear-gradient(160deg, #ffffff 0%, #f0f4ff 50%, #e8f0fe 100%)",
+          background: "linear-gradient(160deg, #ffffff 0%, #f0effe 50%, #e8e7f8 100%)",
           padding: "72px 0 80px",
           position: "relative",
           overflow: "hidden",
@@ -367,10 +367,10 @@ export default function HomePage() {
         }}
       >
         {/* Subtle grid pattern */}
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundImage: "linear-gradient(rgba(0,48,135,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(0,48,135,0.04) 1px, transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundImage: "linear-gradient(rgba(61,53,128,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(61,53,128,0.04) 1px, transparent 1px)", backgroundSize: "48px 48px", pointerEvents: "none" }} />
         {/* Decorative circles */}
-        <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "360px", height: "360px", borderRadius: "50%", background: "radial-gradient(circle, rgba(0,48,135,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-60px", left: "-60px", width: "280px", height: "280px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,102,0,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "-80px", right: "-80px", width: "360px", height: "360px", borderRadius: "50%", background: "radial-gradient(circle, rgba(61,53,128,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-60px", left: "-60px", width: "280px", height: "280px", borderRadius: "50%", background: "radial-gradient(circle, rgba(240,120,0,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem", textAlign: "center", position: "relative", zIndex: 1 }}>
           {/* Badge */}
@@ -378,10 +378,10 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#ffffff", border: "1.5px solid #003087", borderRadius: "100px", padding: "7px 18px", marginBottom: "28px", boxShadow: "0 2px 12px rgba(0,48,135,0.10)" }}
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#ffffff", border: "1.5px solid #3D3580", borderRadius: "100px", padding: "7px 18px", marginBottom: "28px", boxShadow: "0 2px 12px rgba(61,53,128,0.12)" }}
           >
             <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#10b981", boxShadow: "0 0 6px #10b981", display: "inline-block" }}></span>
-            <span style={{ fontSize: "12px", color: "#003087", fontWeight: 700, letterSpacing: "0.2px" }}>{text.heroBadge}</span>
+            <span style={{ fontSize: "12px", color: "#3D3580", fontWeight: 700, letterSpacing: "0.2px" }}>{text.heroBadge}</span>
           </motion.div>
 
           {/* Hero Title */}
@@ -389,13 +389,13 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.15 }}
-            style={{ fontSize: "clamp(34px, 5.5vw, 68px)", fontWeight: 900, color: "#003087", lineHeight: 1.1, marginBottom: "20px", letterSpacing: "-1.5px" }}
+            style={{ fontSize: "clamp(34px, 5.5vw, 68px)", fontWeight: 900, color: "#3D3580", lineHeight: 1.1, marginBottom: "20px", letterSpacing: "-1.5px" }}
           >
             {text.heroTitle1}
             <br />
-            <span style={{ color: "#FF6600", display: "inline-block", position: "relative" }}>
+            <span style={{ color: "#F07800", display: "inline-block", position: "relative" }}>
               {text.heroTitle2}
-              <span style={{ position: "absolute", bottom: "-4px", left: 0, right: 0, height: "4px", background: "linear-gradient(90deg, #FF6600, #FFB800)", borderRadius: "2px", opacity: 0.5 }}></span>
+              <span style={{ position: "absolute", bottom: "-4px", left: 0, right: 0, height: "4px", background: "linear-gradient(90deg, #F07800, #F5B800)", borderRadius: "2px", opacity: 0.5 }}></span>
             </span>
           </motion.h1>
 
@@ -426,19 +426,19 @@ export default function HomePage() {
           >
             {session ? (
               <Link href={`/${(session.user as any)?.role?.toLowerCase() || "student"}`} id="hero-goto-portal"
-                style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#FF6600", color: "#ffffff", padding: "13px 30px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "14px", boxShadow: "0 4px 18px rgba(255,102,0,0.35)", transition: "all 0.2s" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "linear-gradient(135deg, #F07800, #E84400)", color: "#ffffff", padding: "13px 30px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "14px", boxShadow: "0 4px 18px rgba(240,120,0,0.35)", transition: "all 0.2s" }}
               >
                 🚀 {text.heroBtnGo}
               </Link>
             ) : (
               <Link href="/login" id="hero-signin"
-                style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#FF6600", color: "#ffffff", padding: "13px 30px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "14px", boxShadow: "0 4px 18px rgba(255,102,0,0.35)", transition: "all 0.2s" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "linear-gradient(135deg, #F07800, #E84400)", color: "#ffffff", padding: "13px 30px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "14px", boxShadow: "0 4px 18px rgba(240,120,0,0.35)", transition: "all 0.2s" }}
               >
                 🚀 {text.heroBtnSignIn}
               </Link>
             )}
             <a href="#portals" id="hero-explore"
-              style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#ffffff", color: "#003087", padding: "13px 30px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "14px", border: "2px solid #003087", transition: "all 0.2s" }}
+              style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#ffffff", color: "#3D3580", padding: "13px 30px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "14px", border: "2px solid #3D3580", transition: "all 0.2s" }}
             >
               {text.heroBtnExplore} ↓
             </a>
@@ -452,10 +452,10 @@ export default function HomePage() {
             style={{ display: "flex", justifyContent: "center", gap: "clamp(0px, 2vw, 12px)", marginTop: "56px", flexWrap: "wrap" }}
           >
             {[
-              { label: "Students", value: "47.2L+", color: "#003087", icon: "👨‍🎓" },
-              { label: "Schools", value: "37,000+", color: "#006400", icon: "🏫" },
-              { label: "Teachers", value: "2.1L+", color: "#FF6600", icon: "📚" },
-              { label: "Districts", value: "38", color: "#8b5cf6", icon: "🗺️" },
+              { label: "Students", value: "47.2L+", color: "#3D3580", icon: "👨‍🎓" },
+              { label: "Schools", value: "37,000+", color: "#7B7FC4", icon: "🏫" },
+              { label: "Teachers", value: "2.1L+", color: "#F07800", icon: "📚" },
+              { label: "Districts", value: "38", color: "#F5B800", icon: "🗺️" },
             ].map((s, i) => (
               <div key={s.label} style={{ textAlign: "center", background: "#ffffff", border: `1.5px solid ${s.color}25`, borderTop: `3px solid ${s.color}`, borderRadius: "12px", padding: "18px 28px", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", minWidth: "140px" }}>
                 <div style={{ fontSize: "20px", marginBottom: "4px" }}>{s.icon}</div>
@@ -468,15 +468,15 @@ export default function HomePage() {
       </section>
 
       {/* ═══════ DIVIDER STRIP ═══════ */}
-      <div style={{ height: "5px", background: "linear-gradient(90deg, #003087, #FF6600, #006400, #FFB800)" }} />
+      <div style={{ height: "5px", background: "linear-gradient(90deg, #3D3580, #7B7FC4, #F5B800, #F07800, #E84400)" }} />
 
       {/* ═══════════════ STATS SECTION ═══════════════ */}
       <section id="stats" style={{ background: "#ffffff", padding: "80px 0" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 2rem" }}>
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", color: "#FF6600", display: "block", marginBottom: "8px" }}>{text.statTitleSub}</span>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#003087", marginBottom: "12px", lineHeight: 1.2 }}>
-              {text.statTitle1} <span style={{ color: "#FF6600" }}>{text.statTitle2}</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", color: "#F07800", display: "block", marginBottom: "8px" }}>{text.statTitleSub}</span>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#3D3580", marginBottom: "12px", lineHeight: 1.2 }}>
+              {text.statTitle1} <span style={{ color: "#F07800" }}>{text.statTitle2}</span>
             </h2>
             <p style={{ color: "#6b7280", maxWidth: "520px", margin: "0 auto", fontSize: "15px", lineHeight: 1.6 }}>{text.statDesc}</p>
           </div>
@@ -514,12 +514,12 @@ export default function HomePage() {
       <div style={{ height: "1px", background: "linear-gradient(90deg, transparent, #e2e8f0, transparent)", maxWidth: "800px", margin: "0 auto" }} />
 
       {/* ═══════════════ FEATURES SECTION ═══════════════ */}
-      <section id="features" style={{ background: "#f8f9fa", padding: "80px 0" }}>
+      <section id="features" style={{ background: "#f5f5fb", padding: "80px 0" }}>
         <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "0 2rem" }}>
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", color: "#006400", display: "block", marginBottom: "8px" }}>{text.featTitleSub}</span>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#003087", marginBottom: "12px", lineHeight: 1.2 }}>
-              {text.featTitle1} <span style={{ color: "#006400" }}>{text.featTitle2}</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", color: "#7B7FC4", display: "block", marginBottom: "8px" }}>{text.featTitleSub}</span>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#3D3580", marginBottom: "12px", lineHeight: 1.2 }}>
+              {text.featTitle1} <span style={{ color: "#7B7FC4" }}>{text.featTitle2}</span>
             </h2>
             <p style={{ color: "#6b7280", maxWidth: "520px", margin: "0 auto", fontSize: "15px", lineHeight: 1.6 }}>{text.featDesc}</p>
           </div>
@@ -561,9 +561,9 @@ export default function HomePage() {
       <section id="portals" style={{ background: "#ffffff", padding: "80px 0" }}>
         <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 2rem" }}>
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", color: "#003087", display: "block", marginBottom: "8px" }}>{text.portalTitleSub}</span>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#003087", marginBottom: "12px", lineHeight: 1.2 }}>
-              {text.portalTitle1} <span style={{ color: "#FF6600" }}>{text.portalTitle2}</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", color: "#3D3580", display: "block", marginBottom: "8px" }}>{text.portalTitleSub}</span>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#3D3580", marginBottom: "12px", lineHeight: 1.2 }}>
+              {text.portalTitle1} <span style={{ color: "#F07800" }}>{text.portalTitle2}</span>
             </h2>
             <p style={{ color: "#6b7280", maxWidth: "520px", margin: "0 auto", fontSize: "15px", lineHeight: 1.6 }}>{text.portalDesc}</p>
           </div>
@@ -629,15 +629,15 @@ export default function HomePage() {
       </section>
 
       {/* ═══════ BLUE DIVIDER ═══════ */}
-      <div style={{ height: "4px", background: "linear-gradient(90deg, #003087, #FF6600, #006400)" }} />
+      <div style={{ height: "4px", background: "linear-gradient(90deg, #3D3580, #7B7FC4, #F5B800, #F07800, #E84400)" }} />
 
       {/* ═══════════════ TESTIMONIALS SECTION ═══════════════ */}
-      <section id="testimonials" style={{ background: "#f8f9fa", padding: "80px 0" }}>
+      <section id="testimonials" style={{ background: "#f5f5fb", padding: "80px 0" }}>
         <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "0 2rem" }}>
           <div style={{ textAlign: "center", marginBottom: "56px" }}>
-            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", color: "#FF6600", display: "block", marginBottom: "8px" }}>{text.testTitleSub}</span>
-            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#003087", marginBottom: "12px" }}>
-              {text.testTitle1} <span style={{ color: "#FF6600" }}>{text.testTitle2}</span>
+            <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "2px", color: "#F07800", display: "block", marginBottom: "8px" }}>{text.testTitleSub}</span>
+            <h2 style={{ fontSize: "clamp(28px, 4vw, 44px)", fontWeight: 800, color: "#3D3580", marginBottom: "12px" }}>
+              {text.testTitle1} <span style={{ color: "#F07800" }}>{text.testTitle2}</span>
             </h2>
             <p style={{ color: "#6b7280", maxWidth: "520px", margin: "0 auto", fontSize: "15px", lineHeight: 1.6 }}>{text.testDesc}</p>
           </div>
@@ -680,7 +680,7 @@ export default function HomePage() {
               <button
                 key={i}
                 onClick={() => setActiveTestimonial(i)}
-                style={{ width: i === activeTestimonial ? "28px" : "8px", height: "8px", borderRadius: "100px", background: i === activeTestimonial ? "#003087" : "#d1d5db", border: "none", cursor: "pointer", transition: "all 0.3s" }}
+                style={{ width: i === activeTestimonial ? "28px" : "8px", height: "8px", borderRadius: "100px", background: i === activeTestimonial ? "#3D3580" : "#d1d5db", border: "none", cursor: "pointer", transition: "all 0.3s" }}
               />
             ))}
           </div>
@@ -693,7 +693,7 @@ export default function HomePage() {
       {/* ═══════════════ CTA SECTION — LIGHT THEME ═══════════════ */}
       <section
         style={{
-          background: "linear-gradient(160deg, #f0f4ff 0%, #ffffff 50%, #fff7ed 100%)",
+          background: "linear-gradient(160deg, #eeedf8 0%, #ffffff 50%, #fff5e8 100%)",
           padding: "80px 0",
           position: "relative",
           overflow: "hidden",
@@ -701,8 +701,8 @@ export default function HomePage() {
         }}
       >
         {/* Decorative elements */}
-        <div style={{ position: "absolute", top: "-60px", right: "-60px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(0,48,135,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "-60px", left: "-60px", width: "260px", height: "260px", borderRadius: "50%", background: "radial-gradient(circle, rgba(255,102,0,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", top: "-60px", right: "-60px", width: "300px", height: "300px", borderRadius: "50%", background: "radial-gradient(circle, rgba(61,53,128,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "-60px", left: "-60px", width: "260px", height: "260px", borderRadius: "50%", background: "radial-gradient(circle, rgba(240,120,0,0.07) 0%, transparent 70%)", pointerEvents: "none" }} />
 
         <div style={{ maxWidth: "800px", margin: "0 auto", padding: "0 2rem", textAlign: "center", position: "relative", zIndex: 1 }}>
           <motion.div
@@ -716,7 +716,7 @@ export default function HomePage() {
               <span style={{ fontSize: "11px", color: "#065f46", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>{text.ctaBadge}</span>
             </div>
 
-            <h2 style={{ fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 900, color: "#003087", marginBottom: "16px", lineHeight: 1.2, letterSpacing: "-0.5px" }}>
+            <h2 style={{ fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 900, color: "#3D3580", marginBottom: "16px", lineHeight: 1.2, letterSpacing: "-0.5px" }}>
               {text.ctaTitle}
             </h2>
             <p style={{ color: "#64748b", fontSize: "16px", lineHeight: 1.7, marginBottom: "40px", maxWidth: "600px", margin: "0 auto 40px" }}>
@@ -726,12 +726,12 @@ export default function HomePage() {
             {/* Buttons */}
             <div style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}>
               <Link href="/login" id="cta-signin"
-                style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#FF6600", color: "#ffffff", padding: "14px 32px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "15px", boxShadow: "0 4px 18px rgba(255,102,0,0.35)", transition: "all 0.2s" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "linear-gradient(135deg, #F07800, #E84400)", color: "#ffffff", padding: "14px 32px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "15px", boxShadow: "0 4px 18px rgba(240,120,0,0.35)", transition: "all 0.2s" }}
               >
                 🚀 {text.ctaBtnIn}
               </Link>
               <a href="#portals" id="cta-explore"
-                style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#ffffff", color: "#003087", padding: "14px 32px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "15px", border: "2px solid #003087", transition: "all 0.2s" }}
+                style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#ffffff", color: "#3D3580", padding: "14px 32px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "15px", border: "2px solid #3D3580", transition: "all 0.2s" }}
               >
                 {text.ctaBtnBrowse}
               </a>
@@ -763,10 +763,10 @@ export default function HomePage() {
             {/* Brand */}
             <div style={{ gridColumn: "span 1" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px" }}>
-                <div style={{ width: "44px", height: "44px", background: "linear-gradient(135deg, #003087, #1a56db)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>🏛️</div>
+                <div style={{ width: "44px", height: "44px", background: "linear-gradient(135deg, #3D3580, #7B7FC4)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px" }}>🏛️</div>
                 <div>
                   <div style={{ fontSize: "14px", fontWeight: 800, color: "#ffffff" }}>TN Schools</div>
-                  <div style={{ fontSize: "10px", color: "#FF6600", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>AI Smart Ecosystem</div>
+                  <div style={{ fontSize: "10px", color: "#F07800", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.5px" }}>AI Smart Ecosystem</div>
                 </div>
               </div>
               <p style={{ fontSize: "12px", lineHeight: 1.7, color: "#6b7280", maxWidth: "240px" }}>
@@ -784,7 +784,7 @@ export default function HomePage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {portals.slice(0, 4).map((p) => (
                   <Link key={p.href} href={p.href} style={{ fontSize: "12px", color: "#6b7280", textDecoration: "none", transition: "color 0.2s" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#FF6600")}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#F07800")}
                     onMouseLeave={(e) => (e.currentTarget.style.color = "#6b7280")}
                   >{p.label}</Link>
                 ))}
@@ -797,7 +797,7 @@ export default function HomePage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {portals.slice(4).map((p) => (
                   <Link key={p.href} href={p.href} style={{ fontSize: "12px", color: "#6b7280", textDecoration: "none", transition: "color 0.2s" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#FF6600")}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#F07800")}
                     onMouseLeave={(e) => (e.currentTarget.style.color = "#6b7280")}
                   >{p.label}</Link>
                 ))}
@@ -810,7 +810,7 @@ export default function HomePage() {
               <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
                 {[text.ftHelp, text.ftDoc, text.ftPrivacy, text.ftTerms].map((link) => (
                   <a key={link} href="#" style={{ fontSize: "12px", color: "#6b7280", textDecoration: "none", transition: "color 0.2s" }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = "#FF6600")}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = "#F07800")}
                     onMouseLeave={(e) => (e.currentTarget.style.color = "#6b7280")}
                   >{link}</a>
                 ))}
