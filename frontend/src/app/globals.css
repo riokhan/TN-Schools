@@ -15,7 +15,7 @@
   --bg-topbar: transparent;
   --text-main: #4b5563; /* Slate-600 contrast text */
   --text-heading: #0f172a; /* Slate-900 navy headings */
-  --text-muted: #94a3b8; /* Slate-400 caption text */
+  --text-muted: #64748b; /* Slate-500 caption text for accessibility */
   --border: #eaeef4; /* Extremely soft light grey/blue border */
   --border-light: #eaeef4;
   --input-bg: #ffffff;
@@ -37,7 +37,7 @@
   --table-header-color: #94a3b8;
   --table-cell-color: #4b5563;
   --table-row-border: #eaeef4;
-  --table-row-hover: #f8fafc;
+  --table-row-hover: #f1f5f9; /* Slate-100 for high-visibility hover in light mode */
   /* KPI card */
   --kpi-bg: #ffffff;
   --kpi-border: #eaeef4;
@@ -892,8 +892,14 @@ h1, h2, h3, h4, h5, h6 {
 :root:not(.dark) .hover\:bg-slate-800\/50:hover,
 :root:not(.dark) .hover\:bg-slate-800:hover,
 :root:not(.dark) .hover\:bg-slate-900\/80:hover,
-:root:not(.dark) .hover\:bg-slate-900:hover {
-  background-color: #f8fafc !important;
+:root:not(.dark) .hover\:bg-slate-900:hover,
+:root:not(.dark) [class*="hover:bg-slate-"]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+:root:not(.dark) .main-content .bg-gradient-to-r {
+  background: #ffffff !important;
+  border-color: var(--border) !important;
 }
 
 /* Light mode text readability corrections for hardcoded dark-theme selectors */
@@ -912,7 +918,14 @@ h1, h2, h3, h4, h5, h6 {
 :root:not(.dark) .glass-strong h1,
 :root:not(.dark) .glass-strong h2,
 :root:not(.dark) .glass-strong h3,
-:root:not(.dark) .glass-strong h4 {
+:root:not(.dark) .glass-strong h4,
+:root:not(.dark) .main-content h1.text-white,
+:root:not(.dark) .main-content h2.text-white,
+:root:not(.dark) .main-content h3.text-white,
+:root:not(.dark) .main-content h4.text-white,
+:root:not(.dark) .main-content h5.text-white,
+:root:not(.dark) .main-content h6.text-white,
+:root:not(.dark) .main-content .text-white:not(.w-7):not(.w-8):not(.w-9):not(.w-10):not(.avatar):not(button):not(a):not(.badge):not(.btn-primary):not(.btn-glow) {
   color: var(--text-heading) !important;
 }
 
@@ -924,7 +937,10 @@ h1, h2, h3, h4, h5, h6 {
 :root:not(.dark) .glass .text-slate-300,
 :root:not(.dark) .glass-strong .text-slate-100,
 :root:not(.dark) .glass-strong .text-slate-200,
-:root:not(.dark) .glass-strong .text-slate-300 {
+:root:not(.dark) .glass-strong .text-slate-300,
+:root:not(.dark) .main-content .text-slate-100,
+:root:not(.dark) .main-content .text-slate-200,
+:root:not(.dark) .main-content .text-slate-300 {
   color: var(--text-main) !important;
 }
 
@@ -936,8 +952,18 @@ h1, h2, h3, h4, h5, h6 {
 :root:not(.dark) .glass .text-slate-600,
 :root:not(.dark) .glass-strong .text-slate-400,
 :root:not(.dark) .glass-strong .text-slate-500,
-:root:not(.dark) .glass-strong .text-slate-600 {
+:root:not(.dark) .glass-strong .text-slate-600,
+:root:not(.dark) .main-content .text-slate-400,
+:root:not(.dark) .main-content .text-slate-500,
+:root:not(.dark) .main-content .text-slate-600,
+:root:not(.dark) .main-content p.text-slate-400,
+:root:not(.dark) .main-content p.text-slate-500 {
   color: var(--text-muted) !important;
+}
+
+:root:not(.dark) .text-purple-300,
+:root:not(.dark) .text-purple-400 {
+  color: #6b21a8 !important;
 }
 
 /* Light mode specific status colors and tracks */
