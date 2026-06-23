@@ -569,7 +569,7 @@ export default function PortalLayout({
         </div>
 
         {/* Children content relative to sit above absolute background */}
-        <div className="relative z-10">
+        <div className="relative">
           {children}
         </div>
       </div>

@@ -50,30 +50,30 @@ export default function SystemLogs() {
 
       <div className="glass rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="data-table">
             <thead>
-              <tr className="border-b border-slate-800 text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="px-4 py-3">Timestamp</th>
-                <th className="px-4 py-3">Level</th>
-                <th className="px-4 py-3">User</th>
-                <th className="px-4 py-3">Action</th>
-                <th className="px-4 py-3">Detail</th>
-                <th className="px-4 py-3">IP</th>
+              <tr>
+                <th>Timestamp</th>
+                <th>Level</th>
+                <th>User</th>
+                <th>Action</th>
+                <th>Detail</th>
+                <th>IP</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((log) => (
-                <tr key={log.id} className="border-b border-slate-800/50 hover:bg-slate-900/40 transition-colors">
-                  <td className="px-4 py-3 text-[10px] text-slate-500 font-mono whitespace-nowrap">{log.timestamp}</td>
-                  <td className="px-4 py-3">
+                <tr key={log.id}>
+                  <td className="font-mono whitespace-nowrap">{log.timestamp}</td>
+                  <td>
                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded border ${levelColors[log.level]}`}>
                       {log.level}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-300">{log.user}</td>
-                  <td className="px-4 py-3 text-xs font-semibold text-white">{log.action}</td>
-                  <td className="px-4 py-3 text-xs text-slate-400 max-w-xs truncate">{log.detail}</td>
-                  <td className="px-4 py-3 text-[10px] text-slate-600 font-mono">{log.ip}</td>
+                  <td>{log.user}</td>
+                  <td className="font-semibold text-white">{log.action}</td>
+                  <td className="max-w-xs truncate">{log.detail}</td>
+                  <td className="font-mono">{log.ip}</td>
                 </tr>
               ))}
             </tbody>

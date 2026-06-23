@@ -385,9 +385,9 @@ export const roleConfigs: Record<string, PortalConfig> = {
     title: "Super Admin Portal",
     subtitle: "System Management & Dynamic Governance",
     avatarLetter: "S",
-    avatarColor: "#475569",
+    avatarColor: "#7c3aed",
     themeClass: "theme-superadmin",
-    accentColor: "#475569",
+    accentColor: "#7c3aed",
     navItems: [
       { label: "System Dashboard", href: "/super-admin", icon: "📊" },
 

@@ -747,7 +747,7 @@ h1, h2, h3, h4, h5, h6 {
 .theme-deo          { --portal-color: #f5365c; --portal-light: rgba(245, 54, 92, 0.15); }
 .theme-commissioner { --portal-color: #172b4d; --portal-light: rgba(23, 43, 77, 0.15); }
 .theme-minister     { --portal-color: #f5365c; --portal-light: rgba(245, 54, 92, 0.15); }
-.theme-superadmin   { --portal-color: #475569; --portal-light: rgba(71, 85, 105, 0.15); }
+.theme-superadmin   { --portal-color: #7c3aed; --portal-light: rgba(124, 58, 237, 0.15); }
 
 /* ===================== FOOTER GRADIENT ===================== */
 .footer-gradient {
@@ -983,9 +983,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Overwrite search inputs on other pages */
-:root:not(.dark) input[type="text"],
-:root:not(.dark) input[type="email"],
-:root:not(.dark) input[type="password"],
+:root:not(.dark) input,
 :root:not(.dark) select,
 :root:not(.dark) textarea {
   background-color: #ffffff !important;
@@ -993,9 +991,7 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-heading) !important;
 }
 
-.dark input[type="text"],
-.dark input[type="email"],
-.dark input[type="password"],
+.dark input,
 .dark select,
 .dark textarea {
   background-color: var(--input-bg) !important;
@@ -1320,4 +1316,22 @@ button.bg-red-600 span {
 .landing-nav .text-white,
 :root:not(.dark) .landing-nav .text-white {
   color: #ffffff !important;
+}
+
+/* Ensure text color utility classes take precedence in Light Mode over general element overrides (excluding form controls) */
+:root:not(.dark) .text-white:not(input):not(select):not(textarea),
+:root:not(.dark) .text-white:not(input):not(select):not(textarea) span {
+  color: #ffffff !important;
+}
+:root:not(.dark) .text-slate-400:not(input):not(select):not(textarea) {
+  color: #94a3b8 !important;
+}
+:root:not(.dark) .text-slate-300:not(input):not(select):not(textarea) {
+  color: #cbd5e1 !important;
+}
+:root:not(.dark) .text-slate-200:not(input):not(select):not(textarea) {
+  color: #e2e8f0 !important;
+}
+:root:not(.dark) .text-slate-100:not(input):not(select):not(textarea) {
+  color: #f1f5f9 !important;
 }

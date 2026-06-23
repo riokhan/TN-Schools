@@ -180,32 +180,43 @@ export default function SyllabusManagement() {
             </div>
           </div>
 
-          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
-            {filteredChapters.map((ch) => (
-              <div key={ch.id} className={`flex items-center gap-3 rounded-xl px-4 py-3 border transition-all ${
-                ch.enabled ? "bg-slate-900/50 border-slate-800" : "bg-slate-950/50 border-slate-800/30 opacity-60"
-              }`}>
-                <div className="w-8 h-8 rounded-lg bg-slate-800 flex items-center justify-center text-xs font-bold text-slate-400 shrink-0">
-                  {ch.no}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs font-semibold text-white truncate">{ch.title}</div>
-                  <div className="text-[9px] text-slate-500">{ch.topics} topics</div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  {/* AI Mapping */}
-                  <button onClick={() => toggleAI(subject!.id, ch.id)} title="Toggle AI Mapping"
-                    className={`text-[9px] font-bold px-2 py-0.5 rounded-full border transition ${
-                      ch.aiMapped ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/30" : "text-slate-600 bg-slate-800 border-slate-700"
-                    }`}>🤖 AI</button>
-                  {/* Enable/Disable */}
-                  <button onClick={() => toggleChapter(subject!.id, ch.id)}
-                    className={`relative w-9 h-5 rounded-full transition-colors ${ch.enabled ? "bg-emerald-500" : "bg-slate-700"}`}>
-                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${ch.enabled ? "translate-x-4" : "translate-x-0.5"}`} />
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="overflow-x-auto max-h-[500px]">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th className="w-16">No</th>
+                  <th>Chapter Title</th>
+                  <th>Topics</th>
+                  <th>AI Mapping</th>
+                  <th className="text-right">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredChapters.map((ch) => (
+                  <tr key={ch.id} className={ch.enabled ? "" : "opacity-60"}>
+                    <td className="font-bold text-slate-500">{ch.no}</td>
+                    <td>
+                      <span className="text-xs font-semibold text-white">{ch.title}</span>
+                    </td>
+                    <td>{ch.topics} topics</td>
+                    <td>
+                      <button onClick={() => toggleAI(subject!.id, ch.id)} title="Toggle AI Mapping"
+                        className={`text-[9px] font-bold px-2 py-0.5 rounded-full border transition ${
+                          ch.aiMapped ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/30" : "text-slate-600 bg-slate-800 border-slate-700"
+                        }`}>🤖 {ch.aiMapped ? "ON" : "OFF"}</button>
+                    </td>
+                    <td className="text-right">
+                      <div className="flex justify-end">
+                        <button onClick={() => toggleChapter(subject!.id, ch.id)}
+                          className={`relative w-9 h-5 rounded-full transition-colors ${ch.enabled ? "bg-emerald-500" : "bg-slate-700"}`}>
+                          <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${ch.enabled ? "translate-x-4" : "translate-x-0.5"}`} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
