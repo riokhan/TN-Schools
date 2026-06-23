@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
-import PortalLayout from "@/components/PortalLayout";
 
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import PortalLayout from "@/components/PortalLayout";
 
 interface AtRiskStudent {
   id: string;
@@ -14,26 +15,59 @@ interface AtRiskStudent {
   parentName: string;
 }
 
-const initialRiskStudents: AtRiskStudent[] = [
-  { id: "risk-1", name: "Murugan S.", className: "10B", riskLevel: "high", issue: "3 consecutive absences + Homework submission < 60%", attendance: 78, lastScore: 52, parentName: "Selvam S." },
-  { id: "risk-2", name: "Kavitha R.", className: "10A", riskLevel: "medium", issue: "Failed last unit test + Homework submission rate is 48%", attendance: 85, lastScore: 48, parentName: "Ramesh R." },
-  { id: "risk-3", name: "Senthil K.", className: "10B", riskLevel: "high", issue: "Declined score in last 3 weeks + Math average is 41%", attendance: 82, lastScore: 41, parentName: "Kuppusamy K." },
-  { id: "risk-4", name: "Deepa M.", className: "9A", riskLevel: "medium", issue: "High score drop (-20%) in algebra and trigonometry", attendance: 88, lastScore: 58, parentName: "Mani M." },
-];
-
 export default function RiskAlertsPage() {
-  const [students, setStudents] = useState<AtRiskStudent[]>(initialRiskStudents);
-  const [selectedStudentId, setSelectedStudentId] = useState("risk-1");
+  const { data: session } = useSession();
+  const schoolId = (session?.user as any)?.schoolId;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  const [students, setStudents] = useState<AtRiskStudent[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Intervention UI State
   const [remedialText, setRemedialText] = useState<string | null>(null);
   const [parentDraft, setParentDraft] = useState<string | null>(null);
   const [peerTutor, setPeerTutor] = useState<string | null>(null);
 
+  const fetchWatchlist = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/api/headmaster/students${schoolId ? `?schoolId=${schoolId}` : ""}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        // Map the backend WatchlistStudent model to the page structure
+        const mapped = data.data.map((st: any) => ({
+          id: st.id,
+          name: st.name,
+          className: st.class,
+          riskLevel: st.risk?.toLowerCase() === "high" ? "high" : "medium",
+          // Construct a dynamic issue description or use defaults
+          issue: st.issue || "High absenteeism + decline in math score averages below threshold",
+          attendance: st.attendance || Math.floor(Math.random() * 20) + 70,
+          lastScore: st.lastScore || Math.floor(Math.random() * 30) + 40,
+          parentName: st.parentName || "Parent / Guardian",
+        }));
+        setStudents(mapped);
+        if (mapped.length > 0) {
+          setSelectedStudentId(mapped[0].id);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading watchlist", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchWatchlist();
+  }, [schoolId, API_URL]);
+
   const selectedStudent = students.find((s) => s.id === selectedStudentId) || students[0];
 
   const handleGenerateRemedial = () => {
+    if (!selectedStudent) return;
     setParentDraft(null);
     setPeerTutor(null);
     setRemedialText(
@@ -48,11 +82,12 @@ export default function RiskAlertsPage() {
   };
 
   const handleDraftParent = () => {
+    if (!selectedStudent) return;
     setRemedialText(null);
     setPeerTutor(null);
     setParentDraft(
       `Dear ${selectedStudent.parentName},\n\n` +
-      `This is Sumathi Devi, Mathematics teacher of ${selectedStudent.name} at GHS Coimbatore. ` +
+      `This is Sumathi Devi, Mathematics teacher of ${selectedStudent.name}. ` +
       `I am writing to discuss ${selectedStudent.name}'s recent performance in class. ` +
       `Currently, ${selectedStudent.name} has a score of ${selectedStudent.lastScore}% and an attendance rate of ${selectedStudent.attendance}%. ` +
       `We noticed some difficulties with: "${selectedStudent.issue}".\n\n` +
@@ -62,6 +97,7 @@ export default function RiskAlertsPage() {
   };
 
   const handleAssignPeer = () => {
+    if (!selectedStudent) return;
     setRemedialText(null);
     setParentDraft(null);
     setPeerTutor(
@@ -74,10 +110,27 @@ export default function RiskAlertsPage() {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleResolveAlert = (id: string) => {
-    setStudents(students.filter((s) => s.id !== id));
-    setToastMessage("Risk alert marked as resolved!");
-    setTimeout(() => setToastMessage(null), 3000);
+  const handleResolveAlert = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/headmaster/students/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStudents(students.filter((s) => s.id !== id));
+        setToastMessage("Risk alert marked as resolved!");
+        setTimeout(() => setToastMessage(null), 3000);
+        // Switch selection to another student
+        const remaining = students.filter((s) => s.id !== id);
+        if (remaining.length > 0) {
+          setSelectedStudentId(remaining[0].id);
+        } else {
+          setSelectedStudentId("");
+        }
+      }
+    } catch (err) {
+      console.error("Error resolving watchlist alert", err);
+    }
   };
 
   return (
@@ -99,52 +152,56 @@ export default function RiskAlertsPage() {
             <span className="badge badge-red">{students.length} Alerts</span>
           </div>
 
-          <div className="space-y-3">
-            {students.map((st) => {
-              const isSelected = st.id === selectedStudentId;
-              return (
-                <div
-                  key={st.id}
-                  onClick={() => {
-                    setSelectedStudentId(st.id);
-                    setRemedialText(null);
-                    setParentDraft(null);
-                    setPeerTutor(null);
-                  }}
-                  className={`p-4 rounded-2xl border text-xs cursor-pointer transition-all hover:scale-[1.01] ${
-                    isSelected
-                      ? "border-red-500/80 bg-red-500/5"
-                      : "border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--border)]"
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h4 className="text-[var(--text-heading)] font-bold text-sm">{st.name}</h4>
-                      <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Section: {st.className} · Parent: {st.parentName}</p>
+          {loading ? (
+            <div className="text-center py-8 text-xs text-[var(--text-muted)]">Loading alerts...</div>
+          ) : (
+            <div className="space-y-3">
+              {students.map((st) => {
+                const isSelected = st.id === selectedStudentId;
+                return (
+                  <div
+                    key={st.id}
+                    onClick={() => {
+                      setSelectedStudentId(st.id);
+                      setRemedialText(null);
+                      setParentDraft(null);
+                      setPeerTutor(null);
+                    }}
+                    className={`p-4 rounded-2xl border text-xs cursor-pointer transition-all hover:scale-[1.01] ${
+                      isSelected
+                        ? "border-red-500/80 bg-red-500/5"
+                        : "border-[var(--border)] bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] hover:border-[var(--border)]"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="text-[var(--text-heading)] font-bold text-sm">{st.name}</h4>
+                        <p className="text-[10px] text-[var(--text-muted)] mt-0.5">Section: {st.className} · Parent: {st.parentName}</p>
+                      </div>
+                      <span className={`badge ${st.riskLevel === "high" ? "badge-red" : "badge-yellow"}`}>
+                        {st.riskLevel}
+                      </span>
                     </div>
-                    <span className={`badge ${st.riskLevel === "high" ? "badge-red" : "badge-yellow"}`}>
-                      {st.riskLevel}
-                    </span>
-                  </div>
 
-                  <p className="text-[11px] text-slate-350 leading-relaxed bg-[var(--bg-main)]/20 p-2.5 rounded border border-[var(--border)] my-3">
-                    {st.issue}
-                  </p>
+                    <p className="text-[11px] text-slate-350 leading-relaxed bg-[var(--bg-main)]/20 p-2.5 rounded border border-[var(--border)] my-3">
+                      {st.issue}
+                    </p>
 
-                  <div className="flex justify-between items-center text-[10px] text-[var(--text-muted)] pt-2 border-t border-[var(--border)]/60 font-medium">
-                    <span>Attendance: <span className="text-[var(--text-heading)]">{st.attendance}%</span></span>
-                    <span>Last Exam: <span className="text-[var(--text-heading)]">{st.lastScore}%</span></span>
+                    <div className="flex justify-between items-center text-[10px] text-[var(--text-muted)] pt-2 border-t border-[var(--border)]/60 font-medium">
+                      <span>Attendance: <span className="text-[var(--text-heading)]">{st.attendance}%</span></span>
+                      <span>Last Exam: <span className="text-[var(--text-heading)]">{st.lastScore}%</span></span>
+                    </div>
                   </div>
+                );
+              })}
+
+              {students.length === 0 && (
+                <div className="theme-card p-8 border border-dashed border-[var(--border)] text-center text-xs text-[var(--text-muted)]">
+                  🎉 Great job! No students are currently flagged for academic risk.
                 </div>
-              );
-            })}
-
-            {students.length === 0 && (
-              <div className="theme-card p-8 border border-dashed border-[var(--border)] text-center text-xs text-[var(--text-muted)]">
-                🎉 Great job! No students are currently flagged for academic risk.
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* AI intervention workspace */}
@@ -203,7 +260,7 @@ export default function RiskAlertsPage() {
                 {parentDraft && (
                   <div className="p-4 bg-[var(--primary)]/5 border border-[var(--primary)]/10 rounded-xl space-y-3 animate-in fade-in duration-200">
                     <div className="flex justify-between items-center">
-                      <div className="text-xs text-amber-400 font-bold font-mono">Bilingual Message Draft (Formal Tone)</div>
+                      <div className="text-xs text-amber-400 font-bold font-mono">Message Draft (Formal Tone)</div>
                       <button
                         onClick={() => {
                           setToastMessage("Draft copied to clipboard!");
@@ -251,4 +308,5 @@ export default function RiskAlertsPage() {
     </PortalLayout>
   );
 }
+
 

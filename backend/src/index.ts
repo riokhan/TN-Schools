@@ -14,6 +14,7 @@ import schoolRoutes    from './routes/school.routes';
 import headmasterRoutes from './routes/headmaster.routes';
 import pageRoutes       from './routes/page.routes';
 import userRoutes       from './routes/user.routes';
+import teacherRoutes    from './routes/teacher.routes';
 
 
 dotenv.config();
@@ -59,6 +60,8 @@ app.use('/api/schools',    schoolRoutes);
 app.use('/api/headmaster', headmasterRoutes);
 app.use('/api/pages',      pageRoutes);
 app.use('/api/users',      userRoutes);
+app.use('/api/teacher',    teacherRoutes);
+
 
 
 // ─── 404 Handler ─────────────────────────────────────────────

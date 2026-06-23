@@ -1,36 +1,27 @@
 "use client";
+
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 
-
-
 interface Question {
-  id: number;
+  id: string;
   type: "mcq" | "short" | "long";
   text: string;
   options?: string[];
   answer: string;
   marks: number;
+  grade: string;
+  subject: string;
+  topic: string;
+  difficulty: string;
 }
 
-const mockQuestionsData: Record<string, Question[]> = {
-  easy: [
-    { id: 1, type: "mcq", text: "What is the formula of Pythagoras theorem in a right triangle with legs a, b and hypotenuse c?", options: ["A) a² + c² = b²", "B) a² + b² = c²", "C) a + b = c", "D) b² + c² = a²"], answer: "B) a² + b² = c²", marks: 1 },
-    { id: 2, type: "mcq", text: "If sides of a triangle are 3 cm, 4 cm, and 5 cm, is it a right-angled triangle?", options: ["A) Yes", "B) No", "C) Cannot be determined", "D) Only in Euclidean geometry"], answer: "A) Yes (3² + 4² = 9 + 16 = 25 = 5²)", marks: 1 },
-    { id: 3, type: "short", text: "State the definition of Hypotenuse in a right-angled triangle.", answer: "The hypotenuse is the longest side of a right-angled triangle, opposite the right angle (90 degrees).", marks: 2 },
-  ],
-  medium: [
-    { id: 1, type: "mcq", text: "A ladder 13m long reaches a window 12m above the ground. How far is the foot of the ladder from the base of the wall?", options: ["A) 5m", "B) 7m", "C) 10m", "D) 6m"], answer: "A) 5m (By Pythagoras theorem: 13² - 12² = 169 - 144 = 25 = 5²)", marks: 1 },
-    { id: 2, type: "short", text: "A boy goes 24m due East and then 10m due North. Find his distance from the starting point.", answer: "Starting point distance = √(24² + 10²) = √(576 + 100) = √676 = 26 meters.", marks: 3 },
-    { id: 3, type: "long", text: "Prove that in a right triangle, the square of the hypotenuse is equal to the sum of the squares of the other two sides.", answer: "Draw perpendicular BD to hypotenuse AC. By similarity of triangles ABC and ADB, AB/AC = AD/AB => AB² = AC * AD. Similarly, BC² = AC * CD. Adding both: AB² + BC² = AC(AD + CD) = AC * AC = AC².", marks: 5 },
-  ],
-  hard: [
-    { id: 1, type: "short", text: "In an equilateral triangle ABC, AD is perpendicular to BC. Prove that 3 AB² = 4 AD².", answer: "In triangle ABD (right-angled at D), AB² = AD² + BD². Since BD = BC/2 = AB/2, AB² = AD² + (AB/2)² => AB² = AD² + AB²/4 => 3/4 AB² = AD² => 3 AB² = 4 AD².", marks: 3 },
-    { id: 2, type: "long", text: "An airplane leaves an airport and flies due north at a speed of 1000 km/h. At the same time, another airplane leaves the same airport and flies due west at a speed of 1200 km/h. How far apart will the two planes be after 1.5 hours?", answer: "North distance = 1000 * 1.5 = 1500 km. West distance = 1200 * 1.5 = 1800 km. Distance apart = √(1500² + 1800²) = √(2,250,000 + 3,240,000) = √5,490,000 = 300√61 ≈ 2343 km.", marks: 5 },
-  ]
-};
-
 export default function QuestionGeneratorPage() {
+  const { data: session } = useSession();
+  const schoolId = (session?.user as any)?.schoolId;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
   const [grade, setGrade] = useState("Grade 10");
   const [subject, setSubject] = useState("Mathematics");
   const [topic, setTopic] = useState("Pythagoras Theorem");
@@ -43,8 +34,37 @@ export default function QuestionGeneratorPage() {
   const [showQuestions, setShowQuestions] = useState(false);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [showAnswers, setShowAnswers] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  
+  // Database store questions
+  const [dbQuestions, setDbQuestions] = useState<Question[]>([]);
+  const [activeView, setActiveView] = useState<"generator" | "bank">("generator");
+  const [loadingBank, setLoadingBank] = useState(false);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState("");
+  const [actionStatus, setActionStatus] = useState<string | null>(null);
+
+  // Fetch from Question Bank DB on mount / view switch
+  const fetchQuestionBank = async () => {
+    try {
+      setLoadingBank(true);
+      const res = await fetch(`${API_URL}/api/teacher/questions?schoolId=${schoolId || ""}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        setDbQuestions(data.data);
+      }
+    } catch (err) {
+      console.error("Error fetching question bank", err);
+    } finally {
+      setLoadingBank(false);
+    }
+  };
+
+  useEffect(() => {
+    if (schoolId) {
+      fetchQuestionBank();
+    }
+  }, [schoolId, API_URL]);
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,12 +72,82 @@ export default function QuestionGeneratorPage() {
     setShowQuestions(false);
     
     setTimeout(() => {
-      // Fetch matching mock questions based on difficulty
-      const pool = mockQuestionsData[difficulty];
-      setQuestions(pool);
+      // Create fresh generated questions
+      const generatedList: Question[] = [];
+      
+      for (let i = 0; i < mcqCount; i++) {
+        generatedList.push({
+          id: `gen-mcq-${i}-${Date.now()}`,
+          type: "mcq",
+          grade,
+          subject,
+          topic,
+          difficulty,
+          text: `Q_${i+1}: What is the correct mathematical application of ${topic} for Grade ${grade} students under ${difficulty} level constraints?`,
+          options: ["A) Choice Alpha", "B) Choice Beta", "C) Choice Gamma", "D) Choice Delta"],
+          answer: "B) Choice Beta",
+          marks: 1
+        });
+      }
+      
+      for (let i = 0; i < shortCount; i++) {
+        generatedList.push({
+          id: `gen-short-${i}-${Date.now()}`,
+          type: "short",
+          grade,
+          subject,
+          topic,
+          difficulty,
+          text: `Explain in brief the logic of ${topic} in context to standard Grade ${grade} guidelines.`,
+          answer: `Standard conceptual proof of ${topic} under Matriculation / CBSE Board standards.`,
+          marks: 3
+        });
+      }
+
+      for (let i = 0; i < longCount; i++) {
+        generatedList.push({
+          id: `gen-long-${i}-${Date.now()}`,
+          type: "long",
+          grade,
+          subject,
+          topic,
+          difficulty,
+          text: `Deconstruct a detailed architectural or mechanical scenario solving for ${topic} parameters. Show full calculation proofs.`,
+          answer: `Complete step-by-step mathematical proof applying hypotenuse and adjacent square values.`,
+          marks: 5
+        });
+      }
+
+      setQuestions(generatedList);
       setIsGenerating(false);
       setShowQuestions(true);
     }, 1200);
+  };
+
+  const handleSaveToBank = async () => {
+    if (questions.length === 0) return;
+    try {
+      setActionStatus("Saving to Bank...");
+      // Map out client-side IDs
+      const cleanQuestions = questions.map(({ id, ...q }) => q);
+      const res = await fetch(`${API_URL}/api/teacher/questions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          questions: cleanQuestions,
+          schoolId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setActionStatus("✓ Saved successfully!");
+        fetchQuestionBank();
+        setTimeout(() => setActionStatus(null), 3000);
+      }
+    } catch (err) {
+      console.error("Error saving questions to DB", err);
+      setActionStatus("Error saving.");
+    }
   };
 
   const handleEdit = (q: Question) => {
@@ -65,20 +155,51 @@ export default function QuestionGeneratorPage() {
     setEditingText(q.text);
   };
 
-  const handleSaveEdit = (id: number) => {
-    setQuestions(questions.map((q) => (q.id === id ? { ...q, text: editingText } : q)));
+  const handleSaveEdit = async (id: string) => {
+    // If it's a db question
+    const isDbQuestion = dbQuestions.some(q => q.id === id);
+    if (isDbQuestion) {
+      try {
+        const res = await fetch(`${API_URL}/api/teacher/questions/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: editingText }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          setDbQuestions(dbQuestions.map(q => q.id === id ? { ...q, text: editingText } : q));
+        }
+      } catch (err) {
+        console.error("Error editing question", err);
+      }
+    } else {
+      setQuestions(questions.map((q) => (q.id === id ? { ...q, text: editingText } : q)));
+    }
     setEditingId(null);
   };
 
-  const handleRegenerateItem = (id: number) => {
-    // Simulate regenerating a single question
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/questions/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDbQuestions(dbQuestions.filter(q => q.id !== id));
+      }
+    } catch (err) {
+      console.error("Error deleting question", err);
+    }
+  };
+
+  const handleRegenerateItem = (id: string) => {
     setQuestions(
       questions.map((q) => {
         if (q.id === id) {
           return {
             ...q,
-            text: `[Regenerated] Alternative formulation: A right-angled triangle has vertices at coordinates...`,
-            answer: "Alternative coordinates proof follows basic hypotenuse definition.",
+            text: `[Regenerated] Alternative formulation for ${topic}: Given a right-angled triangle, calculate dimensions using the standard formula.`,
+            answer: "Alternative proof follows standard curriculum objectives.",
           };
         }
         return q;
@@ -91,243 +212,331 @@ export default function QuestionGeneratorPage() {
       title="Question Generator"
       subtitle="Create high-quality exam and quiz questions using AI"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Settings Column */}
-        <div className="theme-card p-6 h-fit">
-          <h2 className="text-[var(--text-heading)] font-semibold text-sm mb-4">⚙️ Generator Configuration</h2>
+      {/* Navigation tabs */}
+      <div className="flex border-b border-[var(--border)] mb-6">
+        <button
+          onClick={() => setActiveView("generator")}
+          className={`py-3 px-6 text-xs font-semibold border-b-2 transition-all ${
+            activeView === "generator" ? "border-[var(--primary)] text-amber-550" : "border-transparent text-[var(--text-muted)]"
+          }`}
+        >
+          ⚡ AI Question Generator
+        </button>
+        <button
+          onClick={() => {
+            setActiveView("bank");
+            fetchQuestionBank();
+          }}
+          className={`py-3 px-6 text-xs font-semibold border-b-2 transition-all ${
+            activeView === "bank" ? "border-[var(--primary)] text-amber-550" : "border-transparent text-[var(--text-muted)]"
+          }`}
+        >
+          📂 Question Bank DB ({dbQuestions.length})
+        </button>
+      </div>
 
-          <form onSubmit={handleGenerate} className="space-y-4">
-            <div>
-              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Class / Grade</label>
-              <select
-                value={grade}
-                onChange={(e) => setGrade(e.target.value)}
-                className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
-              >
-                <option>Grade 8</option>
-                <option>Grade 9</option>
-                <option>Grade 10</option>
-                <option>Grade 11</option>
-                <option>Grade 12</option>
-              </select>
-            </div>
+      {activeView === "generator" ? (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Settings Column */}
+          <div className="theme-card p-6 h-fit">
+            <h2 className="text-[var(--text-heading)] font-semibold text-sm mb-4">⚙️ Generator Configuration</h2>
 
-            <div>
-              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Subject</label>
-              <select
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
-              >
-                <option>Mathematics</option>
-                <option>Science</option>
-                <option>English</option>
-                <option>Social Science</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Topic / Concept</label>
-              <input
-                type="text"
-                required
-                value={topic}
-                onChange={(e) => setTopic(e.target.value)}
-                placeholder="e.g. Algebra, Trigonometry"
-                className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Difficulty Level</label>
-              <div className="grid grid-cols-3 gap-2">
-                {(["easy", "medium", "hard"] as const).map((diff) => (
-                  <button
-                    key={diff}
-                    type="button"
-                    onClick={() => setDifficulty(diff)}
-                    className={`py-2 rounded-xl text-xs font-bold capitalize border transition-all ${
-                      difficulty === diff
-                        ? "bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm"
-                        : "bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)]"
-                    }`}
-                  >
-                    {diff}
-                  </button>
-                ))}
+            <form onSubmit={handleGenerate} className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Class / Grade</label>
+                <select
+                  value={grade}
+                  onChange={(e) => setGrade(e.target.value)}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
+                >
+                  <option>Grade 8</option>
+                  <option>Grade 9</option>
+                  <option>Grade 10</option>
+                  <option>Grade 11</option>
+                  <option>Grade 12</option>
+                </select>
               </div>
-            </div>
 
-            <hr className="border-[var(--border)] my-2" />
-
-            <div>
-              <label className="text-xs font-semibold text-[var(--text-muted)] block mb-2">Question Breakdown</label>
-              <div className="space-y-2 text-xs">
-                <div className="flex justify-between items-center bg-[var(--bg-main)] p-2 rounded-xl border border-[var(--border)]">
-                  <span className="text-[var(--text-muted)] font-medium">Multiple Choice (MCQ)</span>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setMcqCount(Math.max(0, mcqCount - 1))} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">-</button>
-                    <span className="w-5 text-center text-[var(--text-heading)] font-semibold">{mcqCount}</span>
-                    <button type="button" onClick={() => setMcqCount(mcqCount + 1)} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">+</button>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center bg-[var(--bg-main)] p-2 rounded-xl border border-[var(--border)]">
-                  <span className="text-[var(--text-muted)] font-medium">Short Answer</span>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setShortCount(Math.max(0, shortCount - 1))} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">-</button>
-                    <span className="w-5 text-center text-[var(--text-heading)] font-semibold">{shortCount}</span>
-                    <button type="button" onClick={() => setShortCount(shortCount + 1)} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">+</button>
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-center bg-[var(--bg-main)] p-2 rounded-xl border border-[var(--border)]">
-                  <span className="text-[var(--text-muted)] font-medium">Long Answer</span>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setLongCount(Math.max(0, longCount - 1))} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">-</button>
-                    <span className="w-5 text-center text-[var(--text-heading)] font-semibold">{longCount}</span>
-                    <button type="button" onClick={() => setLongCount(longCount + 1)} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">+</button>
-                  </div>
-                </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Subject</label>
+                <select
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
+                >
+                  <option>Mathematics</option>
+                  <option>Science</option>
+                  <option>English</option>
+                  <option>Social Science</option>
+                </select>
               </div>
-            </div>
 
-            <button
-              type="submit"
-              disabled={isGenerating}
-              className="w-full mt-2 py-3 rounded-xl bg-[var(--primary)] hover:opacity-90 disabled:opacity-50 text-xs font-semibold text-white shadow-sm transition-opacity flex items-center justify-center gap-2"
-            >
-              {isGenerating ? "Synthesizing Questions..." : "⚡ Generate Questions"}
-            </button>
-          </form>
-        </div>
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Topic / Concept</label>
+                <input
+                  type="text"
+                  required
+                  value={topic}
+                  onChange={(e) => setTopic(e.target.value)}
+                  placeholder="e.g. Algebra, Trigonometry"
+                  className="w-full bg-[var(--bg-card)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
+                />
+              </div>
 
-        {/* Output Column */}
-        <div className="lg:col-span-2 flex flex-col min-h-[400px]">
-          {!isGenerating && !showQuestions && (
-            <div className="theme-card p-8 flex-1 flex flex-col items-center justify-center text-center border-dashed">
-              <span className="text-4xl mb-4">❓</span>
-              <h3 className="text-[var(--text-heading)] font-semibold text-sm">No Questions Generated</h3>
-              <p className="text-xs text-[var(--text-muted)] max-w-sm mt-1">
-                Configure your grade, subject, and question distribution metrics, then trigger the generator to construct exam content.
-              </p>
-            </div>
-          )}
-
-          {isGenerating && (
-            <div className="theme-card p-8 flex-1 flex flex-col items-center justify-center text-center">
-              <div className="w-12 h-12 rounded-full border-4 border-[var(--primary)]/20 border-t-[var(--primary)] animate-spin mb-6" />
-              <h3 className="text-[var(--text-heading)] font-semibold text-sm mb-2">Analyzing Topic Syllabus...</h3>
-              <p className="text-xs text-[var(--text-muted)] max-w-xs">
-                Generating questions according to cognitive level taxonomy.
-              </p>
-            </div>
-          )}
-
-          {showQuestions && !isGenerating && (
-            <div className="space-y-4 flex-1 flex flex-col">
-              {/* Toolbar */}
-              <div className="theme-card p-4 flex justify-between items-center bg-[var(--bg-main)]">
-                <div className="text-xs text-[var(--text-muted)]">
-                  Total Questions: <span className="text-[var(--text-heading)] font-semibold">{questions.length}</span> · Difficulty: <span className="text-[var(--primary)] font-bold capitalize">{difficulty}</span>
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowAnswers(!showAnswers)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
-                      showAnswers ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400" : "bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-heading)]"
-                    }`}
-                  >
-                    {showAnswers ? "Hide Answers" : "Show Answers"}
-                  </button>
-                  <button className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] text-xs font-semibold text-[var(--text-heading)] border border-[var(--border)] shadow-sm">
-                    📋 Copy Test Paper
-                  </button>
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-1.5">Difficulty Level</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["easy", "medium", "hard"] as const).map((diff) => (
+                    <button
+                      key={diff}
+                      type="button"
+                      onClick={() => setDifficulty(diff)}
+                      className={`py-2 rounded-xl text-xs font-bold capitalize border transition-all ${
+                        difficulty === diff
+                          ? "bg-[var(--primary)] border-[var(--primary)] text-white shadow-sm"
+                          : "bg-[var(--bg-main)] border-[var(--border)] text-[var(--text-muted)] hover:bg-[var(--bg-card-hover)]"
+                      }`}
+                    >
+                      {diff}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Questions List */}
-              <div className="space-y-4 overflow-y-auto max-h-[500px]">
-                {questions.map((q, idx) => (
-                  <div key={q.id} className="theme-card p-5 space-y-3 relative group">
-                    {/* Header */}
-                    <div className="flex justify-between items-center">
-                      <span className="badge badge-blue text-[10px]">
-                        Q{idx + 1} · {q.type.toUpperCase()}
-                      </span>
-                      <span className="text-xs text-[var(--text-muted)] font-medium">{q.marks} Mark{q.marks > 1 ? "s" : ""}</span>
+              <hr className="border-[var(--border)] my-2" />
+
+              <div>
+                <label className="text-xs font-semibold text-[var(--text-muted)] block mb-2">Question Breakdown</label>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between items-center bg-[var(--bg-main)] p-2 rounded-xl border border-[var(--border)]">
+                    <span className="text-[var(--text-muted)] font-medium">Multiple Choice (MCQ)</span>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => setMcqCount(Math.max(0, mcqCount - 1))} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">-</button>
+                      <span className="w-5 text-center text-[var(--text-heading)] font-semibold">{mcqCount}</span>
+                      <button type="button" onClick={() => setMcqCount(mcqCount + 1)} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">+</button>
                     </div>
+                  </div>
 
-                    {/* Question Content */}
-                    {editingId === q.id ? (
-                      <div className="space-y-2">
-                        <textarea
-                          value={editingText}
-                          onChange={(e) => setEditingText(e.target.value)}
-                          className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl p-3 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] min-h-[80px]"
-                        />
-                        <div className="flex gap-2 justify-end">
+                  <div className="flex justify-between items-center bg-[var(--bg-main)] p-2 rounded-xl border border-[var(--border)]">
+                    <span className="text-[var(--text-muted)] font-medium">Short Answer</span>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => setShortCount(Math.max(0, shortCount - 1))} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">-</button>
+                      <span className="w-5 text-center text-[var(--text-heading)] font-semibold">{shortCount}</span>
+                      <button type="button" onClick={() => setShortCount(shortCount + 1)} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">+</button>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center bg-[var(--bg-main)] p-2 rounded-xl border border-[var(--border)]">
+                    <span className="text-[var(--text-muted)] font-medium">Long Answer</span>
+                    <div className="flex items-center gap-2">
+                      <button type="button" onClick={() => setLongCount(Math.max(0, longCount - 1))} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">-</button>
+                      <span className="w-5 text-center text-[var(--text-heading)] font-semibold">{longCount}</span>
+                      <button type="button" onClick={() => setLongCount(longCount + 1)} className="px-2 py-0.5 bg-[var(--bg-card)] border border-[var(--border)] rounded text-[var(--text-heading)]">+</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isGenerating}
+                className="w-full mt-2 py-3 rounded-xl bg-[var(--primary)] hover:opacity-90 disabled:opacity-50 text-xs font-semibold text-white shadow-sm transition-opacity flex items-center justify-center gap-2"
+              >
+                {isGenerating ? "Synthesizing Questions..." : "⚡ Generate Questions"}
+              </button>
+            </form>
+          </div>
+
+          {/* Output Column */}
+          <div className="lg:col-span-2 flex flex-col min-h-[400px]">
+            {!isGenerating && !showQuestions && (
+              <div className="theme-card p-8 flex-1 flex flex-col items-center justify-center text-center border-dashed">
+                <span className="text-4xl mb-4">❓</span>
+                <h3 className="text-[var(--text-heading)] font-semibold text-sm">No Questions Generated</h3>
+                <p className="text-xs text-[var(--text-muted)] max-w-sm mt-1">
+                  Configure your grade, subject, and question distribution metrics, then trigger the generator to construct exam content.
+                </p>
+              </div>
+            )}
+
+            {isGenerating && (
+              <div className="theme-card p-8 flex-1 flex flex-col items-center justify-center text-center">
+                <div className="w-12 h-12 rounded-full border-4 border-[var(--primary)]/20 border-t-[var(--primary)] animate-spin mb-6" />
+                <h3 className="text-[var(--text-heading)] font-semibold text-sm mb-2">Analyzing Topic Syllabus...</h3>
+                <p className="text-xs text-[var(--text-muted)] max-w-xs">
+                  Generating questions according to cognitive level taxonomy.
+                </p>
+              </div>
+            )}
+
+            {showQuestions && !isGenerating && (
+              <div className="space-y-4 flex-1 flex flex-col">
+                {/* Toolbar */}
+                <div className="theme-card p-4 flex justify-between items-center bg-[var(--bg-main)]">
+                  <div className="text-xs text-[var(--text-muted)]">
+                    Total Questions: <span className="text-[var(--text-heading)] font-semibold">{questions.length}</span> · Difficulty: <span className="text-[var(--primary)] font-bold capitalize">{difficulty}</span>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    {actionStatus && <span className="text-[10px] text-amber-500 font-semibold">{actionStatus}</span>}
+                    <button
+                      onClick={() => setShowAnswers(!showAnswers)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                        showAnswers ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-500 dark:text-emerald-400" : "bg-[var(--bg-card)] border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-heading)]"
+                      }`}
+                    >
+                      {showAnswers ? "Hide Answers" : "Show Answers"}
+                    </button>
+                    <button
+                      onClick={handleSaveToBank}
+                      className="px-3 py-1.5 rounded-lg bg-[var(--primary)] hover:bg-amber-600 text-xs font-bold text-white shadow-sm flex items-center gap-1"
+                    >
+                      💾 Save to Question Bank
+                    </button>
+                  </div>
+                </div>
+
+                {/* Questions List */}
+                <div className="space-y-4 overflow-y-auto max-h-[500px]">
+                  {questions.map((q, idx) => (
+                    <div key={q.id} className="theme-card p-5 space-y-3 relative group">
+                      {/* Header */}
+                      <div className="flex justify-between items-center">
+                        <span className="badge badge-blue text-[10px]">
+                          Q{idx + 1} · {q.type.toUpperCase()}
+                        </span>
+                        <span className="text-xs text-[var(--text-muted)] font-medium">{q.marks} Mark{q.marks > 1 ? "s" : ""}</span>
+                      </div>
+
+                      {/* Question Content */}
+                      {editingId === q.id ? (
+                        <div className="space-y-2">
+                          <textarea
+                            value={editingText}
+                            onChange={(e) => setEditingText(e.target.value)}
+                            className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl p-3 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] min-h-[80px]"
+                          />
+                          <div className="flex gap-2 justify-end">
+                            <button
+                              onClick={() => setEditingId(null)}
+                              className="px-2.5 py-1 rounded bg-[var(--bg-card)] border border-[var(--border)] text-[10px] text-[var(--text-muted)] hover:text-[var(--text-heading)]"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => handleSaveEdit(q.id)}
+                              className="px-2.5 py-1 rounded bg-[var(--primary)] text-[10px] text-white shadow-sm hover:opacity-90"
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-xs text-[var(--text-heading)] font-medium leading-relaxed">{q.text}</div>
+                      )}
+
+                      {/* Options (if MCQ) */}
+                      {q.type === "mcq" && q.options && (
+                        <div className="grid grid-cols-2 gap-2 pl-2">
+                          {q.options.map((opt) => (
+                            <div key={opt} className="text-xs text-[var(--text-muted)] font-mono">
+                              {opt}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Answer Key */}
+                      {showAnswers && (
+                        <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl mt-3 text-xs">
+                          <span className="text-emerald-500 dark:text-emerald-400 font-bold block mb-1">Answer / Solved:</span>
+                          <span className="text-[var(--text-main)] leading-relaxed font-mono">{q.answer}</span>
+                        </div>
+                      )}
+
+                      {/* Actions Bar (Hover) */}
+                      {editingId !== q.id && (
+                        <div className="flex gap-3 justify-end pt-2 border-t border-[var(--border-light)] opacity-60 group-hover:opacity-100 transition-opacity">
                           <button
-                            onClick={() => setEditingId(null)}
-                            className="px-2.5 py-1 rounded bg-[var(--bg-card)] border border-[var(--border)] text-[10px] text-[var(--text-muted)] hover:text-[var(--text-heading)]"
+                            onClick={() => handleEdit(q)}
+                            className="text-[10px] font-semibold text-[var(--text-muted)] hover:text-[var(--primary)] flex items-center gap-1"
                           >
-                            Cancel
+                            ✏️ Edit
                           </button>
                           <button
-                            onClick={() => handleSaveEdit(q.id)}
-                            className="px-2.5 py-1 rounded bg-[var(--primary)] text-[10px] text-white shadow-sm hover:opacity-90"
+                            onClick={() => handleRegenerateItem(q.id)}
+                            className="text-[10px] font-semibold text-[var(--text-muted)] hover:text-[var(--primary)] flex items-center gap-1"
                           >
-                            Save
+                            🔄 Regenerate
                           </button>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="text-xs text-[var(--text-heading)] font-medium leading-relaxed">{q.text}</div>
-                    )}
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* Saved Bank Tab View */
+        <div className="theme-card p-6 min-h-[400px]">
+          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">🗂️ Active Question Bank</h2>
+          
+          {loadingBank ? (
+            <div className="text-center py-12 text-xs text-[var(--text-muted)]">Loading bank repository...</div>
+          ) : dbQuestions.length === 0 ? (
+            <div className="text-center py-12 text-xs text-[var(--text-muted)]">No questions saved in bank database yet. Use the Generator tab to generate and save questions.</div>
+          ) : (
+            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2">
+              {dbQuestions.map((q, idx) => (
+                <div key={q.id} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-card)] hover:border-[var(--primary)] space-y-2 relative group">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <span className="badge badge-yellow text-[9px] uppercase">{q.type}</span>
+                      <span className="text-[10px] text-[var(--text-muted)]">{q.grade} · {q.subject} · {q.topic} ({q.difficulty})</span>
+                    </div>
+                    <span className="text-xs font-semibold text-[var(--text-heading)]">{q.marks} Mark{q.marks > 1 ? "s" : ""}</span>
+                  </div>
 
-                    {/* Options (if MCQ) */}
-                    {q.type === "mcq" && q.options && (
-                      <div className="grid grid-cols-2 gap-2 pl-2">
-                        {q.options.map((opt) => (
-                          <div key={opt} className="text-xs text-[var(--text-muted)] font-mono">
-                            {opt}
-                          </div>
-                        ))}
+                  {editingId === q.id ? (
+                    <div className="space-y-2">
+                      <textarea
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-lg p-2 text-xs text-[var(--text-heading)] outline-none min-h-[60px]"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <button onClick={() => setEditingId(null)} className="px-2 py-0.5 bg-[var(--bg-main)] text-[10px] rounded border border-[var(--border)]">Cancel</button>
+                        <button onClick={() => handleSaveEdit(q.id)} className="px-2 py-0.5 bg-[var(--primary)] text-white text-[10px] rounded">Save</button>
                       </div>
-                    )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-[var(--text-heading)] font-medium leading-relaxed">{q.text}</p>
+                  )}
 
-                    {/* Answer Key */}
-                    {showAnswers && (
-                      <div className="p-3 bg-emerald-500/5 border border-emerald-500/10 rounded-xl mt-3 text-xs">
-                        <span className="text-emerald-500 dark:text-emerald-400 font-bold block mb-1">Answer / Solved:</span>
-                        <span className="text-[var(--text-main)] leading-relaxed font-mono">{q.answer}</span>
-                      </div>
-                    )}
+                  {q.type === "mcq" && q.options && (
+                    <div className="grid grid-cols-2 gap-1.5 pl-2 font-mono text-[10px] text-[var(--text-muted)]">
+                      {q.options.map((opt) => (
+                        <div key={opt}>{opt}</div>
+                      ))}
+                    </div>
+                  )}
 
-                    {/* Actions Bar (Hover) */}
+                  <div className="pt-2 flex justify-between items-center text-[10px] border-t border-[var(--border-light)]/50">
+                    <span className="text-emerald-500 font-semibold font-mono">Ans: {q.answer}</span>
                     {editingId !== q.id && (
-                      <div className="flex gap-3 justify-end pt-2 border-t border-[var(--border-light)] opacity-60 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleEdit(q)}
-                          className="text-[10px] font-semibold text-[var(--text-muted)] hover:text-[var(--primary)] flex items-center gap-1"
-                        >
-                          ✏️ Edit
-                        </button>
-                        <button
-                          onClick={() => handleRegenerateItem(q.id)}
-                          className="text-[10px] font-semibold text-[var(--text-muted)] hover:text-[var(--primary)] flex items-center gap-1"
-                        >
-                          🔄 Regenerate
-                        </button>
+                      <div className="flex gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button onClick={() => handleEdit(q)} className="text-[var(--text-muted)] hover:text-[var(--primary)]">✏️ Edit</button>
+                        <button onClick={() => handleDelete(q.id)} className="text-red-500 hover:text-red-400">🗑️ Delete</button>
                       </div>
                     )}
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
-      </div>
+      )}
     </PortalLayout>
   );
 }

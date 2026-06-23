@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 
 interface Experiment {
-  id: number;
+  id: string;
   name: string;
-  class: string;
+  classSection: string;
   status: "active" | "scheduled" | "completed";
   date: string;
   safetyCheck: boolean;
@@ -21,19 +22,13 @@ interface StudentLabGrade {
 }
 
 export default function ScienceLabsPage() {
-  const [experiments, setExperiments] = useState<Experiment[]>([
-    { id: 1, name: "Acid-Base Titration (HCl and NaOH)", class: "Class 10A", status: "active", date: "Today, 11:30 AM", safetyCheck: true },
-    { id: 2, name: "Ohm's Law Verification", class: "Class 12B", status: "scheduled", date: "June 22, 2026", safetyCheck: true },
-    { id: 3, name: "Plant Cell Structure (Onion Peel Experiment)", class: "Class 8A", status: "completed", date: "June 17, 2026", safetyCheck: true },
-    { id: 4, name: "Refraction of Light through Prism", class: "Class 10B", status: "scheduled", date: "June 25, 2026", safetyCheck: false },
-  ]);
+  const { data: session } = useSession();
+  const schoolId = (session?.user as any)?.schoolId;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-  const [studentGrades, setStudentGrades] = useState<StudentLabGrade[]>([
-    { id: "S01", name: "Murugan S.", conduct: "Excellent", reportStatus: "Submitted", grade: "A" },
-    { id: "S02", name: "Kavitha R.", conduct: "Good", reportStatus: "Pending", grade: "B" },
-    { id: "S03", name: "Arjun Kumar", conduct: "Excellent", reportStatus: "Submitted", grade: "A+" },
-    { id: "S04", name: "Deepak T.", conduct: "Needs Attention", reportStatus: "Late", grade: "C" },
-  ]);
+  const [experiments, setExperiments] = useState<Experiment[]>([]);
+  const [studentGrades, setStudentGrades] = useState<StudentLabGrade[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // AI Generator States
   const [labTopic, setLabTopic] = useState("Photosynthesis Rate under Blue Light");
@@ -42,16 +37,95 @@ export default function ScienceLabsPage() {
   const [generationStep, setGenerationStep] = useState(0);
   const [generatedManual, setGeneratedManual] = useState<any>(null);
 
-  const toggleSafety = (id: number) => {
-    setExperiments(
-      experiments.map((exp) => (exp.id === id ? { ...exp, safetyCheck: !exp.safetyCheck } : exp))
-    );
+  // Form state for creating a new session
+  const [newLabName, setNewLabName] = useState("");
+  const [newLabClass, setNewLabClass] = useState("Class 10A");
+  const [newLabDate, setNewLabDate] = useState("");
+  const [showAddForm, setShowAddForm] = useState(false);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Fetch Labs
+        const labsRes = await fetch(`${API_URL}/api/teacher/labs${schoolId ? `?schoolId=${schoolId}` : ""}`);
+        const labsData = await labsRes.json();
+        if (labsData.success && labsData.data) {
+          setExperiments(labsData.data);
+        }
+
+        // Fetch Students to populate roster
+        const studentsRes = await fetch(`${API_URL}/api/students${schoolId ? `?schoolId=${schoolId}` : ""}`);
+        const studentsData = await studentsRes.json();
+        if (studentsData.success && studentsData.data) {
+          const mappedGrades = studentsData.data.map((student: any, idx: number) => ({
+            id: student.id,
+            name: student.user?.name || "Student Name",
+            conduct: idx % 3 === 0 ? "Excellent" : idx % 3 === 1 ? "Good" : "Needs Attention",
+            reportStatus: idx % 4 === 0 ? "Pending" : idx % 4 === 1 ? "Late" : "Submitted",
+            grade: idx % 3 === 0 ? "A" : idx % 3 === 1 ? "B" : "C",
+          }));
+          setStudentGrades(mappedGrades);
+        }
+      } catch (err) {
+        console.error("Error loading labs page data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [schoolId, API_URL]);
+
+  const toggleSafety = async (id: string, currentVal: boolean) => {
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/labs/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ safetyCheck: !currentVal }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setExperiments(experiments.map((exp) => (exp.id === id ? { ...exp, safetyCheck: !currentVal } : exp)));
+      }
+    } catch (err) {
+      console.error("Error updating safety check", err);
+    }
   };
 
   const handleGradeChange = (id: string, newGrade: string) => {
     setStudentGrades(
       studentGrades.map((sg) => (sg.id === id ? { ...sg, grade: newGrade, reportStatus: "Submitted" } : sg))
     );
+  };
+
+  const handleCreateLab = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLabName || !newLabDate) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/labs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newLabName,
+          classSection: newLabClass,
+          status: "scheduled",
+          date: newLabDate,
+          safetyCheck: true,
+          schoolId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setExperiments([data.data, ...experiments]);
+        setNewLabName("");
+        setNewLabDate("");
+        setShowAddForm(false);
+      }
+    } catch (err) {
+      console.error("Error creating lab session", err);
+    }
   };
 
   const handleGenerateManual = () => {
@@ -98,67 +172,125 @@ export default function ScienceLabsPage() {
         <div className="lg:col-span-2 theme-card p-6">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-semibold text-[var(--text-heading)]">🧪 Experimental Lab Sessions</h2>
-            <span className="text-xs font-medium text-[var(--text-muted)] bg-[var(--bg-main)] px-2.5 py-1 rounded-full">
-              Active: {experiments.filter(e => e.status === "active").length}
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            {experiments.map((exp) => (
-              <div
-                key={exp.id}
-                className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4 hover-lift ${
-                  exp.status === "active" 
-                    ? "bg-[var(--bg-card)] border-[var(--primary)] shadow-[0_4px_20px_rgba(79,70,229,0.15)] dark:shadow-[0_4px_20px_rgba(129,140,248,0.15)]"
-                    : "bg-[var(--bg-card)] border-[var(--border)] hover:border-[var(--primary)]"
-                }`}
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="btn-primary py-1 px-3 text-[11px] font-bold rounded-lg shadow-none"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                    exp.status === "active" ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400" : 
-                    exp.status === "completed" ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400" : 
-                    "bg-slate-50 text-slate-500 dark:bg-slate-500/10 dark:text-slate-400"
-                  }`}>
-                    {exp.status === "active" ? "🔥" : exp.status === "completed" ? "✅" : "📅"}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-bold text-[var(--text-heading)]">{exp.name}</span>
-                      <span className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full ${
-                        exp.status === "active"
-                          ? "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400"
-                          : exp.status === "scheduled"
-                          ? "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400"
-                          : "bg-slate-50 text-slate-500 border border-slate-200 dark:bg-slate-500/10 dark:border-slate-500/20 dark:text-slate-400"
-                      }`}>
-                        {exp.status}
-                      </span>
-                    </div>
-                    <div className="text-xs text-[var(--text-main)]">
-                      Target: <strong className="text-[var(--text-heading)]">{exp.class}</strong> · Scheduled: <span>{exp.date}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => toggleSafety(exp.id)}
-                    className={`px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 border transition-all ${
-                      exp.safetyCheck
-                        ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
-                        : "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20"
-                    }`}
-                  >
-                    <span className={`w-2 h-2 rounded-full ${exp.safetyCheck ? 'bg-emerald-500' : 'bg-red-500 animate-pulse'}`}></span>
-                    {exp.safetyCheck ? "Safety Approved" : "Safety Unverified"}
-                  </button>
-                  <button className="btn-primary py-1.5 text-[11px] px-4 shadow-none hover:shadow-[var(--primary-shadow-1)]">
-                    Start Session
-                  </button>
-                </div>
-              </div>
-            ))}
+                {showAddForm ? "Cancel" : "+ Schedule Lab"}
+              </button>
+              <span className="text-xs font-medium text-[var(--text-muted)] bg-[var(--bg-main)] px-2.5 py-1 rounded-full">
+                Active: {experiments.filter((e) => e.status === "active").length}
+              </span>
+            </div>
           </div>
+
+          {showAddForm && (
+            <form onSubmit={handleCreateLab} className="mb-6 p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-main)] space-y-3">
+              <h3 className="text-xs font-bold text-[var(--text-heading)] uppercase">New Lab Session Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <input
+                  type="text"
+                  placeholder="Experiment Name"
+                  value={newLabName}
+                  onChange={(e) => setNewLabName(e.target.value)}
+                  className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-2 text-xs text-[var(--text-heading)] outline-none"
+                  required
+                />
+                <select
+                  value={newLabClass}
+                  onChange={(e) => setNewLabClass(e.target.value)}
+                  className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-2 text-xs text-[var(--text-heading)] outline-none"
+                >
+                  <option value="Class 10A">Class 10A</option>
+                  <option value="Class 10B">Class 10B</option>
+                  <option value="Class 9A">Class 9A</option>
+                  <option value="Class 8A">Class 8A</option>
+                  <option value="Class 12B">Class 12B</option>
+                </select>
+                <input
+                  type="text"
+                  placeholder="e.g. June 25, 2026, 11:30 AM"
+                  value={newLabDate}
+                  onChange={(e) => setNewLabDate(e.target.value)}
+                  className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-2 text-xs text-[var(--text-heading)] outline-none"
+                  required
+                />
+              </div>
+              <button type="submit" className="btn-primary py-1.5 px-4 text-xs font-semibold rounded-lg shadow-none">
+                Schedule Session
+              </button>
+            </form>
+          )}
+
+          {loading ? (
+            <div className="text-center py-8 text-xs text-[var(--text-muted)]">Loading lab sessions...</div>
+          ) : experiments.length === 0 ? (
+            <div className="text-center py-8 text-xs text-[var(--text-muted)]">No experimental sessions scheduled.</div>
+          ) : (
+            <div className="space-y-4">
+              {experiments.map((exp) => (
+                <div
+                  key={exp.id}
+                  className={`p-4 rounded-2xl border transition-all duration-300 flex flex-col md:flex-row md:items-center justify-between gap-4 hover-lift ${
+                    exp.status === "active"
+                      ? "bg-[var(--bg-card)] border-[var(--primary)] shadow-[0_4px_20px_rgba(79,70,229,0.15)] dark:shadow-[0_4px_20px_rgba(129,140,248,0.15)]"
+                      : "bg-[var(--bg-card)] border-[var(--border)] hover:border-[var(--primary)]"
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                        exp.status === "active"
+                          ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
+                          : exp.status === "completed"
+                          ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
+                          : "bg-slate-50 text-slate-500 dark:bg-slate-500/10 dark:text-slate-400"
+                      }`}
+                    >
+                      {exp.status === "active" ? "🔥" : exp.status === "completed" ? "✅" : "📅"}
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-bold text-[var(--text-heading)]">{exp.name}</span>
+                        <span
+                          className={`text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full ${
+                            exp.status === "active"
+                              ? "bg-emerald-50 text-emerald-600 border border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400"
+                              : exp.status === "scheduled"
+                              ? "bg-blue-50 text-blue-600 border border-blue-200 dark:bg-blue-500/10 dark:border-blue-500/20 dark:text-blue-400"
+                              : "bg-slate-50 text-slate-500 border border-slate-200 dark:bg-slate-500/10 dark:border-slate-500/20 dark:text-slate-400"
+                          }`}
+                        >
+                          {exp.status}
+                        </span>
+                      </div>
+                      <div className="text-xs text-[var(--text-main)]">
+                        Target: <strong className="text-[var(--text-heading)]">{exp.classSection}</strong> · Scheduled: <span>{exp.date}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => toggleSafety(exp.id, exp.safetyCheck)}
+                      className={`px-3 py-1.5 rounded-full text-[11px] font-bold flex items-center gap-1.5 border transition-all ${
+                        exp.safetyCheck
+                          ? "bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
+                          : "bg-red-50 text-red-600 border-red-200 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/20"
+                      }`}
+                    >
+                      <span className={`w-2 h-2 rounded-full ${exp.safetyCheck ? "bg-emerald-500" : "bg-red-500 animate-pulse"}`}></span>
+                      {exp.safetyCheck ? "Safety Approved" : "Safety Unverified"}
+                    </button>
+                    <button className="btn-primary py-1.5 text-[11px] px-4 shadow-none hover:shadow-[var(--primary-shadow-1)]">
+                      Start Session
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* AI Manual Creator */}
@@ -259,63 +391,71 @@ export default function ScienceLabsPage() {
       {/* Lab Roster & Grading */}
       <div className="glass rounded-2xl p-6 border border-slate-800">
         <h2 className="text-base font-semibold text-white mb-5">👩‍🔬 Student Lab Roster & Grades</h2>
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Lab Conduct</th>
-                <th>Report Status</th>
-                <th>Current Grade</th>
-                <th>Assign Grade</th>
-              </tr>
-            </thead>
-            <tbody>
-              {studentGrades.map((student) => (
-                <tr key={student.id}>
-                  <td className="font-medium text-white">{student.name}</td>
-                  <td>
-                    <span className={`badge ${
-                      student.conduct === "Excellent"
-                        ? "badge-green"
-                        : student.conduct === "Good"
-                        ? "badge-blue"
-                        : "badge-yellow"
-                    }`}>
-                      {student.conduct}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${
-                      student.reportStatus === "Submitted"
-                        ? "badge-green"
-                        : student.reportStatus === "Pending"
-                        ? "badge-yellow"
-                        : "badge-red"
-                    }`}>
-                      {student.reportStatus}
-                    </span>
-                  </td>
-                  <td className="text-white font-semibold">{student.grade}</td>
-                  <td>
-                    <select
-                      value={student.grade}
-                      onChange={(e) => handleGradeChange(student.id, e.target.value)}
-                      className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
-                    >
-                      <option value="A+">A+</option>
-                      <option value="A">A</option>
-                      <option value="B">B</option>
-                      <option value="C">C</option>
-                      <option value="F">F</option>
-                      <option value="Pending">Pending</option>
-                    </select>
-                  </td>
+        {studentGrades.length === 0 ? (
+          <div className="text-center py-6 text-xs text-slate-400">No students found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Student</th>
+                  <th>Lab Conduct</th>
+                  <th>Report Status</th>
+                  <th>Current Grade</th>
+                  <th>Assign Grade</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {studentGrades.map((student) => (
+                  <tr key={student.id}>
+                    <td className="font-medium text-white">{student.name}</td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          student.conduct === "Excellent"
+                            ? "badge-green"
+                            : student.conduct === "Good"
+                            ? "badge-blue"
+                            : "badge-yellow"
+                        }`}
+                      >
+                        {student.conduct}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          student.reportStatus === "Submitted"
+                            ? "badge-green"
+                            : student.reportStatus === "Pending"
+                            ? "badge-yellow"
+                            : "badge-red"
+                        }`}
+                      >
+                        {student.reportStatus}
+                      </span>
+                    </td>
+                    <td className="text-white font-semibold">{student.grade}</td>
+                    <td>
+                      <select
+                        value={student.grade}
+                        onChange={(e) => handleGradeChange(student.id, e.target.value)}
+                        className="bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-slate-300 focus:outline-none focus:border-amber-500"
+                      >
+                        <option value="A+">A+</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="F">F</option>
+                        <option value="Pending">Pending</option>
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </PortalLayout>
   );

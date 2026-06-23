@@ -51,12 +51,16 @@ const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.role = (user as any).role;
+        token.id = (user as any).id;
+        token.schoolId = (user as any).schoolId;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         (session.user as any).role = token.role;
+        (session.user as any).id = token.id;
+        (session.user as any).schoolId = token.schoolId;
       }
       return session;
     },

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 
 interface ScholarshipRecord {
@@ -8,37 +9,102 @@ interface ScholarshipRecord {
   name: string;
   class: string;
   scheme: string;
-  status: "Approved" | "Pending Bank Info" | "Applied" | "Needs Verification";
+  status: "Approved" | "Needs Verification" | "Rejected" | "Disbursed" | "Pending";
   amount: number;
 }
 
 export default function ScholarshipsPage() {
-  const [records, setRecords] = useState<ScholarshipRecord[]>([
-    { id: "S01", name: "Priya Murugan", class: "10A", scheme: "Pudhumai Penn Scheme", status: "Approved", amount: 1000 },
-    { id: "S02", name: "Arun V.", class: "10A", scheme: "Tamil Puthalvan Scheme", status: "Needs Verification", amount: 1000 },
-    { id: "S03", name: "Deepika R.", class: "9B", scheme: "NMMS Merit Scholarship", status: "Pending Bank Info", amount: 500 },
-    { id: "S04", name: "Karthik S.", class: "8A", scheme: "Free Cycle Scheme", status: "Approved", amount: 0 },
-    { id: "S05", name: "Suresh P.", class: "10A", scheme: "Tamil Puthalvan Scheme", status: "Applied", amount: 1000 },
-  ]);
+  const { data: session } = useSession();
+  const schoolId = (session?.user as any)?.schoolId;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+  const [records, setRecords] = useState<ScholarshipRecord[]>([]);
   const [verifyingId, setVerifyingId] = useState<string | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const handleVerify = (id: string) => {
+  // Statistics KPI
+  const [stats, setStats] = useState({
+    eligible: 0,
+    approved: 0,
+    actionNeeded: 0,
+    funds: 0
+  });
+
+  const fetchScholarships = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/api/teacher/scholarships${schoolId ? `?schoolId=${schoolId}` : ""}`);
+      const data = await res.json();
+      if (data.success && data.data) {
+        // Map the backend structure to frontend structure
+        const mapped: ScholarshipRecord[] = data.data.map((item: any) => {
+          let statusText: ScholarshipRecord["status"] = "Pending";
+          if (item.status === "APPROVED") statusText = "Approved";
+          else if (item.status === "PENDING") statusText = "Needs Verification";
+          else if (item.status === "REJECTED") statusText = "Rejected";
+          else if (item.status === "DISBURSED") statusText = "Disbursed";
+
+          return {
+            id: item.id,
+            name: item.student?.user?.name || "Student Name",
+            class: `${item.student?.class || "10"}${item.student?.section || "A"}`,
+            scheme: item.scheme,
+            amount: item.amount,
+            status: statusText,
+          };
+        });
+
+        setRecords(mapped);
+
+        // Compute stats
+        const eligibleCount = mapped.length;
+        const approvedCount = mapped.filter((r) => r.status === "Approved" || r.status === "Disbursed").length;
+        const pendingCount = mapped.filter((r) => r.status === "Needs Verification" || r.status === "Pending").length;
+        const totalAmount = mapped
+          .filter((r) => r.status === "Approved" || r.status === "Disbursed")
+          .reduce((acc, curr) => acc + curr.amount, 0);
+
+        setStats({
+          eligible: eligibleCount,
+          approved: approvedCount,
+          actionNeeded: pendingCount,
+          funds: totalAmount
+        });
+      }
+    } catch (err) {
+      console.error("Error loading scholarships", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchScholarships();
+  }, [schoolId, API_URL]);
+
+  const handleVerify = async (id: string) => {
     setVerifyingId(id);
-    setTimeout(() => {
-      setRecords(
-        records.map((rec) =>
-          rec.id === id ? { ...rec, status: "Approved" } : rec
-        )
-      );
-      const studentName = records.find((rec) => rec.id === id)?.name;
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/scholarships/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "APPROVED" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        const studentName = records.find((rec) => rec.id === id)?.name;
+        setToastMessage(`✓ ${studentName}'s EMIS profile and Bank Details successfully verified! Status updated to Approved.`);
+        fetchScholarships(); // Reload list to recalculate everything
+        setTimeout(() => {
+          setToastMessage(null);
+        }, 4000);
+      }
+    } catch (err) {
+      console.error("Error verifying scholarship", err);
+    } finally {
       setVerifyingId(null);
-      setToastMessage(`✓ ${studentName}'s EMIS profile and Bank Details successfully verified! Status updated to Approved.`);
-      setTimeout(() => {
-        setToastMessage(null);
-      }, 4000);
-    }, 1500);
+    }
   };
 
   return (
@@ -46,10 +112,10 @@ export default function ScholarshipsPage() {
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
-          { label: "Eligible Students", value: "32", icon: "👨‍🎓", color: "text-amber-400", sub: "Across all classes" },
-          { label: "Approved Grants", value: "24", icon: "✅", color: "text-emerald-400", sub: "Disbursals active" },
-          { label: "Action Needed", value: "8", icon: "⚠️", color: "text-red-400", sub: "Pending verifications" },
-          { label: "Fund Value Rate", value: "₹24,000", icon: "💰", color: "text-cyan-400", sub: "Estimated Monthly" },
+          { label: "Eligible Students", value: String(stats.eligible), icon: "👨‍🎓", color: "text-amber-400", sub: "Across all classes" },
+          { label: "Approved Grants", value: String(stats.approved), icon: "✅", color: "text-emerald-400", sub: "Disbursals active" },
+          { label: "Action Needed", value: String(stats.actionNeeded), icon: "⚠️", color: "text-red-400", sub: "Pending verifications" },
+          { label: "Fund Value Rate", value: `₹${stats.funds.toLocaleString()}`, icon: "💰", color: "text-cyan-400", sub: "Estimated Monthly" },
         ].map((kpi) => (
           <div key={kpi.label} className="kpi-card">
             <div className="flex items-center justify-between mb-3">
@@ -77,79 +143,87 @@ export default function ScholarshipsPage() {
           </div>
         )}
 
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Student Name</th>
-                <th>Class</th>
-                <th>Government Scheme</th>
-                <th>Disbursal Amount</th>
-                <th>EMIS Verification Status</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {records.map((rec) => (
-                <tr key={rec.id}>
-                  <td className="font-medium text-[var(--text-heading)]">{rec.name}</td>
-                  <td>{rec.class}</td>
-                  <td>
-                    <span className="text-[var(--text-main)] font-semibold text-xs">{rec.scheme}</span>
-                  </td>
-                  <td>
-                    <span className="text-[var(--text-heading)] font-semibold text-xs">
-                      {rec.amount > 0 ? `₹${rec.amount}/mo` : "Material Distribution"}
-                    </span>
-                  </td>
-                  <td>
-                    <span className={`badge ${
-                      rec.status === "Approved"
-                        ? "badge-green"
-                        : rec.status === "Needs Verification"
-                        ? "badge-red"
-                        : rec.status === "Pending Bank Info"
-                        ? "badge-yellow"
-                        : "badge-blue"
-                    }`}>
-                      {rec.status}
-                    </span>
-                  </td>
-                  <td>
-                    {rec.status === "Needs Verification" || rec.status === "Pending Bank Info" ? (
-                      <button
-                        onClick={() => handleVerify(rec.id)}
-                        disabled={verifyingId === rec.id}
-                        className="px-2.5 py-1 bg-[var(--primary)] hover:bg-amber-600 disabled:bg-[var(--bg-card)] disabled:text-[var(--text-muted)] text-slate-950 font-bold rounded-lg text-[10px] transition-colors"
-                      >
-                        {verifyingId === rec.id ? "Checking EMIS..." : "Verify EMIS"}
-                      </button>
-                    ) : (
-                      <span className="text-[10px] text-[var(--text-muted)] italic">Verified ✓</span>
-                    )}
-                  </td>
+        {loading ? (
+          <div className="text-center py-8 text-xs text-[var(--text-muted)]">Loading scheme records...</div>
+        ) : records.length === 0 ? (
+          <div className="text-center py-8 text-xs text-[var(--text-muted)]">No scholarship candidates found.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Student Name</th>
+                  <th>Class</th>
+                  <th>Government Scheme</th>
+                  <th>Disbursal Amount</th>
+                  <th>EMIS Verification Status</th>
+                  <th>Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {records.map((rec) => (
+                  <tr key={rec.id}>
+                    <td className="font-medium text-[var(--text-heading)]">{rec.name}</td>
+                    <td>{rec.class}</td>
+                    <td>
+                      <span className="text-[var(--text-main)] font-semibold text-xs">{rec.scheme}</span>
+                    </td>
+                    <td>
+                      <span className="text-[var(--text-heading)] font-semibold text-xs">
+                        {rec.amount > 0 ? `₹${rec.amount}/mo` : "Material Distribution"}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          rec.status === "Approved" || rec.status === "Disbursed"
+                            ? "badge-green"
+                            : rec.status === "Needs Verification"
+                            ? "badge-red"
+                            : rec.status === "Pending"
+                            ? "badge-yellow"
+                            : "badge-blue"
+                        }`}
+                      >
+                        {rec.status}
+                      </span>
+                    </td>
+                    <td>
+                      {rec.status === "Needs Verification" || rec.status === "Pending" ? (
+                        <button
+                          onClick={() => handleVerify(rec.id)}
+                          disabled={verifyingId === rec.id}
+                          className="px-2.5 py-1 bg-[var(--primary)] hover:bg-amber-600 disabled:bg-[var(--bg-card)] disabled:text-[var(--text-muted)] text-slate-950 font-bold rounded-lg text-[10px] transition-colors"
+                        >
+                          {verifyingId === rec.id ? "Checking EMIS..." : "Verify EMIS"}
+                        </button>
+                      ) : (
+                        <span className="text-[10px] text-[var(--text-muted)] italic">Verified ✓</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Guidelines details */}
       <div className="theme-card p-6 border border-[var(--border)]">
-        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-3 font-semibold">🏛️ Tamil Nadu Government Scheme Notes</h2>
+        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-3">🏛️ Tamil Nadu Government Scheme Notes</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs text-[var(--text-muted)]">
           <div className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border)]">
             <h4 className="text-sm font-bold text-[var(--text-heading)] mb-1">Pudhumai Penn Scheme</h4>
-            <p className="leading-relaxed">Eligible for all girl students who studied classes 6-12 in govt schools, providing ₹1,000/month upon entering higher education.</p>
+            <p className="leading-relaxed font-normal">Eligible for all girl students who studied classes 6-12 in govt schools, providing ₹1,000/month upon entering higher education.</p>
           </div>
           <div className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border)]">
             <h4 className="text-sm font-bold text-[var(--text-heading)] mb-1">Tamil Puthalvan Scheme</h4>
-            <p className="leading-relaxed">Financial assistance of ₹1,000/month for boy students from government schools enrolling in higher education courses.</p>
+            <p className="leading-relaxed font-normal">Financial assistance of ₹1,000/month for boy students from government schools enrolling in higher education courses.</p>
           </div>
           <div className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-xl border border-[var(--border)]">
             <h4 className="text-sm font-bold text-[var(--text-heading)] mb-1">NMMS Scholarship</h4>
-            <p className="leading-relaxed">National Means-cum-Merit Scholarship providing financial help of ₹6,000/annum for selected students from Class 9.</p>
+            <p className="leading-relaxed font-normal font-normal">National Means-cum-Merit Scholarship providing financial help of ₹6,000/annum for selected students from Class 9.</p>
           </div>
         </div>
       </div>
