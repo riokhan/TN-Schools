@@ -919,7 +919,7 @@ h1, h2, h3, h4, h5, h6 {
 :root:not(.dark) .main-content h4.text-white,
 :root:not(.dark) .main-content h5.text-white,
 :root:not(.dark) .main-content h6.text-white,
-:root:not(.dark) .main-content span.text-white:not(button):not(a):not(.badge):not(.btn-primary) {
+:root:not(.dark) .main-content .text-white:not(.w-7):not(.w-8):not(.w-9):not(.w-10):not(.avatar):not(button):not(a):not(.badge):not(.btn-primary):not(.btn-glow) {
   color: var(--text-heading) !important;
 }
 
