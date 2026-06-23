@@ -179,7 +179,7 @@ router.post('/auth', async (req: Request, res: Response) => {
       }
 
       // Verify password
-      const matchesPassword = user.passwordHash === password || password === '123456';
+      const matchesPassword = user.passwordHash === password;
       if (!matchesPassword) {
         return res.status(400).json({ success: false, error: 'Invalid password.' });
       }

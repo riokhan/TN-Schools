@@ -5,15 +5,15 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const demoAccounts = [
-  { label: "🎓 Student", email: "student@gmail.com", role: "STUDENT" },
-  { label: "📚 Teacher", email: "teacher@gmail.com", role: "TEACHER" },
-  { label: "👨‍👩‍👧 Parent", email: "parent@gmail.com", role: "PARENT" },
-  { label: "🏫 Headmaster", email: "headmaster@gmail.com", role: "HEADMASTER" },
-  { label: "🏢 BEO", email: "beo@gmail.com", role: "BEO" },
-  { label: "🗺️ DEO", email: "deo@gmail.com", role: "DEO" },
-  { label: "⚖️ Commissioner", email: "commissioner@gmail.com", role: "COMMISSIONER" },
-  { label: "🏛️ Minister", email: "minister@gmail.com", role: "MINISTER" },
-  { label: "🛠️ Super Admin", email: "superadmin@gmail.com", role: "SUPERADMIN" },
+  { label: "🎓 Student", email: "student@gmail.com", role: "STUDENT", password: "" },
+  { label: "📚 Teacher", email: "teacher@gmail.com", role: "TEACHER", password: "123456" },
+  { label: "👨‍👩‍👧 Parent", email: "parent@gmail.com", role: "PARENT", password: "123456" },
+  { label: "🏫 Headmaster", email: "headmaster@gmail.com", role: "HEADMASTER", password: "Headmaster@26" },
+  { label: "🏢 BEO", email: "beo@gmail.com", role: "BEO", password: "Beo@26" },
+  { label: "🗺️ DEO", email: "deo@gmail.com", role: "DEO", password: "Deo@26" },
+  { label: "⚖️ Commissioner", email: "commissioner@gmail.com", role: "COMMISSIONER", password: "Commissioner@26" },
+  { label: "🏛️ Minister", email: "minister@gmail.com", role: "MINISTER", password: "Minister@26" },
+  { label: "🛠️ Super Admin", email: "superadmin@gmail.com", role: "SUPERADMIN", password: "123456" },
 ];
 
 export default function LoginPage() {
@@ -21,7 +21,7 @@ export default function LoginPage() {
   
   // Staff credentials
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("123456");
+  const [password, setPassword] = useState("");
   
   // Student credentials
   const [rollNumber, setRollNumber] = useState("");
@@ -101,14 +101,16 @@ export default function LoginPage() {
       setRollNumber("HM10103");
       setPhone("9655258556");
     } else {
+      const demoAccount = demoAccounts.find((a) => a.email === demoEmail);
+      const demoPassword = demoAccount?.password || "123456";
       payload = {
         loginType: "staff",
         email: demoEmail,
-        password: "123456",
+        password: demoPassword,
       };
       setLoginType("staff");
       setEmail(demoEmail);
-      setPassword("123456");
+      setPassword(demoPassword);
     }
 
     const res = await signIn("credentials", {
