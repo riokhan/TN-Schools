@@ -203,15 +203,15 @@ export default function DataFlowMonitor() {
           <h3 className="text-sm font-bold text-white">📋 Pipeline Status Table</h3>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="data-table">
             <thead>
-              <tr className="border-b border-slate-800 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="px-4 py-3">From</th>
-                <th className="px-4 py-3">To</th>
-                <th className="px-4 py-3">Data Type</th>
-                <th className="px-4 py-3">Volume</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3">Action</th>
+              <tr>
+                <th>From</th>
+                <th>To</th>
+                <th>Data Type</th>
+                <th>Volume</th>
+                <th>Status</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -220,18 +220,18 @@ export default function DataFlowMonitor() {
                 const toNode = nodeData.find((n) => n.id === flow.to);
                 const sb = statusBadge[flow.status];
                 return (
-                  <tr key={i} className="border-b border-slate-800/40 hover:bg-slate-900/30 transition-colors">
-                    <td className="px-4 py-3 text-xs font-semibold text-white">{fromNode?.icon} {fromNode?.label}</td>
-                    <td className="px-4 py-3 text-xs font-semibold text-white">{toNode?.icon} {toNode?.label}</td>
-                    <td className="px-4 py-3 text-[10px] text-slate-400">{flow.label}</td>
-                    <td className="px-4 py-3 text-[10px] font-mono text-slate-300">{fmt(flow.volume)} records</td>
-                    <td className="px-4 py-3">
+                  <tr key={i}>
+                    <td>{fromNode?.icon} {fromNode?.label}</td>
+                    <td>{toNode?.icon} {toNode?.label}</td>
+                    <td>{flow.label}</td>
+                    <td className="font-mono">{fmt(flow.volume)} records</td>
+                    <td>
                       <span className={`flex items-center gap-1.5 text-[9px] font-bold`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${sb.dot}`} />
                         <span className={sb.color.split(" ")[0]}>{sb.text}</span>
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td>
                       <button onClick={() => { triggerSync(flow.from); triggerSync(flow.to); }}
                         className="text-[10px] font-bold text-blue-400 hover:text-blue-300 bg-blue-500/10 border border-blue-500/20 px-2 py-1 rounded-lg transition">↺ Resync</button>
                     </td>

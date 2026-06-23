@@ -152,52 +152,52 @@ export default function MaterialLibrary() {
       {/* Materials Table */}
       <div className="glass rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
+          <table className="data-table min-w-[800px]">
             <thead>
-              <tr className="border-b border-slate-800 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="px-4 py-3">Material</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Subject / Class</th>
-                <th className="px-4 py-3">Portal</th>
-                <th className="px-4 py-3">Size</th>
-                <th className="px-4 py-3">AI</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+              <tr>
+                <th>Material</th>
+                <th>Type</th>
+                <th>Subject / Class</th>
+                <th>Portal</th>
+                <th>Size</th>
+                <th>AI</th>
+                <th>Status</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((m) => (
-                <tr key={m.id} className="border-b border-slate-800/40 hover:bg-slate-900/40 transition-colors">
-                  <td className="px-4 py-3">
+                <tr key={m.id}>
+                  <td>
                     <div className="text-xs font-semibold text-white max-w-[220px] truncate">{m.title}</div>
                     <div className="text-[9px] text-slate-500">{m.uploadedBy} · {m.date}</div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${typeColors[m.type]}`}>
                       {typeIcons[m.type]} {m.type}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-[10px] text-slate-400">
+                  <td>
                     <div>{m.subject}</div>
                     <div className="text-slate-600">{m.class}</div>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     <span className="text-[9px] font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded">{m.portal}</span>
                   </td>
-                  <td className="px-4 py-3 text-[10px] text-slate-500">{m.size}</td>
-                  <td className="px-4 py-3">
+                  <td>{m.size}</td>
+                  <td>
                     <button onClick={() => toggleAI(m.id)}
                       className={`text-[9px] font-bold px-2 py-0.5 rounded-full border transition ${
                         m.aiTagged ? "text-cyan-400 bg-cyan-500/10 border-cyan-500/30" : "text-slate-600 bg-slate-800 border-slate-700"
                       }`}>🤖 {m.aiTagged ? "ON" : "OFF"}</button>
                   </td>
-                  <td className="px-4 py-3">
+                  <td>
                     <button onClick={() => toggleStatus(m.id)}
                       className={`text-[9px] font-bold px-2 py-0.5 rounded-full border transition ${statusColors[m.status]}`}>
                       {m.status.toUpperCase()}
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="text-right">
                     <button onClick={() => deleteMaterial(m.id)} className="text-[10px] text-red-400 hover:text-red-300 font-semibold">Delete</button>
                   </td>
                 </tr>

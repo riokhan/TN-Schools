@@ -287,7 +287,7 @@ export default function ModelExamsPage() {
             </thead>
             <tbody className="divide-y divide-slate-850">
               {filteredToppers.map((t) => (
-                <tr key={t.id} className="hover:bg-slate-900/40 transition-colors">
+                <tr key={t.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors">
                   <td className="py-3.5 pl-2 font-bold text-slate-300">
                     {t.rank === 1 ? "🥇" : t.rank === 2 ? "🥈" : t.rank === 3 ? "🥉" : `${t.rank}`}
                   </td>

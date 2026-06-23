@@ -149,22 +149,22 @@ export default function UserManagement() {
       {/* Users Table */}
       <div className="glass rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left">
+          <table className="data-table">
             <thead>
-              <tr className="border-b border-slate-800 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="px-4 py-3">User</th>
-                <th className="px-4 py-3">Email</th>
-                <th className="px-4 py-3">Role</th>
-                <th className="px-4 py-3">Location</th>
-                <th className="px-4 py-3">Joined</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+              <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Location</th>
+                <th>Joined</th>
+                <th>Status</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((u) => (
-                <tr key={u.id} className="border-b border-slate-800/40 hover:bg-slate-900/40 transition-colors">
-                  <td className="px-4 py-3">
+                <tr key={u.id}>
+                  <td>
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-xs font-bold text-white shrink-0">
                         {u.name[0]}
@@ -172,22 +172,22 @@ export default function UserManagement() {
                       <span className="text-xs font-semibold text-white">{u.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-400 font-mono">{u.email}</td>
-                  <td className="px-4 py-3">
+                  <td className="font-mono">{u.email}</td>
+                  <td>
                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${roleColors[u.role]}`}>{u.role}</span>
                   </td>
-                  <td className="px-4 py-3 text-[10px] text-slate-500">
+                  <td>
                     <div>{u.district}</div>
                     {u.school !== "—" && <div className="text-slate-600">{u.school}</div>}
                   </td>
-                  <td className="px-4 py-3 text-[10px] text-slate-500">{u.joined}</td>
-                  <td className="px-4 py-3">
+                  <td>{u.joined}</td>
+                  <td>
                     <button onClick={() => toggleStatus(u.id)}
                       className={`relative w-10 h-5 rounded-full transition-colors ${u.status === "active" ? "bg-emerald-500" : "bg-slate-700"}`}>
                       <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${u.status === "active" ? "translate-x-5" : "translate-x-0.5"}`} />
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-right">
+                  <td className="text-right">
                     <div className="flex gap-2 justify-end">
                       <button onClick={() => openEdit(u)} className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold">Edit</button>
                       <button onClick={() => deleteUser(u.id)} className="text-[10px] text-red-400 hover:text-red-300 font-semibold">Delete</button>

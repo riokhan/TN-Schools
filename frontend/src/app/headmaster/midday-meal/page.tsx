@@ -211,7 +211,7 @@ export default function MiddayMealPage() {
             </thead>
             <tbody className="divide-y divide-slate-850">
               {stocks.map((st) => (
-                <tr key={st.id} className="hover:bg-slate-900/40 transition-colors">
+                <tr key={st.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/40 transition-colors">
                   <td className="py-3.5 pl-2 font-bold text-white">{st.item}</td>
                   <td className="py-3.5 text-blue-400 font-bold">{st.quantity}</td>
                   <td className="py-3.5 text-slate-400">{st.unit}</td>

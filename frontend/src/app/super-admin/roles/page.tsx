@@ -118,13 +118,13 @@ export default function RolePermissions() {
       {/* Permission Matrix Table */}
       <div className="glass rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[900px]">
+          <table className="data-table min-w-[900px]">
             <thead>
-              <tr className="border-b border-slate-800">
-                <th className="px-4 py-3 text-[10px] font-bold text-slate-500 uppercase w-48">Module</th>
-                <th className="px-3 py-3 text-[9px] font-bold text-slate-500 uppercase w-24">Category</th>
+              <tr>
+                <th className="w-48">Module</th>
+                <th className="w-24">Category</th>
                 {roles.map((r) => (
-                  <th key={r} className="px-2 py-3 text-center w-20">
+                  <th key={r} className="text-center w-20">
                     <div className="text-base">{roleIcons[r]}</div>
                     <div className="text-[8px] font-bold text-slate-400 mt-0.5">{r.replace("SUPERADMIN","SA")}</div>
                   </th>
@@ -133,14 +133,14 @@ export default function RolePermissions() {
             </thead>
             <tbody>
               {filteredModules.map((mod) => (
-                <tr key={mod.id} className="border-b border-slate-800/40 hover:bg-slate-900/30 transition-colors">
-                  <td className="px-4 py-3">
+                <tr key={mod.id}>
+                  <td>
                     <div className="flex items-center gap-2">
                       <span className="text-base">{mod.icon}</span>
                       <span className="text-xs font-semibold text-white">{mod.label}</span>
                     </div>
                   </td>
-                  <td className="px-3 py-3">
+                  <td>
                     <span className="text-[9px] font-bold text-slate-500 bg-slate-800 px-2 py-0.5 rounded">{mod.category}</span>
                   </td>
                   {roles.map((r) => {
@@ -148,7 +148,7 @@ export default function RolePermissions() {
                     const isLocked = r === "SUPERADMIN";
                     const cellKey = `${r}-${mod.id}`;
                     return (
-                      <td key={r} className="px-2 py-3 text-center">
+                      <td key={r} className="text-center">
                         <button
                           onClick={() => toggle(r, mod.id)}
                           disabled={isLocked}

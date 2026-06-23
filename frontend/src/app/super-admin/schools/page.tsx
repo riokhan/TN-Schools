@@ -129,44 +129,44 @@ export default function SchoolManagement() {
       {/* Schools Table */}
       <div className="glass rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left min-w-[800px]">
+          <table className="data-table min-w-[800px]">
             <thead>
-              <tr className="border-b border-slate-800 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                <th className="px-4 py-3">School</th>
-                <th className="px-4 py-3">DISE Code</th>
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">District / Block</th>
-                <th className="px-4 py-3">Medium</th>
-                <th className="px-4 py-3">Headmaster</th>
-                <th className="px-4 py-3">Students</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Actions</th>
+              <tr>
+                <th>School</th>
+                <th>DISE Code</th>
+                <th>Type</th>
+                <th>District / Block</th>
+                <th>Medium</th>
+                <th>Headmaster</th>
+                <th>Students</th>
+                <th>Status</th>
+                <th className="text-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filtered.map((s) => (
-                <tr key={s.id} className="border-b border-slate-800/40 hover:bg-slate-900/40 transition-colors cursor-pointer" onClick={() => setViewSchool(s)}>
-                  <td className="px-4 py-3">
+                <tr key={s.id} className="cursor-pointer" onClick={() => setViewSchool(s)}>
+                  <td>
                     <div className="text-xs font-semibold text-white">{s.name}</div>
                   </td>
-                  <td className="px-4 py-3 text-xs text-slate-400 font-mono">{s.dise}</td>
-                  <td className="px-4 py-3">
+                  <td className="font-mono">{s.dise}</td>
+                  <td>
                     <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${typeColors[s.type]}`}>{s.type}</span>
                   </td>
-                  <td className="px-4 py-3 text-[10px] text-slate-400">
+                  <td>
                     <div>{s.district}</div>
                     <div className="text-slate-600">{s.block}</div>
                   </td>
-                  <td className="px-4 py-3 text-[10px] text-slate-400">{s.medium}</td>
-                  <td className="px-4 py-3 text-[10px] text-slate-400">{s.hm || "—"}</td>
-                  <td className="px-4 py-3 text-xs font-bold text-white">{s.students.toLocaleString()}</td>
-                  <td className="px-4 py-3">
+                  <td>{s.medium}</td>
+                  <td>{s.hm || "—"}</td>
+                  <td className="font-bold text-white">{s.students.toLocaleString()}</td>
+                  <td>
                     <button onClick={(e) => { e.stopPropagation(); toggleStatus(s.id); }}
                       className={`relative w-10 h-5 rounded-full transition-colors ${s.status === "active" ? "bg-emerald-500" : "bg-slate-700"}`}>
                       <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${s.status === "active" ? "translate-x-5" : "translate-x-0.5"}`} />
                     </button>
                   </td>
-                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                  <td className="text-right" onClick={(e) => e.stopPropagation()}>
                     <div className="flex gap-2 justify-end">
                       <button onClick={() => openEdit(s)} className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold">Edit</button>
                       <button onClick={() => deleteSchool(s.id)} className="text-[10px] text-red-400 hover:text-red-300 font-semibold">Delete</button>
