@@ -301,6 +301,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
     accentColor: "#8b5cf6",
     navItems: [
       { label: "Dashboard", href: "/block-education-officer", icon: "🏠" },
+      { label: "Manage Headmasters", href: "/block-education-officer/headmasters", icon: "🏫" },
       { label: "School Comparisons", href: "/block-education-officer/schools", icon: "🏫" },
       { label: "Attendance Analytics", href: "/block-education-officer/attendance", icon: "📅" },
       { label: "Exam Analytics", href: "/block-education-officer/exams", icon: "📊" },
@@ -322,6 +323,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
     accentColor: "#ec4899",
     navItems: [
       { label: "Dashboard", href: "/district-education-officer", icon: "🏠" },
+      { label: "Manage BEOs", href: "/district-education-officer/beos", icon: "🏢" },
       { label: "District Overview", href: "/district-education-officer/overview", icon: "🗺️" },
       { label: "School Rankings", href: "/district-education-officer/rankings", icon: "🏆" },
       { label: "Dropout Heatmap", href: "/district-education-officer/dropout", icon: "🔴" },
@@ -344,6 +346,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
     accentColor: "#06b6d4",
     navItems: [
       { label: "Dashboard", href: "/commissioner", icon: "🏠" },
+      { label: "Manage DEOs", href: "/commissioner/deos", icon: "🗺️" },
       { label: "District Comparisons", href: "/commissioner/districts", icon: "🗺️" },
       { label: "Policy Monitoring", href: "/commissioner/policy", icon: "⚖️" },
       { label: "Budget Utilization", href: "/commissioner/budget", icon: "💰" },
@@ -365,6 +368,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
     accentColor: "#ef4444",
     navItems: [
       { label: "Command Center", href: "/minister", icon: "🏛️" },
+      { label: "Manage Commissioners", href: "/minister/commissioners", icon: "⚖️" },
       { label: "Live State View", href: "/minister/live", icon: "📡" },
       { label: "KPI Monitoring", href: "/minister/kpi", icon: "📊" },
       { label: "AI Predictions", href: "/minister/predictions", icon: "🤖" },
@@ -386,6 +390,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
     accentColor: "#475569",
     navItems: [
       { label: "System Dashboard", href: "/super-admin", icon: "📊" },
+      { label: "Manage Ministers", href: "/super-admin/ministers", icon: "🏛️" },
       { label: "Page Management", href: "/super-admin/pages", icon: "📄" },
       { label: "Feature Toggles", href: "/super-admin/features", icon: "🔧" },
       { label: "User Roles", href: "/super-admin/users", icon: "👥" },
