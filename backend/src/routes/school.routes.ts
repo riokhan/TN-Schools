@@ -74,4 +74,71 @@ router.get('/analytics/district/:district', async (req: Request, res: Response) 
   }
 });
 
+// PUT /api/schools/:id — Update school
+router.put('/:id', async (req: Request, res: Response) => {
+  try {
+    const school = await prisma.school.update({
+      where: { id: req.params.id },
+      data: req.body,
+    });
+    res.json({ success: true, data: school });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// DELETE /api/schools/:id — Delete school
+router.delete('/:id', async (req: Request, res: Response) => {
+  try {
+    await prisma.school.delete({
+      where: { id: req.params.id },
+    });
+    res.json({ success: true, message: 'School deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// POST /api/schools/bulk — Bulk import schools from Excel
+router.post('/bulk', async (req: Request, res: Response) => {
+  try {
+    const { records } = req.body;
+    if (!Array.isArray(records)) {
+      return res.status(400).json({ success: false, error: 'Invalid payload: records must be an array' });
+    }
+    const createdSchools = [];
+    for (const record of records) {
+      if (!record.dise || !record.name) continue;
+      const school = await prisma.school.upsert({
+        where: { dise: String(record.dise) },
+        update: {
+          name: record.name,
+          address: record.address || null,
+          headmasterName: record.headmasterName || null,
+          district: record.district || 'Coimbatore',
+          block: record.block || 'Coimbatore South',
+          pincode: record.pincode || null,
+          schoolType: record.schoolType || 'Government',
+          mediumOfInstruction: record.mediumOfInstruction || 'Tamil',
+        },
+        create: {
+          dise: String(record.dise),
+          name: record.name,
+          address: record.address || null,
+          headmasterName: record.headmasterName || null,
+          district: record.district || 'Coimbatore',
+          block: record.block || 'Coimbatore South',
+          pincode: record.pincode || null,
+          schoolType: record.schoolType || 'Government',
+          mediumOfInstruction: record.mediumOfInstruction || 'Tamil',
+        },
+      });
+      createdSchools.push(school);
+    }
+    res.json({ success: true, count: createdSchools.length, data: createdSchools });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 export default router;
