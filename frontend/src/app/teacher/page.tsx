@@ -47,6 +47,7 @@ export default function TeacherDashboard() {
             </button>
           </div>
 
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
             <div className="bg-green-50 dark:bg-green-500/10 rounded-xl p-3 text-center border border-green-100 dark:border-green-500/20">
               <p className="text-xs font-semibold text-green-600 dark:text-green-400 mb-1">Present</p>
