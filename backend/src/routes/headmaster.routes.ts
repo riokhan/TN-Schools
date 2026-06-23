@@ -3,6 +3,21 @@ import { prisma } from '../config/prisma';
 
 const router = Router();
 
+// Helper to parse class and section from inputs like "Class 10A"
+function parseClassSection(classStr: string) {
+  if (!classStr) return { classVal: '10', sectionVal: 'A' };
+  const clean = classStr.replace(/class/i, '').trim();
+  const match = clean.match(/^(\d+)([a-zA-Z])$/);
+  if (match) {
+    return { classVal: match[1], sectionVal: match[2].toUpperCase() };
+  }
+  const digitMatch = clean.match(/^(\d+)$/);
+  if (digitMatch) {
+    return { classVal: digitMatch[1], sectionVal: 'A' };
+  }
+  return { classVal: clean || '10', sectionVal: 'A' };
+}
+
 // GET /api/headmaster/students — List all watchlist students
 router.get('/students', async (req: Request, res: Response) => {
   try {
@@ -24,11 +39,75 @@ router.post('/students', async (req: Request, res: Response) => {
     if (!name || !rollNumber) {
       return res.status(400).json({ success: false, error: 'name and rollNumber are required' });
     }
-    const student = await prisma.watchlistStudent.create({
-      data: { name, rollNumber, class: cls || 'N/A', phone: phone || 'N/A', parentName: parentName || 'N/A', district: district || 'N/A', state: state || 'N/A', city: city || 'N/A', pincode: pincode || 'N/A', risk: risk || 'Medium', schoolId: schoolId || null },
+
+    const cleanRoll  = String(rollNumber).trim();
+    const cleanPhone = String(phone || '').trim();
+    const resolvedSchoolId = schoolId || 'a423cb72-6ef7-48ab-b4ac-d26bdc934b4d';
+
+    // 1. Check if student already exists in Student table
+    const existingStudent = await prisma.student.findFirst({
+      where: { rollNumber: { equals: cleanRoll, mode: 'insensitive' } }
     });
-    res.status(201).json({ success: true, data: student });
+    if (existingStudent) {
+      return res.status(400).json({ success: false, error: 'Student with this roll number already exists.' });
+    }
+
+    // 2. Determine mobile uniqueness
+    let mobileValue: string | null = cleanPhone || null;
+    if (cleanPhone) {
+      const existingMobile = await prisma.user.findFirst({ where: { mobile: cleanPhone } });
+      if (existingMobile) mobileValue = null;
+    }
+
+    // 3. Create all 3 records in a single atomic transaction
+    const { classVal, sectionVal } = parseClassSection(cls || 'Class 10A');
+
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name,
+          email: `${cleanRoll.toLowerCase()}@tn.gov.in`,
+          mobile: mobileValue,
+          passwordHash: cleanPhone || '123456',
+          role: 'STUDENT',
+          schoolId: resolvedSchoolId,
+        }
+      });
+
+      await tx.student.create({
+        data: {
+          userId: user.id,
+          schoolId: resolvedSchoolId,
+          class: classVal,
+          section: sectionVal,
+          rollNumber: cleanRoll,
+          parentName: parentName || 'N/A',
+          parentMobile: cleanPhone || 'N/A',
+        }
+      });
+
+      const watchlist = await tx.watchlistStudent.create({
+        data: {
+          name,
+          rollNumber: cleanRoll,
+          class: cls || 'Class 10A',
+          phone: cleanPhone || 'N/A',
+          parentName: parentName || 'N/A',
+          district: district || 'N/A',
+          state: state || 'N/A',
+          city: city || 'N/A',
+          pincode: pincode || 'N/A',
+          risk: risk || 'Medium',
+          schoolId: resolvedSchoolId,
+        }
+      });
+
+      return watchlist;
+    });
+
+    res.status(201).json({ success: true, data: result });
   } catch (err) {
+    console.error('Error creating student:', err);
     res.status(500).json({ success: false, error: String(err) });
   }
 });
@@ -40,34 +119,205 @@ router.post('/students/bulk', async (req: Request, res: Response) => {
     if (!Array.isArray(students) || students.length === 0) {
       return res.status(400).json({ success: false, error: 'students array is required' });
     }
-    const records = students
-      .filter((s) => s.name && s.rollNumber)
-      .map((s) => ({
-        name: s.name,
-        rollNumber: s.rollNumber,
-        class: s.class || 'N/A',
-        phone: s.phone || 'N/A',
-        parentName: s.parentName || 'N/A',
-        district: s.district || 'N/A',
-        state: s.state || 'N/A',
-        city: s.city || 'N/A',
-        pincode: s.pincode || 'N/A',
-        risk: s.risk || 'Medium',
-        schoolId: s.schoolId || null,
-      }));
-    const result = await prisma.watchlistStudent.createMany({ data: records, skipDuplicates: true });
-    res.status(201).json({ success: true, created: result.count });
+
+    let createdCount = 0;
+    let skippedCount = 0;
+
+    for (const s of students) {
+      if (!s.name || !s.rollNumber) { skippedCount++; continue; }
+
+      const cleanRoll  = String(s.rollNumber).trim();
+      const cleanPhone = String(s.phone || '').trim();
+      const resolvedSchoolId = s.schoolId || 'a423cb72-6ef7-48ab-b4ac-d26bdc934b4d';
+
+      // Skip duplicates
+      const existingStudent = await prisma.student.findFirst({
+        where: { rollNumber: { equals: cleanRoll, mode: 'insensitive' } }
+      });
+      if (existingStudent) { skippedCount++; continue; }
+
+      // Determine mobile uniqueness
+      let mobileValue: string | null = cleanPhone || null;
+      if (cleanPhone) {
+        const existingMobile = await prisma.user.findFirst({ where: { mobile: cleanPhone } });
+        if (existingMobile) mobileValue = null;
+      }
+
+      const { classVal, sectionVal } = parseClassSection(s.class || 'Class 10A');
+
+      try {
+        // Atomic transaction per student
+        await prisma.$transaction(async (tx) => {
+          const user = await tx.user.create({
+            data: {
+              name: s.name,
+              email: `${cleanRoll.toLowerCase()}@tn.gov.in`,
+              mobile: mobileValue,
+              passwordHash: cleanPhone || '123456',
+              role: 'STUDENT',
+              schoolId: resolvedSchoolId,
+            }
+          });
+
+          await tx.student.create({
+            data: {
+              userId: user.id,
+              schoolId: resolvedSchoolId,
+              class: classVal,
+              section: sectionVal,
+              rollNumber: cleanRoll,
+              parentName: s.parentName || 'N/A',
+              parentMobile: cleanPhone || 'N/A',
+            }
+          });
+
+          await tx.watchlistStudent.create({
+            data: {
+              name: s.name,
+              rollNumber: cleanRoll,
+              class: s.class || 'Class 10A',
+              phone: cleanPhone || 'N/A',
+              parentName: s.parentName || 'N/A',
+              district: s.district || 'N/A',
+              state: s.state || 'N/A',
+              city: s.city || 'N/A',
+              pincode: s.pincode || 'N/A',
+              risk: s.risk || 'Medium',
+              schoolId: resolvedSchoolId,
+            }
+          });
+        });
+        createdCount++;
+      } catch (txErr) {
+        console.error(`Bulk import: failed for ${cleanRoll}:`, txErr);
+        skippedCount++;
+      }
+    }
+
+    res.status(201).json({ success: true, created: createdCount, skipped: skippedCount });
   } catch (err) {
+    console.error('Error bulk importing students:', err);
     res.status(500).json({ success: false, error: String(err) });
   }
 });
 
-// DELETE /api/headmaster/students/:id — Remove from watchlist
+// PUT /api/headmaster/students/:id — Update student details
+router.put('/students/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, rollNumber, class: cls, phone, parentName, district, state, city, pincode, risk, schoolId } = req.body;
+
+    const watchlistStudent = await prisma.watchlistStudent.findUnique({
+      where: { id }
+    });
+
+    if (!watchlistStudent) {
+      return res.status(404).json({ success: false, error: 'Student not found in watchlist.' });
+    }
+
+    const oldRollNumber = watchlistStudent.rollNumber;
+    const cleanRoll = rollNumber ? String(rollNumber).trim() : oldRollNumber;
+    const cleanPhone = phone ? String(phone).trim() : watchlistStudent.phone;
+
+    // Update watchlistStudent
+    const updatedWatchlist = await prisma.watchlistStudent.update({
+      where: { id },
+      data: {
+        name: name !== undefined ? name : undefined,
+        rollNumber: cleanRoll,
+        class: cls !== undefined ? cls : undefined,
+        phone: cleanPhone,
+        parentName: parentName !== undefined ? parentName : undefined,
+        district: district !== undefined ? district : undefined,
+        state: state !== undefined ? state : undefined,
+        city: city !== undefined ? city : undefined,
+        pincode: pincode !== undefined ? pincode : undefined,
+        risk: risk !== undefined ? risk : undefined,
+        schoolId: schoolId !== undefined ? schoolId : undefined,
+      }
+    });
+
+    // Find and update core Student & User
+    const student = await prisma.student.findFirst({
+      where: {
+        rollNumber: {
+          equals: oldRollNumber,
+          mode: 'insensitive'
+        }
+      }
+    });
+
+    if (student) {
+      const { classVal, sectionVal } = parseClassSection(cls || watchlistStudent.class);
+      await prisma.student.update({
+        where: { id: student.id },
+        data: {
+          rollNumber: cleanRoll,
+          class: classVal,
+          section: sectionVal,
+          parentName: parentName !== undefined ? parentName : undefined,
+          parentMobile: cleanPhone,
+        }
+      });
+
+      // Update User
+      await prisma.user.update({
+        where: { id: student.userId },
+        data: {
+          name: name !== undefined ? name : undefined,
+          email: `${cleanRoll.toLowerCase()}@tn.gov.in`,
+          passwordHash: cleanPhone,
+        }
+      });
+    }
+
+    res.json({ success: true, data: updatedWatchlist });
+  } catch (err) {
+    console.error('Error updating student:', err);
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// DELETE /api/headmaster/students/:id — Remove from watchlist and core tables
 router.delete('/students/:id', async (req: Request, res: Response) => {
   try {
-    await prisma.watchlistStudent.delete({ where: { id: req.params.id } });
-    res.json({ success: true, message: 'Student removed from watchlist' });
+    const { id } = req.params;
+
+    const watchlistStudent = await prisma.watchlistStudent.findUnique({
+      where: { id }
+    });
+
+    if (!watchlistStudent) {
+      return res.status(404).json({ success: false, error: 'Student not found in watchlist.' });
+    }
+
+    // Find core student
+    const student = await prisma.student.findFirst({
+      where: {
+        rollNumber: {
+          equals: watchlistStudent.rollNumber,
+          mode: 'insensitive'
+        }
+      }
+    });
+
+    if (student) {
+      // 1. Delete dependent records (marks, attendance, scholarships)
+      await prisma.mark.deleteMany({ where: { studentId: student.id } });
+      await prisma.attendance.deleteMany({ where: { studentId: student.id } });
+      await prisma.scholarship.deleteMany({ where: { studentId: student.id } });
+
+      // 2. Delete Student and User
+      await prisma.student.delete({ where: { id: student.id } });
+      await prisma.user.delete({ where: { id: student.userId } });
+    }
+
+    // 3. Delete WatchlistStudent
+    await prisma.watchlistStudent.delete({ where: { id } });
+
+    res.json({ success: true, message: 'Student removed from all tables successfully' });
   } catch (err) {
+    console.error('Error deleting student:', err);
     res.status(500).json({ success: false, error: String(err) });
   }
 });

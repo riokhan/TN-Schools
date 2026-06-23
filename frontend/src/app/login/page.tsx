@@ -4,31 +4,33 @@ import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
-const demoAccounts = [
-  { label: "🎓 Student", email: "student@gmail.com", role: "STUDENT", password: "" },
-  { label: "📚 Teacher", email: "teacher@gmail.com", role: "TEACHER", password: "123456" },
-  { label: "👨‍👩‍👧 Parent", email: "parent@gmail.com", role: "PARENT", password: "123456" },
-  { label: "🏫 Headmaster", email: "headmaster@gmail.com", role: "HEADMASTER", password: "Headmaster@26" },
-  { label: "🏢 BEO", email: "beo@gmail.com", role: "BEO", password: "Beo@26" },
-  { label: "🗺️ DEO", email: "deo@gmail.com", role: "DEO", password: "Deo@26" },
-  { label: "⚖️ Commissioner", email: "commissioner@gmail.com", role: "COMMISSIONER", password: "Commissioner@26" },
-  { label: "🏛️ Minister", email: "minister@gmail.com", role: "MINISTER", password: "Minister@26" },
-  { label: "🛠️ Super Admin", email: "superadmin@gmail.com", role: "SUPERADMIN", password: "123456" },
-];
+// Role → portal path
+const roleToPath: Record<string, string> = {
+  TEACHER:      "/teacher",
+  PARENT:       "/parent",
+  HEADMASTER:   "/headmaster",
+  BEO:          "/block-education-officer",
+  DEO:          "/district-education-officer",
+  COMMISSIONER: "/commissioner",
+  MINISTER:     "/minister",
+  SUPERADMIN:   "/super-admin",
+  STUDENT:      "/student",
+};
 
 export default function LoginPage() {
   const [loginType, setLoginType] = useState<"staff" | "student">("staff");
-  
-  // Staff credentials
-  const [email, setEmail] = useState("");
+
+  // Staff
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  
-  // Student credentials
+
+  // Student
   const [rollNumber, setRollNumber] = useState("");
-  const [phone, setPhone] = useState("");
-  
-  const [error, setError] = useState<string | null>(null);
+  const [phone, setPhone]           = useState("");
+
+  const [error, setError]     = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -36,117 +38,75 @@ export default function LoginPage() {
     setLoading(true);
     setError(null);
 
-    let payload: Record<string, string> = { loginType };
-
     if (loginType === "student") {
       if (!rollNumber.trim() || !phone.trim()) {
         setError("Please enter both Roll Number and Phone Number.");
         setLoading(false);
         return;
       }
-      payload.rollNumber = rollNumber;
-      payload.phone = phone;
+
+      const res = await signIn("credentials", {
+        loginType: "student",
+        rollNumber: rollNumber.trim(),
+        phone: phone.trim(),
+        redirect: false,
+      });
+
+      if (res?.error || !res?.ok) {
+        setError("Student not found or incorrect phone number. Please check and try again.");
+        setLoading(false);
+      } else {
+        router.push("/student");
+        router.refresh();
+      }
     } else {
       if (!email.trim() || !password.trim()) {
         setError("Please enter both email and password.");
         setLoading(false);
         return;
       }
-      payload.email = email;
-      payload.password = password;
-    }
 
-    const res = await signIn("credentials", {
-      ...payload,
-      redirect: false,
-    });
-
-    if (res?.error || !res?.ok) {
-      setError("Invalid credentials. Try check database users or use quick logins below.");
-      setLoading(false);
-    } else {
-      // Direct user to their respective default home dashboard based on role
-      let path = "/student";
-      if (loginType === "staff") {
-        const lower = email.toLowerCase();
-        if (lower.includes("teacher")) path = "/teacher";
-        else if (lower.includes("parent")) path = "/parent";
-        else if (lower.includes("headmaster")) path = "/headmaster";
-        else if (lower.includes("beo")) path = "/block-education-officer";
-        else if (lower.includes("deo")) path = "/district-education-officer";
-        else if (lower.includes("commissioner")) path = "/commissioner";
-        else if (lower.includes("minister")) path = "/minister";
-        else if (lower.includes("superadmin")) path = "/super-admin";
-      }
-
-      router.push(path);
-      router.refresh();
-    }
-  };
-
-  const handleQuickLogin = async (demoEmail: string) => {
-    setLoading(true);
-    setError(null);
-
-    let payload: Record<string, string> = {};
-
-    if (demoEmail === "student@gmail.com") {
-      // Use database suganya student test credentials
-      payload = {
-        loginType: "student",
-        rollNumber: "HM10103",
-        phone: "9655258556",
-      };
-      setLoginType("student");
-      setRollNumber("HM10103");
-      setPhone("9655258556");
-    } else {
-      const demoAccount = demoAccounts.find((a) => a.email === demoEmail);
-      const demoPassword = demoAccount?.password || "123456";
-      payload = {
+      const res = await signIn("credentials", {
         loginType: "staff",
-        email: demoEmail,
-        password: demoPassword,
-      };
-      setLoginType("staff");
-      setEmail(demoEmail);
-      setPassword(demoPassword);
-    }
+        email: email.trim(),
+        password,
+        redirect: false,
+      });
 
-    const res = await signIn("credentials", {
-      ...payload,
-      redirect: false,
-    });
-
-    if (res?.error || !res?.ok) {
-      setError(`Error signing in with demo account. Ensure PostgreSQL is connected.`);
-      setLoading(false);
-    } else {
-      let path = "/student";
-      if (demoEmail.includes("teacher")) path = "/teacher";
-      else if (demoEmail.includes("parent")) path = "/parent";
-      else if (demoEmail.includes("headmaster")) path = "/headmaster";
-      else if (demoEmail.includes("beo")) path = "/block-education-officer";
-      else if (demoEmail.includes("deo")) path = "/district-education-officer";
-      else if (demoEmail.includes("commissioner")) path = "/commissioner";
-      else if (demoEmail.includes("minister")) path = "/minister";
-      else if (demoEmail.includes("superadmin")) path = "/super-admin";
-
-      router.push(path);
-      router.refresh();
+      if (res?.error || !res?.ok) {
+        setError("Invalid email or password. Please check your credentials.");
+        setLoading(false);
+      } else {
+        // Fetch user role from backend to redirect correctly
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+          const body = JSON.stringify({ loginType: "staff", email: email.trim(), password });
+          const r = await fetch(`${apiUrl}/api/users/auth`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body,
+          });
+          const data = await r.json();
+          const role = data?.data?.role as string;
+          router.push(roleToPath[role] || "/student");
+        } catch {
+          router.push("/student");
+        }
+        router.refresh();
+      }
     }
   };
 
   return (
     <div className="min-h-screen gradient-bg flex flex-col justify-center items-center p-6 relative overflow-hidden">
-      {/* Background glow orbs */}
+      {/* Glow orbs */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none" />
       <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-amber-600/10 rounded-full blur-3xl pointer-events-none" />
 
-      {/* Main Container */}
-      <div className="w-full max-w-xl bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-2xl z-10 flex flex-col gap-6">
-        
-        {/* Header Branding */}
+      {/* Card */}
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-8 shadow-2xl z-10 flex flex-col gap-6">
+
+        {/* Header */}
         <div className="text-center">
           <Link href="/" className="inline-flex items-center gap-2 mb-4 hover:opacity-90">
             <span className="text-3xl">🏛️</span>
@@ -155,35 +115,31 @@ export default function LoginPage() {
               <p className="text-[10px] text-slate-500 font-medium">AI Smart Learning Ecosystem</p>
             </div>
           </Link>
-          <h1 className="text-2xl font-black text-slate-850 dark:text-white">Portal Authentication</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Authenticate credentials against the State Registry</p>
+          <h1 className="text-2xl font-black text-slate-800 dark:text-white">Portal Authentication</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Sign in with your registered credentials
+          </p>
         </div>
 
-        {/* Tab Selection */}
+        {/* Tab Toggle */}
         <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-2xl border border-slate-200/50 dark:border-slate-800">
           <button
             type="button"
-            onClick={() => {
-              setLoginType("staff");
-              setError(null);
-            }}
+            onClick={() => { setLoginType("staff"); setError(null); }}
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
               loginType === "staff"
-                ? "bg-white dark:bg-slate-800 text-slate-850 dark:text-white shadow-sm"
+                ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
-            💼 Staff & Parents
+            💼 Staff &amp; Parents
           </button>
           <button
             type="button"
-            onClick={() => {
-              setLoginType("student");
-              setError(null);
-            }}
+            onClick={() => { setLoginType("student"); setError(null); }}
             className={`flex-1 py-2.5 text-xs font-bold rounded-xl transition-all ${
               loginType === "student"
-                ? "bg-white dark:bg-slate-800 text-slate-850 dark:text-white shadow-sm"
+                ? "bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-sm"
                 : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
             }`}
           >
@@ -191,102 +147,112 @@ export default function LoginPage() {
           </button>
         </div>
 
-        {/* Error flash */}
+        {/* Error */}
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-650 dark:text-red-400 text-xs px-4 py-3 rounded-xl">
-            ⚠️ {error}
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 text-xs px-4 py-3 rounded-xl flex items-start gap-2">
+            <span className="mt-0.5">⚠️</span>
+            <span>{error}</span>
           </div>
         )}
 
-        {/* Credentials Form */}
-        <form onSubmit={handleLogin} className="space-y-4">
+        {/* Form */}
+        <form onSubmit={handleLogin} className="flex flex-col gap-4">
           {loginType === "staff" ? (
             <>
-              <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">EMIS Registered Email</label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Email Address
+                </label>
                 <input
+                  id="staff-email"
                   type="email"
                   required
+                  autoComplete="email"
                   placeholder="e.g. teacher@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-850 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">Password / OTP</label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Password
+                </label>
                 <input
+                  id="staff-password"
                   type="password"
                   required
-                  placeholder="••••••"
+                  autoComplete="current-password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-850 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 transition-all"
                 />
               </div>
             </>
           ) : (
             <>
-              <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">Student Roll Number</label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Student Roll Number
+                </label>
                 <input
+                  id="student-roll"
                   type="text"
                   required
+                  autoComplete="off"
                   placeholder="e.g. HM10103"
                   value={rollNumber}
                   onChange={(e) => setRollNumber(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-850 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 transition-all"
                 />
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400 block mb-1.5">Registered Phone Number</label>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Registered Phone Number
+                </label>
                 <input
-                  type="text"
+                  id="student-phone"
+                  type="tel"
                   required
+                  autoComplete="off"
                   placeholder="e.g. 9655258556"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-xs text-slate-850 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/20 transition-all"
                 />
               </div>
             </>
           )}
 
           <button
+            id="sign-in-btn"
             type="submit"
             disabled={loading}
-            className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:bg-amber-800 text-slate-950 font-black text-xs transition-colors flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:bg-amber-700 disabled:opacity-60 disabled:cursor-not-allowed text-slate-950 font-black text-sm transition-all flex items-center justify-center gap-2 mt-1"
           >
             {loading ? (
-              <span className="w-4 h-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
+              <>
+                <span className="w-4 h-4 rounded-full border-2 border-slate-950 border-t-transparent animate-spin" />
+                <span>Authenticating...</span>
+              </>
             ) : (
-              "🔒 Sign In to Account"
+              <>
+                <span>🔒</span>
+                <span>Sign In to Account</span>
+              </>
             )}
           </button>
         </form>
 
-        <hr className="border-slate-200 dark:border-slate-800/80 my-2" />
-
-        {/* Quick Demo Login Switchboard */}
-        <div>
-          <h3 className="text-xs font-bold text-slate-800 dark:text-white mb-3 text-center">⚡ Quick Demo Switchboard</h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {demoAccounts.map((account) => (
-              <button
-                key={account.email}
-                type="button"
-                onClick={() => handleQuickLogin(account.email)}
-                disabled={loading}
-                className="py-2.5 px-2 rounded-xl bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800 text-[10px] font-semibold text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-all text-center flex flex-col justify-center items-center gap-1 hover:-translate-y-0.5"
-              >
-                <span>{account.label.split(" ")[0]}</span>
-                <span className="text-[9px] text-slate-450 dark:text-slate-500">{account.label.split(" ")[1]}</span>
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Footer hint */}
+        <p className="text-center text-[10px] text-slate-400 dark:text-slate-600">
+          {loginType === "staff"
+            ? "Use your registered email and password from the system."
+            : "Use your roll number and registered phone number."}
+        </p>
       </div>
     </div>
   );

@@ -131,14 +131,23 @@ router.post('/auth', async (req: Request, res: Response) => {
     const { loginType, email, password, rollNumber, phone } = req.body;
 
     if (loginType === 'student') {
-      if (!rollNumber || !phone) {
+      const inputRoll = rollNumber || email;
+      const inputPhone = phone || password;
+
+      if (!inputRoll || !inputPhone) {
         return res.status(400).json({ success: false, error: 'Roll number and phone number are required for student login.' });
       }
 
-      // Query student by rollNumber
+      const cleanRoll = String(inputRoll).trim();
+      const cleanPhone = String(inputPhone).trim();
+
+      // Query student by rollNumber (case-insensitive)
       const student = await prisma.student.findFirst({
         where: {
-          rollNumber: String(rollNumber),
+          rollNumber: {
+            equals: cleanRoll,
+            mode: 'insensitive'
+          }
         },
         include: {
           user: true
@@ -149,9 +158,25 @@ router.post('/auth', async (req: Request, res: Response) => {
         return res.status(400).json({ success: false, error: 'Student not found with this roll number.' });
       }
 
-      // Verify phone number (matches student user mobile or parent mobile)
-      const matchesPhone = student.user.mobile === phone || student.parentMobile === phone;
+      if (!student.user) {
+        return res.status(400).json({ success: false, error: 'Student account is not linked to a user.' });
+      }
+
+      // Verify phone number against multiple stored fields:
+      // 1. passwordHash (always set to phone on creation — most reliable)
+      // 2. user.mobile (can be null if another user had same phone)
+      // 3. student.parentMobile (fallback)
+      const passwordHash  = student.user.passwordHash ? String(student.user.passwordHash).trim() : null;
+      const userMobile    = student.user.mobile       ? String(student.user.mobile).trim()       : null;
+      const parentMobile  = student.parentMobile      ? String(student.parentMobile).trim()      : null;
+
+      const matchesPhone =
+        passwordHash === cleanPhone ||
+        userMobile   === cleanPhone ||
+        parentMobile === cleanPhone;
+
       if (!matchesPhone) {
+        console.log(`Auth failed for roll ${cleanRoll}: passwordHash=${passwordHash}, mobile=${userMobile}, parentMobile=${parentMobile}, provided=${cleanPhone}`);
         return res.status(400).json({ success: false, error: 'Incorrect phone number.' });
       }
 
@@ -165,39 +190,84 @@ router.post('/auth', async (req: Request, res: Response) => {
         }
       });
     } else {
-      // Regular login by Email and Password
+      // Staff / Parent login by Email and Password
       if (!email || !password) {
         return res.status(400).json({ success: false, error: 'Email and password are required.' });
       }
 
-      const user = await prisma.user.findUnique({
-        where: { email: String(email).toLowerCase() }
+      const cleanEmail = String(email).trim().toLowerCase();
+
+      // ── Step 1: Check PostgreSQL User table (primary source) ──
+      const pgUser = await prisma.user.findFirst({
+        where: { email: { equals: cleanEmail, mode: 'insensitive' } }
       });
 
-      if (!user) {
-        return res.status(400).json({ success: false, error: 'User not found.' });
-      }
-
-      // Verify password
-      const matchesPassword = user.passwordHash === password;
-      if (!matchesPassword) {
-        return res.status(400).json({ success: false, error: 'Invalid password.' });
-      }
-
-      return res.json({
-        success: true,
-        data: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          schoolId: user.schoolId
+      if (pgUser) {
+        if (pgUser.passwordHash !== password) {
+          return res.status(400).json({ success: false, error: 'Invalid password.' });
         }
+        return res.json({
+          success: true,
+          data: {
+            id: pgUser.id,
+            name: pgUser.name,
+            email: pgUser.email,
+            role: pgUser.role,
+            schoolId: pgUser.schoolId
+          }
+        });
+      }
+
+      // ── Step 2: Check headmasterStaff (MongoDB via Prisma) ──
+      const staffMember = await prisma.headmasterStaff.findFirst({
+        where: { email: cleanEmail }
       });
+
+      if (staffMember) {
+        const staffPass = String(staffMember.password || '123456');
+        if (staffPass !== password) {
+          return res.status(400).json({ success: false, error: 'Invalid password.' });
+        }
+        return res.json({
+          success: true,
+          data: {
+            id: String(staffMember.id),
+            name: staffMember.name,
+            email: staffMember.email || cleanEmail,
+            role: 'TEACHER',
+            schoolId: staffMember.schoolId || null
+          }
+        });
+      }
+
+      // ── Step 3: Check headmasterParent (MongoDB via Prisma) ──
+      const parentMember = await prisma.headmasterParent.findFirst({
+        where: { email: cleanEmail }
+      });
+
+      if (parentMember) {
+        const parentPass = String(parentMember.password || '123456');
+        if (parentPass !== password) {
+          return res.status(400).json({ success: false, error: 'Invalid password.' });
+        }
+        return res.json({
+          success: true,
+          data: {
+            id: String(parentMember.id),
+            name: parentMember.name,
+            email: parentMember.email || cleanEmail,
+            role: 'PARENT',
+            schoolId: parentMember.schoolId || null
+          }
+        });
+      }
+
+      // ── Not found in any source ──
+      return res.status(400).json({ success: false, error: 'User not found.' });
     }
-  } catch (err) {
+  } catch (err: any) {
     console.error('Authentication error:', err);
-    res.status(500).json({ success: false, error: String(err) });
+    res.status(500).json({ success: false, error: String(err?.message || err) });
   }
 });
 
