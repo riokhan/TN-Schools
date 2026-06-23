@@ -114,7 +114,6 @@ router.post('/bulk', async (req: Request, res: Response) => {
         update: {
           name: record.name,
           address: record.address || null,
-          headmasterName: record.headmasterName || null,
           district: record.district || 'Coimbatore',
           block: record.block || 'Coimbatore South',
           pincode: record.pincode || null,
@@ -125,7 +124,6 @@ router.post('/bulk', async (req: Request, res: Response) => {
           dise: String(record.dise),
           name: record.name,
           address: record.address || null,
-          headmasterName: record.headmasterName || null,
           district: record.district || 'Coimbatore',
           block: record.block || 'Coimbatore South',
           pincode: record.pincode || null,
