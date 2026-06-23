@@ -66,7 +66,7 @@ const buildDefault = () => {
   return matrix;
 };
 
-const categories = [...new Set(modules.map((m) => m.category))];
+const categories = Array.from(new Set(modules.map((m) => m.category)));
 
 export default function RolePermissions() {
   const [matrix, setMatrix] = useState(buildDefault);

@@ -73,7 +73,7 @@ export default function HeadmasterManagement() {
     setTransferTarget("");
   };
 
-  const districts = [...new Set(hms.map((h) => h.district))];
+  const districts = Array.from(new Set(hms.map((h) => h.district)));
 
   return (
     <PortalLayout>

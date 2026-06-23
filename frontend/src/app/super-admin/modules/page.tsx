@@ -37,7 +37,7 @@ const initialModules: Module[] = [
   { id:"career-aptitude", name:"Career Aptitude", icon:"🧭", description:"AI-powered career guidance and aptitude", category:"AI & Learning", route:"/student/career", portals:{ Student:true, Teacher:false, Parent:true, Headmaster:false, BEO:false, DEO:false, Commissioner:false, Minister:false }, dependencies:["ai-tutor"] },
 ];
 
-const categories = [...new Set(initialModules.map((m) => m.category))];
+const categories = Array.from(new Set(initialModules.map((m) => m.category)));
 
 export default function DepartmentModules() {
   const [modules, setModules] = useState<Module[]>(initialModules);
