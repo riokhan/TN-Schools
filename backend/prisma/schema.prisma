@@ -60,6 +60,7 @@ model School {
   dise           String    @unique      // DISE code
   name           String
   address        String?
+  headmasterName String?   @default("N/A")
   district       String
   block          String
   pincode        String?

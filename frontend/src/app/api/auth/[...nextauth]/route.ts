@@ -15,6 +15,8 @@ const authOptions: NextAuthOptions = {
       async authorize(credentials) {
         try {
           const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+          console.log("Authorize called. NextAuth connecting to API URL:", apiUrl);
+          
           const res = await fetch(`${apiUrl}/api/users/auth`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -26,9 +28,14 @@ const authOptions: NextAuthOptions = {
               phone: credentials?.phone,
             }),
           });
+          
           const result = await res.json();
+          console.log("Backend auth response status:", res.status, "Success:", result?.success);
+          
           if (result.success && result.data) {
             return result.data;
+          } else {
+            console.log("Auth failed or user not returned by backend:", result?.error);
           }
         } catch (err) {
           console.error("NextAuth authorize error:", err);
