@@ -1,7 +1,8 @@
 "use client";
-import { useState } from "react";
-import PortalLayout from "@/components/PortalLayout";
 
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import PortalLayout from "@/components/PortalLayout";
 
 interface Assignment {
   id: string;
@@ -14,28 +15,28 @@ interface Assignment {
   description: string;
 }
 
-const initialAssignments: Assignment[] = [
-  { id: "hw-1", title: "Pythagoras Theorem - Practice Set 1", className: "10A - Mathematics", dueDate: "June 22, 2026", submittedCount: 36, totalStudents: 42, status: "active", description: "Solve textbook problems 1 to 5 on Page 44. Show steps for full marks." },
-  { id: "hw-2", title: "Introduction to Trigonometric Ratios", className: "10B - Mathematics", dueDate: "June 24, 2026", submittedCount: 18, totalStudents: 40, status: "active", description: "Define Sin, Cos and Tan ratios. Calculate hypotenuse lengths on given worksheet." },
-  { id: "hw-3", title: "Quadratic Equations Diagnostic quiz", className: "10A - Mathematics", dueDate: "June 15, 2026", submittedCount: 42, totalStudents: 42, status: "completed", description: "Diagnostic assessment on quadratic formula application." },
-  { id: "hw-4", title: "Algebraic identities draft homework", className: "9A - Mathematics", dueDate: "June 28, 2026", submittedCount: 0, totalStudents: 45, status: "draft", description: "Simplify linear and quadratic identity forms." }
-];
-
-const mockSubmissions = [
-  { rollNo: "10A01", name: "Aarthi V.", status: "submitted", score: "9/10", date: "Today, 8:40 AM" },
-  { rollNo: "10A02", name: "Balaji R.", status: "submitted", score: "7/10", date: "Yesterday, 3:15 PM" },
-  { rollNo: "10A03", name: "Kavitha R.", status: "pending", score: "—", date: "—" },
-  { rollNo: "10A04", name: "Manoj K.", status: "submitted", score: "10/10", date: "Today, 9:02 AM" },
-  { rollNo: "10A05", name: "Priya S.", status: "submitted", score: "8/10", date: "Yesterday, 6:00 PM" },
-  { rollNo: "10A06", name: "Rajesh M.", status: "pending", score: "—", date: "—" },
-];
+interface Submission {
+  id: string;
+  rollNo: string;
+  name: string;
+  status: "submitted" | "pending";
+  score: string;
+  date: string;
+}
 
 export default function HomeworkPage() {
-  const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments);
+  const { data: session } = useSession();
+  const schoolId = (session?.user as any)?.schoolId;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [activeTab, setActiveTab] = useState<"active" | "draft" | "completed">("active");
-  const [selectedHwId, setSelectedHwId] = useState("hw-1");
+  const [selectedHwId, setSelectedHwId] = useState("");
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingSubs, setLoadingSubs] = useState(false);
 
   // New Homework Form State
   const [newTitle, setNewTitle] = useState("");
@@ -44,31 +45,112 @@ export default function HomeworkPage() {
   const [newDesc, setNewDesc] = useState("");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
-  const activeAssignments = assignments.filter((a) => a.status === activeTab);
-  const selectedHw = assignments.find((a) => a.id === selectedHwId) || assignments[0];
+  const fetchHomework = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/api/teacher/homework?schoolId=${schoolId || ""}`);
+      const result = await res.json();
+      if (result.success && result.data) {
+        setAssignments(result.data);
+        if (result.data.length > 0 && !selectedHwId) {
+          // Select first homework matching active status
+          const firstHw = result.data.find((a: any) => a.status === activeTab) || result.data[0];
+          setSelectedHwId(firstHw.id);
+        }
+      }
+    } catch (err) {
+      console.error("Error loading homework list:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const handleCreateHomework = (e: React.FormEvent) => {
+  const fetchSubmissions = async (hwId: string) => {
+    if (!hwId) return;
+    try {
+      setLoadingSubs(true);
+      const res = await fetch(`${API_URL}/api/teacher/homework/${hwId}/submissions`);
+      const result = await res.json();
+      if (result.success && result.data) {
+        setSubmissions(result.data);
+      } else {
+        setSubmissions([]);
+      }
+    } catch (err) {
+      console.error("Error loading submissions:", err);
+    } finally {
+      setLoadingSubs(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHomework();
+  }, [schoolId]);
+
+  useEffect(() => {
+    if (selectedHwId) {
+      fetchSubmissions(selectedHwId);
+    }
+  }, [selectedHwId]);
+
+  const handleCreateHomework = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
 
-    const newHw: Assignment = {
-      id: `hw-${assignments.length + 1}`,
-      title: newTitle,
-      className: newClass,
-      dueDate: newDueDate,
-      submittedCount: 0,
-      totalStudents: 40,
-      status: "active",
-      description: newDesc,
-    };
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/homework`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newTitle,
+          className: newClass,
+          dueDate: newDueDate,
+          status: "active",
+          description: newDesc,
+          schoolId: schoolId || null,
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setAssignments([result.data, ...assignments]);
+        setSelectedHwId(result.data.id);
+        setShowCreateModal(false);
+        setNewTitle("");
+        setNewDesc("");
+        setToastMessage(`New assignment "${newTitle}" assigned successfully!`);
+        setTimeout(() => setToastMessage(null), 3000);
+      }
+    } catch (err) {
+      console.error("Error creating homework:", err);
+    }
+  };
 
-    setAssignments([newHw, ...assignments]);
-    setSelectedHwId(newHw.id);
-    setShowCreateModal(false);
-    setNewTitle("");
-    setNewDesc("");
-    setToastMessage(`New assignment "${newTitle}" assigned successfully!`);
-    setTimeout(() => setToastMessage(null), 3000);
+  const handleGradeSubmission = async (subId: string, name: string) => {
+    const scoreVal = prompt(`Enter score for ${name} (e.g. 9/10):`, "8/10");
+    if (scoreVal === null) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/homework/submissions/${subId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          score: scoreVal,
+          status: "submitted",
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setSubmissions(
+          submissions.map((sub) => (sub.id === subId ? result.data : sub))
+        );
+        // Refresh homework list to update counts
+        fetchHomework();
+        setToastMessage(`Graded ${name} successfully!`);
+        setTimeout(() => setToastMessage(null), 3000);
+      }
+    } catch (err) {
+      console.error("Error grading submission:", err);
+    }
   };
 
   const triggerAIRecipes = () => {
@@ -86,9 +168,12 @@ export default function HomeworkPage() {
   };
 
   const handleSendReminder = () => {
-    setToastMessage(`Push alerts and WhatsApp reminders sent to parents of pending students in ${selectedHw.className}!`);
+    setToastMessage(`Push alerts and WhatsApp reminders sent to parents of pending students!`);
     setTimeout(() => setToastMessage(null), 3000);
   };
+
+  const activeAssignments = assignments.filter((a) => a.status === activeTab);
+  const selectedHw = assignments.find((a) => a.id === selectedHwId) || assignments[0];
 
   return (
     <PortalLayout
@@ -96,7 +181,7 @@ export default function HomeworkPage() {
       subtitle="Track submissions, send automated parent reminders, and generate AI homework exercises"
     >
       {toastMessage && (
-        <div className="fixed top-5 right-5 bg-emerald-500 text-[var(--text-heading)] text-xs font-bold px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2">
+        <div className="fixed top-5 right-5 bg-emerald-500 text-white text-xs font-bold px-4 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-2">
           <span>✅</span> {toastMessage}
         </div>
       )}
@@ -110,7 +195,6 @@ export default function HomeworkPage() {
                 key={tab}
                 onClick={() => {
                   setActiveTab(tab);
-                  // Auto-switch selected homework to avoid stale view
                   const firstHwOfTab = assignments.find((a) => a.status === tab);
                   if (firstHwOfTab) setSelectedHwId(firstHwOfTab.id);
                 }}
@@ -131,129 +215,141 @@ export default function HomeworkPage() {
           </button>
         </div>
 
-        {/* Workspace Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Homework Cards List */}
-          <div className="space-y-4">
-            <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider mb-1">
-              📝 Assignments ({activeAssignments.length})
-            </h3>
-            
-            {activeAssignments.map((hw) => {
-              const isSelected = hw.id === selectedHwId;
-              const percent = Math.round((hw.submittedCount / hw.totalStudents) * 100) || 0;
-              return (
-                <div
-                  key={hw.id}
-                  onClick={() => setSelectedHwId(hw.id)}
-                  className={`theme-card p-4 border text-left cursor-pointer transition-all hover:scale-[1.01] ${
-                    isSelected ? "border-[var(--primary)] bg-[var(--primary)]/5" : "border-[var(--border)] hover:border-[var(--border)]"
-                  }`}
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="text-[var(--text-heading)] font-bold text-xs truncate max-w-[180px]">{hw.title}</h4>
-                    <span className="text-[10px] text-slate-550">{hw.dueDate}</span>
-                  </div>
-
-                  <div className="text-[10px] text-[var(--text-muted)]">{hw.className}</div>
-                  
-                  {hw.status !== "draft" && (
-                    <div className="mt-4 space-y-1.5">
-                      <div className="flex justify-between items-center text-[9px] text-[var(--text-muted)]">
-                        <span>Submissions Progress</span>
-                        <span className="font-semibold text-[var(--text-heading)]">{hw.submittedCount}/{hw.totalStudents} ({percent}%)</span>
-                      </div>
-                      <div className="progress-bar w-full">
-                        <div className="progress-fill" style={{ width: `${percent}%`, background: "#f59e0b" }} />
-                      </div>
+        {loading ? (
+          <div className="text-center py-12 text-xs text-[var(--text-muted)]">Loading homework dashboard...</div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Homework Cards List */}
+            <div className="space-y-4">
+              <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider mb-1">
+                📝 Assignments ({activeAssignments.length})
+              </h3>
+              
+              {activeAssignments.map((hw) => {
+                const isSelected = hw.id === selectedHwId;
+                const percent = Math.round((hw.submittedCount / hw.totalStudents) * 100) || 0;
+                return (
+                  <div
+                    key={hw.id}
+                    onClick={() => setSelectedHwId(hw.id)}
+                    className={`theme-card p-4 border text-left cursor-pointer transition-all hover:scale-[1.01] ${
+                      isSelected ? "border-[var(--primary)] bg-[var(--primary)]/5" : "border-[var(--border)] hover:border-[var(--border)]"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <h4 className="text-[var(--text-heading)] font-bold text-xs truncate max-w-[180px]">{hw.title}</h4>
+                      <span className="text-[10px] text-slate-550">{hw.dueDate}</span>
                     </div>
-                  )}
-                </div>
-              );
-            })}
 
-            {activeAssignments.length === 0 && (
-              <div className="theme-card p-8 border border-dashed border-[var(--border)] text-center text-xs text-[var(--text-muted)]">
-                No assignments found in this status category.
-              </div>
-            )}
-          </div>
-
-          {/* Detailed Assignment Submissions Panel */}
-          {selectedHw && (
-            <div className="lg:col-span-2 space-y-6">
-              {/* Info panel */}
-              <div className="theme-card p-6 border border-[var(--border)]">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="text-[var(--text-heading)] font-bold text-base leading-snug">{selectedHw.title}</h3>
-                    <p className="text-xs text-[var(--text-muted)] mt-1">{selectedHw.className} · Due on {selectedHw.dueDate}</p>
+                    <div className="text-[10px] text-[var(--text-muted)]">{hw.className}</div>
+                    
+                    {hw.status !== "draft" && (
+                      <div className="mt-4 space-y-1.5">
+                        <div className="flex justify-between items-center text-[9px] text-[var(--text-muted)]">
+                          <span>Submissions Progress</span>
+                          <span className="font-semibold text-[var(--text-heading)]">{hw.submittedCount}/{hw.totalStudents} ({percent}%)</span>
+                        </div>
+                        <div className="progress-bar w-full">
+                          <div className="progress-fill" style={{ width: `${percent}%`, background: "#f59e0b" }} />
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  
-                  {selectedHw.status === "active" && (
-                    <button
-                      onClick={handleSendReminder}
-                      className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-amber-400 border border-[var(--primary)]/20 hover:bg-[var(--primary)]/10 transition-all flex items-center gap-1.5"
-                    >
-                      <span>🔔</span> Send Parent Reminders
-                    </button>
-                  )}
-                </div>
+                );
+              })}
 
-                <div className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-xl text-xs text-slate-350 leading-relaxed">
-                  <span className="font-semibold text-[var(--text-heading)] block mb-1">Homework Guidelines:</span>
-                  {selectedHw.description}
-                </div>
-              </div>
-
-              {/* Roster & submissions checklist */}
-              {selectedHw.status !== "draft" && (
-                <div className="theme-card p-6 border border-[var(--border)]">
-                  <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider mb-4">
-                    📋 Submission Roster
-                  </h3>
-
-                  <div className="overflow-x-auto">
-                    <table className="data-table">
-                      <thead>
-                        <tr>
-                          <th>Roll No</th>
-                          <th>Student Name</th>
-                          <th>Status</th>
-                          <th>Turned In</th>
-                          <th>Score</th>
-                          <th>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {mockSubmissions.map((sub) => (
-                          <tr key={sub.rollNo}>
-                            <td className="font-mono text-xs">{sub.rollNo}</td>
-                            <td className="font-medium text-[var(--text-heading)]">{sub.name}</td>
-                            <td>
-                              <span className={`badge ${sub.status === "submitted" ? "badge-green" : "badge-yellow"}`}>
-                                {sub.status}
-                              </span>
-                            </td>
-                            <td>{sub.date}</td>
-                            <td className="font-bold font-mono text-[var(--text-heading)]">{sub.score}</td>
-                            <td>
-                              {sub.status === "submitted" ? (
-                                <button className="text-xs text-amber-400 hover:underline">Grade Sheet</button>
-                              ) : (
-                                <button className="text-xs text-[var(--text-muted)] hover:text-[var(--text-heading)]">Poke Parent</button>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+              {activeAssignments.length === 0 && (
+                <div className="theme-card p-8 border border-dashed border-[var(--border)] text-center text-xs text-[var(--text-muted)]">
+                  No assignments found in this status category.
                 </div>
               )}
             </div>
-          )}
-        </div>
+
+            {/* Detailed Assignment Submissions Panel */}
+            {selectedHw && (
+              <div className="lg:col-span-2 space-y-6">
+                {/* Info panel */}
+                <div className="theme-card p-6 border border-[var(--border)]">
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 className="text-[var(--text-heading)] font-bold text-base leading-snug">{selectedHw.title}</h3>
+                      <p className="text-xs text-[var(--text-muted)] mt-1">{selectedHw.className} · Due on {selectedHw.dueDate}</p>
+                    </div>
+                    
+                    {selectedHw.status === "active" && (
+                      <button
+                        onClick={handleSendReminder}
+                        className="px-3.5 py-1.5 rounded-xl text-xs font-semibold text-amber-400 border border-[var(--primary)]/20 hover:bg-[var(--primary)]/10 transition-all flex items-center gap-1.5"
+                      >
+                        <span>🔔</span> Send Parent Reminders
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="p-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-xl text-xs text-slate-350 leading-relaxed">
+                    <span className="font-semibold text-[var(--text-heading)] block mb-1">Homework Guidelines:</span>
+                    {selectedHw.description}
+                  </div>
+                </div>
+
+                {/* Roster & submissions checklist */}
+                {selectedHw.status !== "draft" && (
+                  <div className="theme-card p-6 border border-[var(--border)]">
+                    <h3 className="text-[var(--text-heading)] font-semibold text-xs uppercase tracking-wider mb-4">
+                      📋 Submission Roster
+                    </h3>
+
+                    {loadingSubs ? (
+                      <div className="text-center py-8 text-xs text-[var(--text-muted)]">Loading submission roster...</div>
+                    ) : submissions.length > 0 ? (
+                      <div className="overflow-x-auto">
+                        <table className="data-table">
+                          <thead>
+                            <tr>
+                              <th>Roll No</th>
+                              <th>Student Name</th>
+                              <th>Status</th>
+                              <th>Turned In</th>
+                              <th>Score</th>
+                              <th>Actions</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {submissions.map((sub) => (
+                              <tr key={sub.id}>
+                                <td className="font-mono text-xs">{sub.rollNo}</td>
+                                <td className="font-medium text-[var(--text-heading)]">{sub.name}</td>
+                                <td>
+                                  <span className={`badge ${sub.status === "submitted" ? "badge-green" : "badge-yellow"}`}>
+                                    {sub.status}
+                                  </span>
+                                </td>
+                                <td>{sub.date}</td>
+                                <td className="font-bold font-mono text-[var(--text-heading)]">{sub.score}</td>
+                                <td>
+                                  <button
+                                    onClick={() => handleGradeSubmission(sub.id, sub.name)}
+                                    className="text-xs text-amber-400 hover:underline"
+                                  >
+                                    Grade Sheet
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 text-xs text-[var(--text-muted)] italic">
+                        No submissions logged. Ensure students are assigned to this class section.
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Create Homework Dialog */}
@@ -286,9 +382,9 @@ export default function HomeworkPage() {
                     onChange={(e) => setNewClass(e.target.value)}
                     className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
                   >
-                    <option>10A - Mathematics</option>
-                    <option>10B - Mathematics</option>
-                    <option>9A - Mathematics</option>
+                    <option value="10A - Mathematics">10A - Mathematics</option>
+                    <option value="10B - Mathematics">10B - Mathematics</option>
+                    <option value="9A - Mathematics">9A - Mathematics</option>
                   </select>
                 </div>
 
@@ -348,4 +444,3 @@ export default function HomeworkPage() {
     </PortalLayout>
   );
 }
-

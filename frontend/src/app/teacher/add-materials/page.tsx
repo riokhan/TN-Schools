@@ -1,57 +1,117 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 
 interface Material {
-  id: number;
+  id: string;
   title: string;
   category: "Notes" | "Worksheet" | "Video Reference" | "Exam Prep";
-  class: string;
+  classSection: string;
   format: string;
   size: string;
   date: string;
 }
 
 export default function AddMaterialsPage() {
-  const [materials, setMaterials] = useState<Material[]>([
-    { id: 1, title: "Class 10 - Physics - Laws of Motion Notes", category: "Notes", class: "Class 10A", format: "PDF", size: "2.4 MB", date: "June 15, 2026" },
-    { id: 2, title: "Grade 9 - Biology - Plant Cells Labeling Activity", category: "Worksheet", class: "Class 9B", format: "PDF", size: "1.8 MB", date: "June 18, 2026" },
-    { id: 3, title: "Ohm's Law Video Tutorial (TN Kalvi TV)", category: "Video Reference", class: "Class 12B", format: "Link", size: "External", date: "June 10, 2026" },
-  ]);
+  const { data: session } = useSession();
+  const schoolId = (session?.user as any)?.schoolId;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  const [materials, setMaterials] = useState<Material[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Upload Form State
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Material["category"]>("Notes");
   const [targetClass, setTargetClass] = useState("Class 10A");
-  const [simulatedFile, setSimulatedFile] = useState<string | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [selectedFileSize, setSelectedFileSize] = useState<string>("");
+  const [selectedFileFormat, setSelectedFileFormat] = useState<string>("PDF");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"All" | "Notes" | "Worksheet" | "Video Reference" | "Exam Prep">("All");
 
-  const handleSimulatedFileSelect = () => {
-    setSimulatedFile("study_resource_document_draft.pdf (4.2 MB)");
+  const fetchMaterials = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${API_URL}/api/teacher/materials?schoolId=${schoolId || ""}`);
+      const result = await res.json();
+      if (result.success) {
+        setMaterials(result.data);
+      }
+    } catch (err) {
+      console.error("Error fetching materials:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleUpload = (e: React.FormEvent) => {
+  useEffect(() => {
+    fetchMaterials();
+  }, [schoolId]);
+
+  const handleFileSelectClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setSelectedFileName(file.name);
+      
+      const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
+      setSelectedFileSize(`${sizeInMB} MB`);
+
+      const extension = file.name.split('.').pop()?.toUpperCase() || "PDF";
+      setSelectedFileFormat(extension);
+    }
+  };
+
+  const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !simulatedFile) return;
+    if (!title || !selectedFileName) return;
 
-    const newMaterial: Material = {
-      id: Date.now(),
-      title,
-      category,
-      class: targetClass,
-      format: "PDF",
-      size: "4.2 MB",
-      date: "Today",
-    };
-
-    setMaterials([newMaterial, ...materials]);
-    setTitle("");
-    setSimulatedFile(null);
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/materials`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          category,
+          classSection: targetClass,
+          format: selectedFileFormat,
+          size: selectedFileSize,
+          schoolId: schoolId || null,
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setMaterials([result.data, ...materials]);
+        setTitle("");
+        setSelectedFileName(null);
+        setSelectedFileSize("");
+        setSelectedFileFormat("PDF");
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    } catch (err) {
+      console.error("Error uploading material:", err);
+    }
   };
 
-  const handleDelete = (id: number) => {
-    setMaterials(materials.filter((m) => m.id !== id));
+  const handleDelete = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this resource?")) return;
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/materials/${id}`, {
+        method: "DELETE",
+      });
+      const result = await res.json();
+      if (result.success) {
+        setMaterials(materials.filter((m) => m.id !== id));
+      }
+    } catch (err) {
+      console.error("Error deleting material:", err);
+    }
   };
 
   const filteredMaterials = materials.filter(
@@ -109,13 +169,20 @@ export default function AddMaterialsPage() {
 
             <div>
               <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">File Attachment</label>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                className="hidden" 
+                accept=".pdf,.doc,.docx,.ppt,.pptx"
+              />
               <div
-                onClick={handleSimulatedFileSelect}
+                onClick={handleFileSelectClick}
                 className="border-2 border-dashed border-[var(--border)] hover:border-[var(--primary)]/50 hover:bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-2xl p-6 text-center cursor-pointer transition-all"
               >
                 <span className="text-3xl block mb-2">📁</span>
                 <span className="text-xs text-[var(--text-muted)] font-medium block">
-                  {simulatedFile ? simulatedFile : "Click to select study resource file"}
+                  {selectedFileName ? `${selectedFileName} (${selectedFileSize})` : "Click to select study resource file"}
                 </span>
                 <span className="text-[10px] text-[var(--text-muted)] mt-1 block">Supports PDF, Doc, PPT up to 15MB</span>
               </div>
@@ -123,7 +190,7 @@ export default function AddMaterialsPage() {
 
             <button
               type="submit"
-              disabled={!title || !simulatedFile}
+              disabled={!title || !selectedFileName}
               className="w-full py-2.5 bg-[var(--primary)] hover:bg-amber-600 disabled:bg-[var(--bg-card)] disabled:text-[var(--text-muted)] text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
             >
               Upload & Distribute to Students
@@ -154,7 +221,11 @@ export default function AddMaterialsPage() {
           </div>
 
           <div className="space-y-4">
-            {filteredMaterials.length > 0 ? (
+            {loading ? (
+              <div className="p-12 text-center text-[var(--text-muted)] text-xs">
+                Loading database directory...
+              </div>
+            ) : filteredMaterials.length > 0 ? (
               filteredMaterials.map((m) => (
                 <div
                   key={m.id}
@@ -165,7 +236,7 @@ export default function AddMaterialsPage() {
                       <span className="text-xs font-bold px-2 py-0.5 bg-[var(--primary)]/10 text-amber-400 border border-[var(--primary)]/20 rounded-md">
                         {m.category}
                       </span>
-                      <span className="text-xs font-bold text-[var(--text-muted)]">{m.class}</span>
+                      <span className="text-xs font-bold text-[var(--text-muted)]">{m.classSection}</span>
                     </div>
                     <h3 className="text-sm font-bold text-[var(--text-heading)] mb-0.5">{m.title}</h3>
                     <div className="text-[10px] text-[var(--text-muted)] font-semibold">
@@ -197,4 +268,3 @@ export default function AddMaterialsPage() {
     </PortalLayout>
   );
 }
-

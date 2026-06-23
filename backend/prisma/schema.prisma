@@ -301,5 +301,157 @@ model HeadmasterAlumni {
   @@index([schoolId])
 }
 
+model StudyMaterial {
+  id           String   @id @default(uuid())
+  title        String
+  category     String // "Notes", "Worksheet", "Video Reference", "Exam Prep"
+  classSection String // "Class 10A", etc.
+  format       String // "PDF", "Link", etc.
+  size         String // "2.4 MB"
+  date         String   @default("Today")
+  schoolId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model Announcement {
+  id           String   @id @default(uuid())
+  title        String
+  body         String
+  target       String // "Class 10A Parents", etc.
+  date         String   @default("Today")
+  sender       String // "You (Science Specialist)", etc.
+  pinned       Boolean  @default(false)
+  readReceipts String?  @default("0/40 read")
+  schoolId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model Homework {
+  id             String               @id @default(uuid())
+  title          String
+  className      String
+  dueDate        String
+  status         String               @default("active") // "active", "draft", "completed"
+  description    String
+  schoolId       String?
+  submissions    HomeworkSubmission[]
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@index([schoolId])
+}
+
+model HomeworkSubmission {
+  id          String   @id @default(uuid())
+  homeworkId  String
+  homework    Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  rollNo      String
+  name        String
+  status      String // "submitted", "pending"
+  score       String?  @default("—")
+  date        String?  @default("—")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([homeworkId])
+}
+
+model EvaluationSubmission {
+  id          String   @id @default(uuid())
+  studentName String
+  rollNo      String
+  status      String   @default("pending") // "pending", "graded"
+  score       Float?
+  totalMarks  Int      @default(10)
+  submittedAt String
+  ocrContent  Json // Array of questions, student answers, AI scores, rationale
+  schoolId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model LabEquipment {
+  id          String   @id @default(uuid())
+  name        String
+  classSection String
+  status      String // "active", "scheduled", "completed"
+  date        String
+  safetyCheck Boolean  @default(true)
+  schoolId    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model LeaveRequest {
+  id        String   @id @default(uuid())
+  type      String
+  duration  String
+  reason    String
+  proxy     String
+  status    String   @default("Pending") // "Approved", "Pending", "Rejected"
+  schoolId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model LessonPlan {
+  id           String   @id @default(uuid())
+  syllabus     String
+  grade        String
+  subject      String
+  topic        String
+  duration     String
+  planData     Json // Stores outline, bilingual terms, assessments, exit tickets
+  schoolId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model Question {
+  id           String   @id @default(uuid())
+  grade        String
+  subject      String
+  topic        String
+  difficulty   String // "easy", "medium", "hard"
+  type         String // "mcq", "short", "long"
+  text         String
+  options      String[] // For MCQs
+  answer       String
+  marks        Int
+  schoolId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([schoolId])
+}
+
+model StudentBadge {
+  id           String   @id @default(uuid())
+  studentId    String
+  studentName  String
+  classSection String
+  badge        String
+  remark       String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([studentId])
+}
+
+
 
 

@@ -1,29 +1,59 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 
 interface AttendanceStudent {
   id: string;
   name: string;
-  rollNo: number;
+  rollNo: string;
   status: "Present" | "Absent" | "Late";
 }
 
 export default function AttendancePage() {
-  const [selectedClass, setSelectedClass] = useState("10A");
-  const [selectedDate, setSelectedDate] = useState("2026-06-19");
-  
-  const [students, setStudents] = useState<AttendanceStudent[]>([
-    { id: "S01", name: "Arjun Kumar", rollNo: 1, status: "Present" },
-    { id: "S02", name: "Deepak T.", rollNo: 2, status: "Present" },
-    { id: "S03", name: "Kavitha R.", rollNo: 3, status: "Present" },
-    { id: "S04", name: "Murugan S.", rollNo: 4, status: "Absent" },
-    { id: "S05", name: "Priya M.", rollNo: 5, status: "Present" },
-    { id: "S06", name: "Senthil K.", rollNo: 6, status: "Late" },
-  ]);
+  const { data: session } = useSession();
+  const schoolId = (session?.user as any)?.schoolId;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+  const [selectedClass, setSelectedClass] = useState("10A");
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
+  const [students, setStudents] = useState<AttendanceStudent[]>([]);
+  const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+
+  const fetchStudents = async () => {
+    if (!schoolId) return;
+    try {
+      setLoading(true);
+      // parse class and section
+      const clsNum = selectedClass.replace(/\D/g, "");
+      const secLetter = selectedClass.replace(/\d/g, "").toUpperCase();
+
+      const res = await fetch(`${API_URL}/api/students?schoolId=${schoolId}&class=${clsNum}&section=${secLetter}`);
+      const result = await res.json();
+      if (result.success && result.data) {
+        const studentList = result.data.map((s: any, idx: number) => ({
+          id: s.id,
+          name: s.user?.name || `Student ${idx + 1}`,
+          rollNo: s.rollNumber || `${clsNum}${secLetter}${String(idx + 1).padStart(2, '0')}`,
+          status: "Present" as const, // default
+        }));
+        setStudents(studentList);
+      } else {
+        setStudents([]);
+      }
+    } catch (err) {
+      console.error("Error loading students:", err);
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStudents();
+  }, [schoolId, selectedClass]);
 
   const handleStatusChange = (id: string, newStatus: AttendanceStudent["status"]) => {
     setStudents(
@@ -37,26 +67,46 @@ export default function AttendancePage() {
     setStudents(students.map((student) => ({ ...student, status: "Present" })));
   };
 
-  const handleSaveAttendance = () => {
-    const totalCount = students.length;
+  const handleSaveAttendance = async () => {
+    if (students.length === 0 || !schoolId) return;
+
     const presentCount = students.filter((s) => s.status === "Present").length;
     const absentCount = students.filter((s) => s.status === "Absent").length;
     const lateCount = students.filter((s) => s.status === "Late").length;
-    const attendancePercentage = Math.round((presentCount / totalCount) * 100);
+    const attendancePercentage = Math.round((presentCount / students.length) * 100);
 
-    setToast(
-      `✓ Attendance for Class ${selectedClass} on ${selectedDate} has been saved! Present: ${presentCount}, Absent: ${absentCount}, Late: ${lateCount} (${attendancePercentage}%). ${absentCount} parent notifications dispatched.`
-    );
+    const records = students.map((s) => ({
+      studentId: s.id,
+      schoolId: schoolId,
+      date: new Date(selectedDate),
+      status: s.status.toUpperCase(), // PRESENT, ABSENT, LATE
+      method: "Manual",
+    }));
 
-    setTimeout(() => {
-      setToast(null);
-    }, 5000);
+    try {
+      const res = await fetch(`${API_URL}/api/attendance`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ records }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setToast(
+          `✓ Attendance for Class ${selectedClass} on ${selectedDate} has been saved! Present: ${presentCount}, Absent: ${absentCount}, Late: ${lateCount} (${attendancePercentage}%). Parent notifications dispatched.`
+        );
+        setTimeout(() => {
+          setToast(null);
+        }, 5000);
+      }
+    } catch (err) {
+      console.error("Error saving attendance:", err);
+    }
   };
 
   const presentCount = students.filter((s) => s.status === "Present").length;
   const absentCount = students.filter((s) => s.status === "Absent").length;
   const lateCount = students.filter((s) => s.status === "Late").length;
-  const attendanceRate = Math.round((presentCount / students.length) * 100);
+  const attendanceRate = students.length > 0 ? Math.round((presentCount / students.length) * 100) : 0;
 
   return (
     <PortalLayout title="Daily Attendance Tracker" subtitle="Mark student attendance and dispatch instant parental absence alerts.">
@@ -129,55 +179,62 @@ export default function AttendancePage() {
         )}
 
         <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Roll No</th>
-                <th>Student Name</th>
-                <th className="text-center">Present</th>
-                <th className="text-center">Absent</th>
-                <th className="text-center">Late</th>
-              </tr>
-            </thead>
-            <tbody>
-              {students.map((student) => (
-                <tr key={student.id}>
-                  <td className="text-[var(--text-muted)] font-bold text-xs">{student.rollNo}</td>
-                  <td className="font-medium text-[var(--text-heading)]">{student.name}</td>
-                  <td className="text-center">
-                    <input
-                      type="radio"
-                      name={`attendance-${student.id}`}
-                      checked={student.status === "Present"}
-                      onChange={() => handleStatusChange(student.id, "Present")}
-                      className="accent-emerald-500 scale-125 cursor-pointer"
-                    />
-                  </td>
-                  <td className="text-center">
-                    <input
-                      type="radio"
-                      name={`attendance-${student.id}`}
-                      checked={student.status === "Absent"}
-                      onChange={() => handleStatusChange(student.id, "Absent")}
-                      className="accent-red-500 scale-125 cursor-pointer"
-                    />
-                  </td>
-                  <td className="text-center">
-                    <input
-                      type="radio"
-                      name={`attendance-${student.id}`}
-                      checked={student.status === "Late"}
-                      onChange={() => handleStatusChange(student.id, "Late")}
-                      className="accent-amber-500 scale-125 cursor-pointer"
-                    />
-                  </td>
+          {loading ? (
+            <div className="text-center py-8 text-xs text-[var(--text-muted)]">Loading roster checklist...</div>
+          ) : students.length > 0 ? (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Roll No</th>
+                  <th>Student Name</th>
+                  <th className="text-center">Present</th>
+                  <th className="text-center">Absent</th>
+                  <th className="text-center">Late</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {students.map((student) => (
+                  <tr key={student.id}>
+                    <td className="text-[var(--text-muted)] font-bold text-xs">{student.rollNo}</td>
+                    <td className="font-medium text-[var(--text-heading)]">{student.name}</td>
+                    <td className="text-center">
+                      <input
+                        type="radio"
+                        name={`attendance-${student.id}`}
+                        checked={student.status === "Present"}
+                        onChange={() => handleStatusChange(student.id, "Present")}
+                        className="accent-emerald-500 scale-125 cursor-pointer"
+                      />
+                    </td>
+                    <td className="text-center">
+                      <input
+                        type="radio"
+                        name={`attendance-${student.id}`}
+                        checked={student.status === "Absent"}
+                        onChange={() => handleStatusChange(student.id, "Absent")}
+                        className="accent-red-500 scale-125 cursor-pointer"
+                      />
+                    </td>
+                    <td className="text-center">
+                      <input
+                        type="radio"
+                        name={`attendance-${student.id}`}
+                        checked={student.status === "Late"}
+                        onChange={() => handleStatusChange(student.id, "Late")}
+                        className="accent-amber-500 scale-125 cursor-pointer"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center py-8 text-xs text-[var(--text-muted)] italic">
+              No students found in Class {selectedClass} for this school.
+            </div>
+          )}
         </div>
       </div>
     </PortalLayout>
   );
 }
-

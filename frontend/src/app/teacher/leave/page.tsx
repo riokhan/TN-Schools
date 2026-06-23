@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 
 interface LeaveRequest {
-  id: number;
+  id: string;
   type: string;
   duration: string;
   reason: string;
@@ -12,11 +13,20 @@ interface LeaveRequest {
   status: "Approved" | "Pending" | "Rejected";
 }
 
+interface Staff {
+  id: string;
+  name: string;
+  subject: string;
+}
+
 export default function LeaveRequestsPage() {
-  const [requests, setRequests] = useState<LeaveRequest[]>([
-    { id: 1, type: "Casual Leave", duration: "June 25, 2026 (1 Day)", reason: "Personal family function in Madurai", proxy: "Mrs. Kavitha S. (Tamil)", status: "Approved" },
-    { id: 2, type: "Medical Leave", duration: "May 12 - May 14, 2026 (3 Days)", reason: "Severe viral fever", proxy: "Mr. Rajan K. (Science)", status: "Approved" },
-  ]);
+  const { data: session } = useSession();
+  const schoolId = (session?.user as any)?.schoolId;
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  const [requests, setRequests] = useState<LeaveRequest[]>([]);
+  const [staffList, setStaffList] = useState<Staff[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const [quotas, setQuotas] = useState([
     { label: "Casual Leave", remaining: 4, total: 12, color: "text-amber-400" },
@@ -29,10 +39,63 @@ export default function LeaveRequestsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
-  const [proxy, setProxy] = useState("Mrs. Kavitha S. (Tamil)");
+  const [proxy, setProxy] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        // Fetch Leave Requests
+        const leaveRes = await fetch(`${API_URL}/api/teacher/leave${schoolId ? `?schoolId=${schoolId}` : ""}`);
+        const leaveData = await leaveRes.json();
+        if (leaveData.success && leaveData.data) {
+          setRequests(leaveData.data);
+          
+          // Calculate remaining quotas based on approved requests
+          let casualCount = 0;
+          let medicalCount = 0;
+          let earnedCount = 0;
+
+          leaveData.data.forEach((r: LeaveRequest) => {
+            if (r.status === "Approved") {
+              const daysMatch = r.duration.match(/(\d+)\s*Day/i);
+              const days = daysMatch ? parseInt(daysMatch[1]) : 1;
+              if (r.type === "Casual Leave") casualCount += days;
+              if (r.type === "Medical Leave") medicalCount += days;
+              if (r.type === "Earned Leave") earnedCount += days;
+            }
+          });
+
+          setQuotas([
+            { label: "Casual Leave", remaining: Math.max(0, 12 - casualCount), total: 12, color: "text-amber-400" },
+            { label: "Medical Leave", remaining: Math.max(0, 15 - medicalCount), total: 15, color: "text-blue-400" },
+            { label: "Earned Leave", remaining: Math.max(0, 20 - earnedCount), total: 20, color: "text-emerald-400" },
+          ]);
+        }
+
+        // Fetch Staff for Proxy Selection
+        const staffRes = await fetch(`${API_URL}/api/headmaster/staff${schoolId ? `?schoolId=${schoolId}` : ""}`);
+        const staffData = await staffRes.json();
+        if (staffData.success && staffData.data) {
+          setStaffList(staffData.data);
+          if (staffData.data.length > 0) {
+            setProxy(`${staffData.data[0].name} (${staffData.data[0].subject})`);
+          } else {
+            setProxy("Headmaster / Principal");
+          }
+        }
+      } catch (err) {
+        console.error("Error loading leave page data", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [schoolId, API_URL]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!startDate || !reason) return;
 
@@ -40,23 +103,32 @@ export default function LeaveRequestsPage() {
       ? `${startDate} (1 Day)`
       : `${startDate} to ${endDate}`;
 
-    const newRequest: LeaveRequest = {
-      id: Date.now(),
-      type: leaveType,
-      duration: durationStr,
-      reason,
-      proxy,
-      status: "Pending",
-    };
-
-    setRequests([newRequest, ...requests]);
-    setReason("");
-    setStartDate("");
-    setEndDate("");
-    setToast("✓ Leave request submitted successfully! Proxy teacher and Headmaster notified.");
-    setTimeout(() => {
-      setToast(null);
-    }, 4500);
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/leave`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: leaveType,
+          duration: durationStr,
+          reason,
+          proxy,
+          schoolId,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        setRequests([data.data, ...requests]);
+        setReason("");
+        setStartDate("");
+        setEndDate("");
+        setToast("✓ Leave request submitted successfully! Proxy teacher and Headmaster notified.");
+        setTimeout(() => {
+          setToast(null);
+        }, 4500);
+      }
+    } catch (err) {
+      console.error("Error submitting leave request", err);
+    }
   };
 
   return (
@@ -76,7 +148,7 @@ export default function LeaveRequestsPage() {
               </div>
               <div className="space-y-1">
                 <div className="progress-bar">
-                  <div className={`progress-fill bg-gradient-to-r from-amber-500 to-orange-500`} style={{ width: `${pct}%` }} />
+                  <div className="progress-fill bg-gradient-to-r from-amber-500 to-orange-500" style={{ width: `${pct}%` }} />
                 </div>
                 <div className="flex justify-between text-[10px] text-[var(--text-muted)]">
                   <span>Used: {q.total - q.remaining} days</span>
@@ -136,10 +208,20 @@ export default function LeaveRequestsPage() {
                 onChange={(e) => setProxy(e.target.value)}
                 className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               >
-                <option value="Mrs. Kavitha S. (Tamil)">Mrs. Kavitha S. (Tamil)</option>
-                <option value="Mr. Rajan K. (Science)">Mr. Rajan K. (Science)</option>
-                <option value="Mr. Prakash R. (Social Science)">Mr. Prakash R. (Social Science)</option>
-                <option value="Ms. Deepa N. (English)">Ms. Deepa N. (English)</option>
+                {staffList.length > 0 ? (
+                  staffList.map((st) => (
+                    <option key={st.id} value={`${st.name} (${st.subject})`}>
+                      {st.name} ({st.subject})
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Mrs. Kavitha S. (Tamil)">Mrs. Kavitha S. (Tamil)</option>
+                    <option value="Mr. Rajan K. (Science)">Mr. Rajan K. (Science)</option>
+                    <option value="Mr. Prakash R. (Social Science)">Mr. Prakash R. (Social Science)</option>
+                    <option value="Ms. Deepa N. (English)">Ms. Deepa N. (English)</option>
+                  </>
+                )}
               </select>
             </div>
 
@@ -174,40 +256,48 @@ export default function LeaveRequestsPage() {
             </div>
           )}
 
-          <div className="overflow-x-auto">
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>Leave Type</th>
-                  <th>Period Details</th>
-                  <th>Reason</th>
-                  <th>Proxy Teacher</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {requests.map((req) => (
-                  <tr key={req.id}>
-                    <td className="font-bold text-[var(--text-heading)] text-xs">{req.type}</td>
-                    <td>{req.duration}</td>
-                    <td className="text-[var(--text-muted)] text-xs max-w-[150px] truncate">{req.reason}</td>
-                    <td>{req.proxy}</td>
-                    <td>
-                      <span className={`badge ${
-                        req.status === "Approved"
-                          ? "badge-green"
-                          : req.status === "Pending"
-                          ? "badge-yellow"
-                          : "badge-red"
-                      }`}>
-                        {req.status}
-                      </span>
-                    </td>
+          {loading ? (
+            <div className="text-center py-8 text-xs text-[var(--text-muted)]">Loading leave history...</div>
+          ) : requests.length === 0 ? (
+            <div className="text-center py-8 text-xs text-[var(--text-muted)]">No leave requests found.</div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="data-table">
+                <thead>
+                  <tr>
+                    <th>Leave Type</th>
+                    <th>Period Details</th>
+                    <th>Reason</th>
+                    <th>Proxy Teacher</th>
+                    <th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {requests.map((req) => (
+                    <tr key={req.id}>
+                      <td className="font-bold text-[var(--text-heading)] text-xs">{req.type}</td>
+                      <td>{req.duration}</td>
+                      <td className="text-[var(--text-muted)] text-xs max-w-[150px] truncate">{req.reason}</td>
+                      <td>{req.proxy}</td>
+                      <td>
+                        <span
+                          className={`badge ${
+                            req.status === "Approved"
+                              ? "badge-green"
+                              : req.status === "Pending"
+                              ? "badge-yellow"
+                              : "badge-red"
+                          }`}
+                        >
+                          {req.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </PortalLayout>
