@@ -892,8 +892,14 @@ h1, h2, h3, h4, h5, h6 {
 :root:not(.dark) .hover\:bg-slate-800\/50:hover,
 :root:not(.dark) .hover\:bg-slate-800:hover,
 :root:not(.dark) .hover\:bg-slate-900\/80:hover,
-:root:not(.dark) .hover\:bg-slate-900:hover {
-  background-color: #f8fafc !important;
+:root:not(.dark) .hover\:bg-slate-900:hover,
+:root:not(.dark) [class*="hover:bg-slate-"]:hover {
+  background-color: #f1f5f9 !important;
+}
+
+:root:not(.dark) .main-content .bg-gradient-to-r {
+  background: #ffffff !important;
+  border-color: var(--border) !important;
 }
 
 /* Light mode text readability corrections for hardcoded dark-theme selectors */
