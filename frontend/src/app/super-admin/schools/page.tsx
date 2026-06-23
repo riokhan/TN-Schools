@@ -1,0 +1,269 @@
+"use client";
+import { useState } from "react";
+import PortalLayout from "@/components/PortalLayout";
+
+interface School {
+  id: number;
+  name: string;
+  dise: string;
+  district: string;
+  block: string;
+  type: "GHS" | "GHSS" | "Middle" | "Primary";
+  medium: "Tamil" | "English" | "Both";
+  hm: string;
+  students: number;
+  teachers: number;
+  status: "active" | "inactive";
+}
+
+const DISTRICTS = ["Coimbatore","Chennai","Madurai","Salem","Trichy","Tirunelveli","Erode","Vellore","Thanjavur","Dindigul"];
+const TYPES = ["GHS","GHSS","Middle","Primary"] as const;
+const MEDIUMS = ["Tamil","English","Both"] as const;
+
+const initialSchools: School[] = [
+  { id:1, name:"GHSS Coimbatore North", dise:"33012345", district:"Coimbatore", block:"Coimbatore South", type:"GHSS", medium:"Both", hm:"Mr. Venkatesh R.", students:1240, teachers:48, status:"active" },
+  { id:2, name:"GHS Madurai East", dise:"35089012", district:"Madurai", block:"Madurai East", type:"GHS", medium:"Tamil", hm:"Mrs. Anitha R.", students:876, teachers:32, status:"active" },
+  { id:3, name:"GHS Salem West", dise:"43002567", district:"Salem", block:"Salem Block", type:"GHS", medium:"Tamil", hm:"Mr. Ramesh K.", students:654, teachers:26, status:"active" },
+  { id:4, name:"GHSS Chennai Anna Nagar", dise:"01078923", district:"Chennai", block:"T. Nagar", type:"GHSS", medium:"English", hm:"Mrs. Sujatha M.", students:1850, teachers:72, status:"active" },
+  { id:5, name:"Middle School Erode", dise:"21034501", district:"Erode", block:"Erode Town", type:"Middle", medium:"Tamil", hm:"Mr. Durai S.", students:420, teachers:18, status:"active" },
+  { id:6, name:"GHS Vellore South", dise:"37056789", district:"Vellore", block:"Vellore Block", type:"GHS", medium:"Tamil", hm:"—", students:560, teachers:22, status:"inactive" },
+  { id:7, name:"GHSS Trichy Central", dise:"45091234", district:"Trichy", block:"Trichy Block", type:"GHSS", medium:"Both", hm:"Mr. Kumar R.", students:1560, teachers:60, status:"active" },
+  { id:8, name:"GHS Thanjavur", dise:"56012300", district:"Thanjavur", block:"Thanjavur Block", type:"GHS", medium:"Tamil", hm:"Mrs. Kavitha P.", students:730, teachers:28, status:"active" },
+];
+
+const typeColors: Record<School["type"], string> = {
+  GHSS:"text-violet-400 bg-violet-500/10 border-violet-500/30",
+  GHS:"text-blue-400 bg-blue-500/10 border-blue-500/30",
+  Middle:"text-amber-400 bg-amber-500/10 border-amber-500/30",
+  Primary:"text-emerald-400 bg-emerald-500/10 border-emerald-500/30",
+};
+
+const emptyForm = { name:"", dise:"", district:"Coimbatore", block:"", type:"GHS" as School["type"], medium:"Tamil" as School["medium"], hm:"", students:0, teachers:0 };
+
+export default function SchoolManagement() {
+  const [schools, setSchools] = useState<School[]>(initialSchools);
+  const [search, setSearch] = useState("");
+  const [filterDist, setFilterDist] = useState("All");
+  const [filterType, setFilterType] = useState("All");
+  const [showModal, setShowModal] = useState(false);
+  const [editSchool, setEditSchool] = useState<School | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [viewSchool, setViewSchool] = useState<School | null>(null);
+
+  const filtered = schools.filter((s) => {
+    const matchSearch = s.name.toLowerCase().includes(search.toLowerCase()) ||
+      s.dise.includes(search) || s.hm.toLowerCase().includes(search.toLowerCase());
+    const matchDist = filterDist === "All" || s.district === filterDist;
+    const matchType = filterType === "All" || s.type === filterType;
+    return matchSearch && matchDist && matchType;
+  });
+
+  const openAdd = () => { setEditSchool(null); setForm(emptyForm); setShowModal(true); };
+  const openEdit = (s: School) => { setEditSchool(s); setForm({ name:s.name, dise:s.dise, district:s.district, block:s.block, type:s.type, medium:s.medium, hm:s.hm, students:s.students, teachers:s.teachers }); setShowModal(true); };
+  const saveSchool = () => {
+    if (!form.name || !form.dise) return;
+    if (editSchool) {
+      setSchools((prev) => prev.map((s) => s.id === editSchool.id ? { ...s, ...form } : s));
+    } else {
+      setSchools((prev) => [...prev, { id:Date.now(), ...form, status:"active" }]);
+    }
+    setShowModal(false);
+  };
+  const deleteSchool = (id: number) => { setSchools((prev) => prev.filter((s) => s.id !== id)); if (viewSchool?.id === id) setViewSchool(null); };
+  const toggleStatus = (id: number) => setSchools((prev) => prev.map((s) => s.id === id ? { ...s, status: s.status === "active" ? "inactive" : "active" } : s));
+
+  const totalStudents = schools.reduce((a, s) => a + s.students, 0);
+  const totalTeachers = schools.reduce((a, s) => a + s.teachers, 0);
+  const active = schools.filter((s) => s.status === "active").length;
+
+  return (
+    <PortalLayout>
+      {/* Header */}
+      <div className="mb-6 flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-xl font-bold text-white">🏫 School Management</h1>
+          <p className="text-xs text-slate-400 mt-1">Add, edit, and manage all government schools. Assign headmasters and track school status.</p>
+        </div>
+        <div className="flex gap-2">
+          <button className="text-xs font-bold bg-slate-700 hover:bg-slate-600 text-white px-3 py-2 rounded-lg transition border border-slate-600">⬆️ Bulk Import</button>
+          <button onClick={openAdd} className="text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 rounded-lg transition">+ Add School</button>
+        </div>
+      </div>
+
+      {/* Summary KPIs */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {[
+          { label:"Total Schools", value:schools.length.toLocaleString(), icon:"🏫", color:"text-blue-400" },
+          { label:"Active Schools", value:active.toLocaleString(), icon:"✅", color:"text-emerald-400" },
+          { label:"Total Students", value:totalStudents.toLocaleString(), icon:"🎓", color:"text-violet-400" },
+          { label:"Total Teachers", value:totalTeachers.toLocaleString(), icon:"📚", color:"text-amber-400" },
+        ].map((k) => (
+          <div key={k.label} className="glass rounded-xl p-4 border border-slate-800">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="text-2xl">{k.icon}</span>
+              <span className="text-xs text-slate-500">{k.label}</span>
+            </div>
+            <div className={`text-2xl font-extrabold ${k.color}`}>{k.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-3 mb-4 items-center">
+        <input value={search} onChange={(e) => setSearch(e.target.value)}
+          placeholder="🔍 Search school, DISE code, HM..."
+          className="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 w-64 focus:outline-none focus:border-emerald-500" />
+        <select value={filterDist} onChange={(e) => setFilterDist(e.target.value)}
+          className="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+          <option value="All">All Districts</option>
+          {DISTRICTS.map((d) => <option key={d}>{d}</option>)}
+        </select>
+        <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
+          className="bg-slate-900 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+          <option value="All">All Types</option>
+          {TYPES.map((t) => <option key={t}>{t}</option>)}
+        </select>
+        <span className="text-[10px] text-slate-500 ml-auto">{filtered.length} schools</span>
+      </div>
+
+      {/* Schools Table */}
+      <div className="glass rounded-2xl overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
+            <thead>
+              <tr className="border-b border-slate-800 text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                <th className="px-4 py-3">School</th>
+                <th className="px-4 py-3">DISE Code</th>
+                <th className="px-4 py-3">Type</th>
+                <th className="px-4 py-3">District / Block</th>
+                <th className="px-4 py-3">Medium</th>
+                <th className="px-4 py-3">Headmaster</th>
+                <th className="px-4 py-3">Students</th>
+                <th className="px-4 py-3">Status</th>
+                <th className="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((s) => (
+                <tr key={s.id} className="border-b border-slate-800/40 hover:bg-slate-900/40 transition-colors cursor-pointer" onClick={() => setViewSchool(s)}>
+                  <td className="px-4 py-3">
+                    <div className="text-xs font-semibold text-white">{s.name}</div>
+                  </td>
+                  <td className="px-4 py-3 text-xs text-slate-400 font-mono">{s.dise}</td>
+                  <td className="px-4 py-3">
+                    <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${typeColors[s.type]}`}>{s.type}</span>
+                  </td>
+                  <td className="px-4 py-3 text-[10px] text-slate-400">
+                    <div>{s.district}</div>
+                    <div className="text-slate-600">{s.block}</div>
+                  </td>
+                  <td className="px-4 py-3 text-[10px] text-slate-400">{s.medium}</td>
+                  <td className="px-4 py-3 text-[10px] text-slate-400">{s.hm || "—"}</td>
+                  <td className="px-4 py-3 text-xs font-bold text-white">{s.students.toLocaleString()}</td>
+                  <td className="px-4 py-3">
+                    <button onClick={(e) => { e.stopPropagation(); toggleStatus(s.id); }}
+                      className={`relative w-10 h-5 rounded-full transition-colors ${s.status === "active" ? "bg-emerald-500" : "bg-slate-700"}`}>
+                      <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${s.status === "active" ? "translate-x-5" : "translate-x-0.5"}`} />
+                    </button>
+                  </td>
+                  <td className="px-4 py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex gap-2 justify-end">
+                      <button onClick={() => openEdit(s)} className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold">Edit</button>
+                      <button onClick={() => deleteSchool(s.id)} className="text-[10px] text-red-400 hover:text-red-300 font-semibold">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* School Detail Drawer */}
+      {viewSchool && (
+        <div className="fixed inset-y-0 right-0 w-80 bg-slate-900 border-l border-slate-700 p-6 z-40 overflow-y-auto shadow-2xl">
+          <button onClick={() => setViewSchool(null)} className="text-xs text-slate-500 hover:text-white mb-4">✕ Close</button>
+          <h3 className="text-base font-bold text-white mb-1">{viewSchool.name}</h3>
+          <p className="text-[10px] text-slate-500 font-mono mb-4">DISE: {viewSchool.dise}</p>
+          <div className="space-y-3 text-xs">
+            {[
+              ["Type", viewSchool.type], ["Medium", viewSchool.medium],
+              ["District", viewSchool.district], ["Block", viewSchool.block],
+              ["Headmaster", viewSchool.hm || "Not Assigned"],
+              ["Students", viewSchool.students.toLocaleString()],
+              ["Teachers", viewSchool.teachers.toLocaleString()],
+              ["Status", viewSchool.status.toUpperCase()],
+            ].map(([k, v]) => (
+              <div key={k} className="flex justify-between border-b border-slate-800 pb-2">
+                <span className="text-slate-500">{k}</span>
+                <span className="text-white font-semibold">{v}</span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 flex gap-2">
+            <button onClick={() => { openEdit(viewSchool); setViewSchool(null); }}
+              className="flex-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 py-2 rounded-lg transition">Edit</button>
+            <button onClick={() => deleteSchool(viewSchool.id)}
+              className="text-xs font-bold text-red-400 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 px-3 py-2 rounded-lg transition">Delete</button>
+          </div>
+        </div>
+      )}
+
+      {/* Add/Edit Modal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 className="text-base font-bold text-white mb-5">{editSchool ? "✏️ Edit School" : "➕ Add New School"}</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                { label:"School Name", key:"name", placeholder:"Full school name", span:true },
+                { label:"DISE Code", key:"dise", placeholder:"e.g. 33012345" },
+                { label:"Block", key:"block", placeholder:"Block name" },
+                { label:"Headmaster Name", key:"hm", placeholder:"HM full name" },
+              ].map(({ label, key, placeholder, span }) => (
+                <div key={key} className={span ? "col-span-2" : ""}>
+                  <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase">{label}</label>
+                  <input value={(form as any)[key]} onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
+                    placeholder={placeholder}
+                    className="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500" />
+                </div>
+              ))}
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase">District</label>
+                <select value={form.district} onChange={(e) => setForm((f) => ({ ...f, district: e.target.value }))}
+                  className="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                  {DISTRICTS.map((d) => <option key={d}>{d}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Type</label>
+                <select value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value as any }))}
+                  className="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                  {TYPES.map((t) => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Medium</label>
+                <select value={form.medium} onChange={(e) => setForm((f) => ({ ...f, medium: e.target.value as any }))}
+                  className="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500">
+                  {MEDIUMS.map((m) => <option key={m}>{m}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 block mb-1 uppercase">Students</label>
+                <input type="number" value={form.students} onChange={(e) => setForm((f) => ({ ...f, students: +e.target.value }))}
+                  className="w-full bg-slate-800 border border-slate-700 text-white text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-emerald-500" />
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => setShowModal(false)} className="flex-1 text-xs font-bold text-slate-400 bg-slate-800 hover:bg-slate-700 py-2 rounded-lg transition border border-slate-700">Cancel</button>
+              <button onClick={saveSchool} className="flex-1 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 py-2 rounded-lg transition">
+                {editSchool ? "Save Changes" : "Add School"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </PortalLayout>
+  );
+}

@@ -390,10 +390,29 @@ export const roleConfigs: Record<string, PortalConfig> = {
     accentColor: "#475569",
     navItems: [
       { label: "System Dashboard", href: "/super-admin", icon: "📊" },
+
+      { label: "People & Access", href: "#", icon: "" },
+      { label: "User Management", href: "/super-admin/users", icon: "👥" },
+      { label: "Role & Permissions", href: "/super-admin/roles", icon: "🔐" },
+      { label: "School Management", href: "/super-admin/schools", icon: "🏫" },
+      { label: "Headmaster Management", href: "/super-admin/headmasters", icon: "👤" },
+
+      { label: "Academics & Content", href: "#", icon: "" },
+      { label: "Syllabus Management", href: "/super-admin/syllabus", icon: "📚" },
+      { label: "Material Library", href: "/super-admin/materials", icon: "📦" },
+      { label: "Department Modules", href: "/super-admin/modules", icon: "🗓️" },
+
+      { label: "System & AI", href: "#", icon: "" },
+      { label: "Feature Toggles", href: "/super-admin/features", icon: "🔧" },
+      { label: "AI Integration Setup", href: "/super-admin/ai-config", icon: "🤖" },
+      { label: "Data Flow Monitor", href: "/super-admin/data-flow", icon: "🔄" },
+
+      { label: "Governance", href: "#", icon: "" },
       { label: "Manage Ministers", href: "/super-admin/ministers", icon: "🏛️" },
       { label: "Page Management", href: "/super-admin/pages", icon: "📄" },
-      { label: "Feature Toggles", href: "/super-admin/features", icon: "🔧" },
-      { label: "User Roles", href: "/super-admin/users", icon: "👥" },
+      { label: "Announcements", href: "/super-admin/announcements", icon: "📢" },
+
+      { label: "Audit & Config", href: "#", icon: "" },
       { label: "System Logs", href: "/super-admin/logs", icon: "📋" },
       { label: "Portal Settings", href: "/super-admin/settings", icon: "⚙️" },
     ],
