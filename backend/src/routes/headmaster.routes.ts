@@ -265,6 +265,19 @@ router.post('/parents/bulk', async (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/headmaster/parents/:id — Update parent officer
+router.put('/parents/:id', async (req: Request, res: Response) => {
+  try {
+    const parent = await prisma.headmasterParent.update({
+      where: { id: req.params.id },
+      data: req.body,
+    });
+    res.json({ success: true, data: parent });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 // DELETE /api/headmaster/parents/:id — Remove parent officer
 router.delete('/parents/:id', async (req: Request, res: Response) => {
   try {
