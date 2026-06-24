@@ -64,6 +64,13 @@ export default function StaffManagementPage() {
   const [previewTeachers, setPreviewTeachers] = useState<ParsedPreviewTeacher[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [staffToEdit, setStaffToEdit] = useState<StaffMember | null>(null);
+  const [editForm, setEditForm] = useState<Partial<StaffMember>>({});
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
@@ -239,15 +246,63 @@ export default function StaffManagementPage() {
   };
 
   // ── Delete staff member ─────────────────────────────────────────
-  const handleDelete = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!staffToDelete?.id) return;
     try {
-      await fetch(`${API_BASE}/api/headmaster/staff/${id}`, { method: "DELETE" });
-      setStaff((prev) => prev.filter((s) => s.id !== id));
+      await fetch(`${API_BASE}/api/headmaster/staff/${staffToDelete.id}`, { method: "DELETE" });
+      setStaff((prev) => prev.filter((s) => s.id !== staffToDelete.id));
       showToast("🗑️ Staff member removed.");
     } catch {
       showToast("🔴 Could not delete — server error.", "error");
+    } finally {
+      setStaffToDelete(null);
     }
   };
+
+  // ── Edit staff member ─────────────────────────────────────────
+  const openEditModal = (s: StaffMember) => {
+    setStaffToEdit(s);
+    setEditForm({
+      name: s.name,
+      emisId: s.emisId,
+      subject: s.subject,
+      phone: s.phone,
+      email: s.email,
+      attendance: s.attendance,
+      performance: s.performance,
+      leaveUsed: s.leaveUsed,
+      password: s.password
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!staffToEdit?.id) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch(`${API_BASE}/api/headmaster/staff/${staffToEdit.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editForm),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`🎉 ${editForm.name} updated successfully!`);
+        setIsEditModalOpen(false);
+        fetchStaff();
+      } else {
+        showToast(`❌ Could not update: ${json.error}`, "error");
+      }
+    } catch {
+      showToast("🔴 Server offline — could not update record.", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const totalPages = Math.ceil(staff.length / pageSize);
+  const paginatedStaff = staff.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <PortalLayout
@@ -301,6 +356,7 @@ export default function StaffManagementPage() {
         {staff.length === 0 && !isLoading ? (
           <div className="text-center py-12 text-slate-500 text-xs">No staff records found. Click "+ Add Teacher" to get started.</div>
         ) : (
+          <>
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
@@ -315,9 +371,9 @@ export default function StaffManagementPage() {
                 </tr>
               </thead>
               <tbody>
-                {staff.map((s) => (
+                {paginatedStaff.map((s) => (
                   <tr key={s.id || s.emisId}>
-                    <td className="font-bold text-white text-xs py-3">
+                    <td className="font-bold text-green text-xs py-3">
                       <div>{s.name}</div>
                       <div className="text-[10px] text-slate-400 font-semibold mt-1 space-x-2 flex flex-wrap">
                         <span>ID: {s.emisId || "N/A"}</span>
@@ -346,22 +402,150 @@ export default function StaffManagementPage() {
                       {s.createdAt ? new Date(s.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                     </td>
                     <td>
-                      {s.id && (
+                      <div className="flex gap-2">
                         <button
-                          onClick={() => handleDelete(s.id!)}
-                          className="text-[10px] text-red-400 hover:text-red-300 font-semibold border border-red-500/20 px-2 py-1 rounded-lg transition-colors"
+                          onClick={() => openEditModal(s)}
+                          className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold border border-blue-500/20 px-2 py-1 rounded-lg transition-colors"
                         >
-                          ✕ Remove
+                          ✎ Edit
                         </button>
-                      )}
+                        {s.id && (
+                          <button
+                            onClick={() => setStaffToDelete(s)}
+                            className="text-[10px] text-red-400 hover:text-red-300 font-semibold border border-red-500/20 px-2 py-1 rounded-lg transition-colors"
+                          >
+                            ✕ Remove
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center mt-4">
+              <span className="text-xs text-slate-400">
+                Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, staff.length)} of {staff.length} entries
+              </span>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 bg-slate-800/50 hover:bg-slate-700 disabled:opacity-50 text-slate-300 text-xs rounded-lg transition-colors border border-slate-700"
+                >
+                  Previous
+                </button>
+                <div className="px-3 py-1 bg-slate-900/50 text-slate-400 text-xs rounded-lg border border-slate-800">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 bg-slate-800/50 hover:bg-slate-700 disabled:opacity-50 text-slate-300 text-xs rounded-lg transition-colors border border-slate-700"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {staffToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-3xl p-6 relative bg-white border border-slate-200 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Remove Staff Member?</h3>
+            <p className="text-sm text-slate-600 mb-6">
+              Are you sure you want to remove <strong>{staffToDelete.name}</strong> from the registry? This action cannot be undone.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setStaffToDelete(null)}
+                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-colors shadow-md"
+              >
+                Yes, Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Staff Modal */}
+      {isEditModalOpen && staffToEdit && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl rounded-3xl p-6 relative bg-white border border-slate-200 shadow-2xl">
+            <div className="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-800">✎ Edit Staff Member</h3>
+              <button onClick={() => setIsEditModalOpen(false)} className="text-slate-500 hover:text-slate-800 text-xs font-semibold">✕ Close</button>
+            </div>
+            <form onSubmit={handleEditSubmit} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Full Name</label>
+                  <input type="text" required value={editForm.name || ""} onChange={(e) => setEditForm({...editForm, name: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">EMIS ID (Cannot be changed)</label>
+                  <input type="text" disabled value={editForm.emisId || ""} className="w-full bg-slate-200 border border-slate-300 rounded-xl px-3 py-1.5 text-xs text-slate-600 cursor-not-allowed" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Subject</label>
+                  <select value={editForm.subject || ""} onChange={(e) => setEditForm({...editForm, subject: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500">
+                    <option value="Mathematics">Mathematics</option><option value="Science">Science</option><option value="English">English</option><option value="Tamil">Tamil</option><option value="Social Science">Social Science</option><option value="Computer Science">Computer Science</option><option value="Physical Education">Physical Education</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Performance Index</label>
+                  <select value={editForm.performance || "Good"} onChange={(e) => setEditForm({...editForm, performance: e.target.value as any})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500">
+                    <option value="Excellent">Excellent</option><option value="Good">Good</option><option value="Average">Average</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Phone Number</label>
+                  <input type="text" value={editForm.phone || ""} onChange={(e) => setEditForm({...editForm, phone: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Email Address</label>
+                  <input type="email" value={editForm.email || ""} onChange={(e) => setEditForm({...editForm, email: e.target.value})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Attendance Rate (%)</label>
+                  <input type="number" min="0" max="100" value={editForm.attendance || 0} onChange={(e) => setEditForm({...editForm, attendance: parseFloat(e.target.value) || 0})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Leave Balance Used</label>
+                  <input type="number" min="0" value={editForm.leaveUsed || 0} onChange={(e) => setEditForm({...editForm, leaveUsed: parseInt(e.target.value, 10) || 0})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Update Password</label>
+                <input type="text" value={editForm.password || ""} onChange={(e) => setEditForm({...editForm, password: e.target.value})} placeholder="Leave blank to keep current password" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500" />
+              </div>
+              <button type="submit" disabled={isSaving} className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2 flex items-center justify-center gap-2">
+                {isSaving ? <><div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Saving...</> : "💾 Save Changes"}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add teacher modal */}
       {isAddModalOpen && (
@@ -393,7 +577,7 @@ export default function StaffManagementPage() {
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-100 sticky top-0">
                         <th className="p-3 text-slate-700 font-semibold">Teacher Name</th>
-                        <th className="p-3 text-slate-700 font-semibold">EMIS ID</th>
+                        <th className="p-3 text-slate-700 font-semibold">ID</th>
                         <th className="p-3 text-slate-700 font-semibold">Subject</th>
                         <th className="p-3 text-slate-700 font-semibold">Phone</th>
                         <th className="p-3 text-slate-700 font-semibold">Email</th>
@@ -459,7 +643,7 @@ export default function StaffManagementPage() {
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">EMIS ID</label>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">ID</label>
                       <input type="text" required value={newEmisId} onChange={(e) => setNewEmisId(e.target.value)}
                         placeholder="e.g. TCH206"
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors" />

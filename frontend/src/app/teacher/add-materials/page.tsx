@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface Material {
   id: string;
@@ -99,18 +100,160 @@ export default function AddMaterialsPage() {
     }
   };
 
+  const handleDownload = (material: Material) => {
+    const title = material.title;
+    const category = material.category;
+    const classSection = material.classSection;
+    const size = material.size;
+    const date = material.date;
+    const format = material.format;
+
+    // Create a dynamic minimal PDF file structure
+    const pdfContent = `%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.275 841.89] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 350 >>
+stream
+BT
+/F1 22 Tf
+50 750 Td
+(Tamil Nadu School Education Department) Tj
+/F1 14 Tf
+0 -40 Td
+(STUDY MATERIAL RESOURCE) Tj
+0 -30 Td
+(Title: ${title}) Tj
+0 -25 Td
+(Category: ${category}) Tj
+0 -25 Td
+(Class Section: ${classSection}) Tj
+0 -25 Td
+(Format: ${format} | Size: ${size}) Tj
+0 -25 Td
+(Uploaded Date: ${date}) Tj
+0 -40 Td
+(This is an official smart learning resource generated for students.) Tj
+ET
+endstream
+endobj
+xref
+0 5
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000282 00000 n 
+trailer
+<< /Size 5 /Root 1 0 R >>
+startxref
+483
+%%EOF`;
+
+    const blob = new Blob([pdfContent], { type: "application/pdf" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${title.toLowerCase().replace(/\s+/g, "_")}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    Swal.fire({
+      title: "Downloading...",
+      text: `Your resource "${title}" is downloading.`,
+      icon: "success",
+      timer: 1500,
+      showConfirmButton: false,
+      background: "#ffffff",
+      color: "#1a1a2e",
+      toast: true,
+      position: "top-end",
+      customClass: {
+        popup: "rounded-xl border border-[#e5e7eb]"
+      }
+    });
+  };
+
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this resource?")) return;
+    const result = await Swal.fire({
+      title: "Delete Resource?",
+      text: "Are you sure you want to permanently delete this study material?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete it",
+      cancelButtonText: "No, cancel",
+      background: "#ffffff",
+      color: "#1a1a2e",
+      confirmButtonColor: "#E84400",
+      cancelButtonColor: "#3D3580",
+      buttonsStyling: true,
+      customClass: {
+        popup: "rounded-2xl border border-[#e5e7eb]",
+        title: "text-lg font-bold text-[#111827] font-sans",
+        htmlContainer: "text-sm text-[#475569] font-sans",
+        confirmButton: "rounded-xl px-4 py-2 text-xs font-bold text-white",
+        cancelButton: "rounded-xl px-4 py-2 text-xs font-bold text-white",
+      }
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`${API_URL}/api/teacher/materials/${id}`, {
         method: "DELETE",
       });
-      const result = await res.json();
-      if (result.success) {
+      const resultData = await res.json();
+      if (resultData.success) {
         setMaterials(materials.filter((m) => m.id !== id));
+        Swal.fire({
+          title: "Deleted!",
+          text: "The resource has been deleted successfully.",
+          icon: "success",
+          timer: 2000,
+          showConfirmButton: false,
+          background: "#ffffff",
+          color: "#1a1a2e",
+          customClass: {
+            popup: "rounded-2xl border border-[#e5e7eb]",
+            title: "text-base font-bold text-[#111827] font-sans",
+            htmlContainer: "text-xs text-[#475569] font-sans"
+          }
+        });
+      } else {
+        Swal.fire({
+          title: "Error!",
+          text: resultData.error || "Failed to delete the resource.",
+          icon: "error",
+          background: "#ffffff",
+          color: "#1a1a2e",
+          confirmButtonColor: "#3D3580",
+          customClass: {
+            popup: "rounded-2xl border border-[#e5e7eb]"
+          }
+        });
       }
     } catch (err) {
       console.error("Error deleting material:", err);
+      Swal.fire({
+        title: "Error!",
+        text: "An unexpected error occurred while deleting.",
+        icon: "error",
+        background: "#ffffff",
+        color: "#1a1a2e",
+        confirmButtonColor: "#3D3580",
+        customClass: {
+          popup: "rounded-2xl border border-[#e5e7eb]"
+        }
+      });
     }
   };
 
@@ -245,7 +388,10 @@ export default function AddMaterialsPage() {
                   </div>
 
                   <div className="flex items-center gap-2 self-end sm:self-auto">
-                    <button className="p-2 bg-[var(--bg-card)] hover:bg-slate-700 text-[var(--text-heading)] rounded-lg text-xs transition-colors border border-[var(--border)]">
+                    <button
+                      onClick={() => handleDownload(m)}
+                      className="p-2 bg-[var(--bg-card)] hover:bg-slate-700 text-[var(--text-heading)] rounded-lg text-xs transition-colors border border-[var(--border)]"
+                    >
                       ⬇ Download
                     </button>
                     <button

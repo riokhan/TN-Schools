@@ -1,5 +1,16 @@
+"use client";
+import React, { useState, useEffect } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
+const getApiBase = () => {
+  let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  return url;
+};
+
+const API_BASE = getApiBase();
 
 const subjects = [
   { name: "Physics", progress: 75, color: "#3b82f6", icon: "⚛️" },
@@ -54,8 +65,25 @@ const streamKnowledge = [
 ];
 
 export default function HigherSecondaryDashboard() {
+  const [student, setStudent] = useState<any>(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/students`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data.length > 0) {
+          setStudent(json.data[0]);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, []);
+
+  const subtitle = student 
+    ? `Welcome, ${student.user.name} · Class ${student.class} ${student.section} Stream · Target: Medical Colleges`
+    : "Loading student data...";
+
   return (
-    <PortalLayout>
+    <PortalLayout subtitle={subtitle}>
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[

@@ -379,6 +379,30 @@ router.post('/staff/bulk', async (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/headmaster/staff/:id — Update staff member
+router.put('/staff/:id', async (req: Request, res: Response) => {
+  try {
+    const { name, subject, phone, email, attendance, performance, leaveUsed, password, schoolId } = req.body;
+    const staff = await prisma.headmasterStaff.update({
+      where: { id: req.params.id },
+      data: {
+        name: name !== undefined ? name : undefined,
+        subject: subject !== undefined ? subject : undefined,
+        phone: phone !== undefined ? phone : undefined,
+        email: email !== undefined ? email : undefined,
+        attendance: attendance !== undefined ? attendance : undefined,
+        performance: performance !== undefined ? performance : undefined,
+        leaveUsed: leaveUsed !== undefined ? leaveUsed : undefined,
+        password: password !== undefined ? password : undefined,
+        schoolId: schoolId !== undefined ? schoolId : undefined,
+      }
+    });
+    res.json({ success: true, data: staff });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 // DELETE /api/headmaster/staff/:id — Remove staff member
 router.delete('/staff/:id', async (req: Request, res: Response) => {
   try {
@@ -431,6 +455,32 @@ router.post('/temp-staff/bulk', async (req: Request, res: Response) => {
     }));
     const result = await prisma.headmasterTempStaff.createMany({ data: records, skipDuplicates: false });
     res.status(201).json({ success: true, created: result.count });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// PUT /api/headmaster/temp-staff/:id
+router.put('/temp-staff/:id', async (req: Request, res: Response) => {
+  try {
+    const { name, role, agency, joined, phone, email, duration, salary, status, password, schoolId } = req.body;
+    const staff = await prisma.headmasterTempStaff.update({
+      where: { id: req.params.id },
+      data: {
+        name: name !== undefined ? name : undefined,
+        role: role !== undefined ? role : undefined,
+        agency: agency !== undefined ? agency : undefined,
+        joined: joined !== undefined ? joined : undefined,
+        phone: phone !== undefined ? phone : undefined,
+        email: email !== undefined ? email : undefined,
+        duration: duration !== undefined ? duration : undefined,
+        salary: salary !== undefined ? salary : undefined,
+        status: status !== undefined ? status : undefined,
+        password: password !== undefined ? password : undefined,
+        schoolId: schoolId !== undefined ? schoolId : undefined,
+      }
+    });
+    res.json({ success: true, data: staff });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
   }
