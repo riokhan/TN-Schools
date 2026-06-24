@@ -425,7 +425,17 @@ export default function HomePage() {
             style={{ display: "flex", gap: "14px", justifyContent: "center", flexWrap: "wrap" }}
           >
             {session ? (
-              <Link href={`/${(session.user as any)?.role?.toLowerCase() || "student"}`} id="hero-goto-portal"
+              <Link
+                href={
+                  (() => {
+                    const role = (session.user as any)?.role?.toUpperCase() || "STUDENT";
+                    if (role === "SUPERADMIN") return "/super-admin";
+                    if (role === "BEO") return "/block-education-officer";
+                    if (role === "DEO") return "/district-education-officer";
+                    return `/${role.toLowerCase()}`;
+                  })()
+                }
+                id="hero-goto-portal"
                 style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "linear-gradient(135deg, #F07800, #E84400)", color: "#ffffff", padding: "13px 30px", borderRadius: "10px", textDecoration: "none", fontWeight: 700, fontSize: "14px", boxShadow: "0 4px 18px rgba(240,120,0,0.35)", transition: "all 0.2s" }}
               >
                 🚀 {text.heroBtnGo}
