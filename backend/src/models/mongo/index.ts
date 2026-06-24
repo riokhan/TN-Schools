@@ -52,21 +52,42 @@ export const Portfolio = mongoose.model<IPortfolio>('Portfolio', PortfolioSchema
 
 // Wellness / Mood Tracking
 export interface IWellness extends Document {
-  studentId:    string;
-  mood:         'happy' | 'neutral' | 'stressed' | 'sad';
-  stressScore:  number; // 1-10
-  notes?:       string;
+  studentId: string;
+  mood: 'great' | 'good' | 'okay' | 'stressed' | 'tired';
+  stressScore: number;
+  notes?: string;
   counselingReferred: boolean;
-  date:         Date;
+  date: Date;
 }
-
 const WellnessSchema = new Schema<IWellness>({
-  studentId:          { type: String, required: true, index: true },
-  mood:               { type: String, enum: ['happy', 'neutral', 'stressed', 'sad'], required: true },
-  stressScore:        { type: Number, min: 1, max: 10, required: true },
-  notes:              { type: String },
-  counselingReferred: { type: Boolean, default: false },
-  date:               { type: Date, default: Date.now },
+  studentId: { type: String, required: true, index: true },
+
+  mood: {
+    type: String,
+    enum: ['great', 'good', 'okay', 'stressed', 'tired'],
+    required: true
+  },
+
+  stressScore: {
+    type: Number,
+    min: 1,
+    max: 10,
+    required: true
+  },
+
+  notes: {
+    type: String
+  },
+
+  counselingReferred: {
+    type: Boolean,
+    default: false
+  },
+
+  date: {
+    type: Date,
+    default: Date.now
+  }
 }, { timestamps: true });
 
 export const Wellness = mongoose.model<IWellness>('Wellness', WellnessSchema);
