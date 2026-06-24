@@ -179,7 +179,7 @@ import { useState } from "react";
 const earnedBadges = [
   { name: "Science Whiz", icon: "🔬", date: "Oct 18, 2026", description: "Scored 100% on 5 Science quizzes.", color: "from-blue-500 to-indigo-600", rarity: "Epic" },
   { name: "7-Day Streak", icon: "🔥", date: "Oct 17, 2026", description: "Logged in and learned for 7 days straight.", color: "from-amber-500 to-orange-600", rarity: "Rare" },
-  { name: "Math Ninja", icon: "🥷", date: "Oct 10, 2026", description: "Completed the Fractions Mastery module.", color: "from-emerald-500 to-teal-600", rarity: "Common" },
+  { name: "Math Ninja", icon: "🧮", date: "Oct 10, 2026", description: "Completed the Fractions Mastery module.", color: "from-emerald-500 to-teal-600", rarity: "Common" },
   { name: "First Steps", icon: "🌱", date: "Sep 01, 2026", description: "Joined the TN Schools Portal.", color: "from-emerald-500 to-emerald-600", rarity: "Common" },
   { name: "Helpful Hand", icon: "🤝", date: "Sep 25, 2026", description: "Answered a peer's question in the forum.", color: "from-purple-500 to-fuchsia-600", rarity: "Rare" },
 ];
@@ -202,14 +202,14 @@ export default function BadgesPage() {
       themeClass="theme-student"
       accentColor="#10b981"
     >
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
          <Link href="/student/middle-school" className="text-sm font-bold text-black dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400 flex items-center gap-2 transition-colors">
             <span>←</span> Back to Dashboard
          </Link>
          
-         <div className="bg-white dark:bg-slate-900/80 border border-emerald-500/30 px-4 py-2 rounded-xl flex items-center gap-3 shadow-lg shadow-emerald-500/10">
+         <div className="w-full sm:w-auto bg-white dark:bg-slate-900/80 border border-emerald-500/30 px-4 py-2 rounded-xl flex items-center justify-between sm:justify-start gap-3 shadow-lg shadow-emerald-500/10">
             <span className="text-2xl">🏆</span>
-            <div>
+            <div className="text-right sm:text-left">
                <span className="block text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-500 leading-none">Total Badges</span>
                <span className="block text-lg font-black text-black dark:text-white leading-none mt-1">5</span>
             </div>
@@ -230,29 +230,29 @@ export default function BadgesPage() {
                   <span className="text-3xl">🏅</span> Earned Badges
                 </h2>
                 
-                <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700/50 w-fit">
+                <div className="flex flex-wrap bg-slate-100 dark:bg-slate-900/50 p-1 rounded-xl border border-slate-200 dark:border-slate-700/50 w-full sm:w-fit">
                    <button 
                      onClick={() => setFilter("all")}
-                     className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${filter === "all" ? "bg-slate-700 text-white" : "text-black dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400"}`}
+                     className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${filter === "all" ? "bg-slate-700 text-white" : "text-black dark:text-white hover:text-emerald-600 dark:hover:text-emerald-400"}`}
                    >
                      All
                    </button>
                    <button 
                      onClick={() => setFilter("Epic")}
-                     className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${filter === "Epic" ? "bg-purple-600 text-white" : "text-black dark:text-white hover:text-purple-600 dark:hover:text-purple-400"}`}
+                     className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${filter === "Epic" ? "bg-purple-600 text-white" : "text-black dark:text-white hover:text-purple-600 dark:hover:text-purple-400"}`}
                    >
                      Epic
                    </button>
                    <button 
                      onClick={() => setFilter("Rare")}
-                     className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${filter === "Rare" ? "bg-blue-600 text-white" : "text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400"}`}
+                     className={`flex-1 sm:flex-none px-4 py-1.5 rounded-lg text-xs font-bold transition-colors ${filter === "Rare" ? "bg-blue-600 text-white" : "text-black dark:text-white hover:text-blue-600 dark:hover:text-blue-400"}`}
                    >
                      Rare
                    </button>
                 </div>
              </div>
 
-             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 relative z-10">
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 relative z-10">
                 {earnedBadges
                   .filter(b => filter === "all" ? true : b.rarity === filter)
                   .map((badge, idx) => (
