@@ -226,6 +226,20 @@ export default function HomePage() {
 
   const text = t[lang];
 
+  const getPortalLink = () => {
+    if (!session?.user) return "/login";
+    const role = (session.user as any).role || "STUDENT";
+    if (role === "SUPERADMIN") return "/super-admin";
+    if (role === "TEACHER") return "/teacher";
+    if (role === "PARENT") return "/parent";
+    if (role === "HEADMASTER") return "/headmaster";
+    if (role === "BEO") return "/block-education-officer";
+    if (role === "DEO") return "/district-education-officer";
+    if (role === "COMMISSIONER") return "/commissioner";
+    if (role === "MINISTER") return "/minister";
+    return "/student";
+  };
+
   useEffect(() => {
     const handleScroll = () => setIsNavScrolled(window.scrollY > 60);
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -330,16 +344,62 @@ export default function HomePage() {
 
             {session ? (
               <>
-                <span style={{ fontSize: "12px", color: "#374151", background: "#f1f5f9", border: "1px solid #e2e8f0", padding: "6px 14px", borderRadius: "8px", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Link
+                  href={getPortalLink()}
+                  style={{
+                    fontSize: "12px",
+                    color: "#3D3580",
+                    background: "#EEEDF8",
+                    border: "1.5px solid #3D3580",
+                    padding: "7px 16px",
+                    borderRadius: "8px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    textDecoration: "none",
+                    cursor: "pointer",
+                    fontWeight: 700,
+                    boxShadow: "0 2px 8px rgba(61,53,128,0.1)",
+                    transition: "all 0.2s"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#3D3580";
+                    e.currentTarget.style.color = "#ffffff";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#EEEDF8";
+                    e.currentTarget.style.color = "#3D3580";
+                  }}
+                >
                   <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", display: "inline-block" }}></span>
-                  <strong style={{ color: "#3D3580" }}>{(session.user as any)?.name}</strong>
-                </span>
+                  👤 {(session.user as any)?.name}
+                </Link>
                 <button
                   id="nav-signout"
                   onClick={() => signOut({ callbackUrl: "/" })}
-                  style={{ fontSize: "12px", fontWeight: 600, color: "#dc2626", background: "transparent", border: "1px solid #fca5a5", padding: "7px 14px", borderRadius: "8px", cursor: "pointer", transition: "all 0.2s" }}
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 700,
+                    color: "#dc2626",
+                    background: "#fff5f5",
+                    border: "1.5px solid #fca5a5",
+                    padding: "7px 16px",
+                    borderRadius: "8px",
+                    cursor: "pointer",
+                    transition: "all 0.2s"
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "#dc2626";
+                    e.currentTarget.style.color = "#ffffff";
+                    e.currentTarget.style.borderColor = "#dc2626";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "#fff5f5";
+                    e.currentTarget.style.color = "#dc2626";
+                    e.currentTarget.style.borderColor = "#fca5a5";
+                  }}
                 >
-                  {text.navSignOut}
+                  🚪 {text.navSignOut}
                 </button>
               </>
             ) : (
