@@ -17,6 +17,8 @@ import headmasterRoutes from './routes/headmaster.routes';
 import pageRoutes       from './routes/page.routes';
 import userRoutes       from './routes/user.routes';
 import teacherRoutes    from './routes/teacher.routes';
+import notificationRoutes from './routes/notification.routes';
+import classRoutes       from './routes/class.routes';
 
 // Trigger nodemon restart after prisma client generation
 dotenv.config();
@@ -65,6 +67,8 @@ app.use('/api/headmaster', headmasterRoutes);
 app.use('/api/pages',      pageRoutes);
 app.use('/api/users',      userRoutes);
 app.use('/api/teacher',    teacherRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/classes',    classRoutes);
 
 
 
@@ -87,9 +91,27 @@ const server = app.listen(port, () => {
   console.log(`🌍  Env       : ${process.env.NODE_ENV || 'development'}\n`);
 });
 
-// Graceful shutdown
+// ─── Auto-recover from port conflict ─────────────────────────────
+server.on('error', (err: NodeJS.ErrnoException) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n❌  Port ${port} is still in use. Run: npm run kill\n`);
+    process.exit(1);
+  } else {
+    throw err;
+  }
+});
+
+
+// ─── Graceful shutdown ────────────────────────────────────────────
 process.on('SIGTERM', async () => {
   server.close();
   await prisma.$disconnect();
   process.exit(0);
 });
+
+process.on('SIGINT', async () => {
+  server.close();
+  await prisma.$disconnect();
+  process.exit(0);
+});
+

@@ -84,6 +84,7 @@ export default function AddMaterialsPage() {
           format: selectedFileFormat,
           size: selectedFileSize,
           schoolId: schoolId || null,
+          userId: (session?.user as any)?.id,
         }),
       });
       const result = await res.json();

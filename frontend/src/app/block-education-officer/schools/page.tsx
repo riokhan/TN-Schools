@@ -528,8 +528,8 @@ export default function BlockSchoolsPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div className="col-span-1">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
                   <label className="block text-[10px] text-slate-550 dark:text-slate-400 mb-1 font-semibold">Pincode</label>
                   <input
                     type="text"
@@ -539,7 +539,7 @@ export default function BlockSchoolsPage() {
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-violet-500 transition-colors"
                   />
                 </div>
-                <div className="col-span-1">
+                <div>
                   <label className="block text-[10px] text-slate-550 dark:text-slate-400 mb-1 font-semibold">School Type</label>
                   <select
                     value={schoolType}
@@ -549,17 +549,6 @@ export default function BlockSchoolsPage() {
                     <option value="Government">Government</option>
                     <option value="Aided">Aided</option>
                     <option value="Private">Private</option>
-                  </select>
-                </div>
-                <div className="col-span-1">
-                  <label className="block text-[10px] text-slate-550 dark:text-slate-400 mb-1 font-semibold">Instruction Medium</label>
-                  <select
-                    value={mediumOfInstruction}
-                    onChange={(e) => setMediumOfInstruction(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-2 text-xs text-slate-805 dark:text-white focus:outline-none focus:border-violet-500 transition-colors"
-                  >
-                    <option value="Tamil">Tamil</option>
-                    <option value="English">English</option>
                   </select>
                 </div>
               </div>

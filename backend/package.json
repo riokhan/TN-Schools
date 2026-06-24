@@ -4,7 +4,10 @@
   "description": "TN Schools AI Smart Learning Ecosystem Backend",
   "main": "index.js",
   "scripts": {
+    "predev": "node scripts/kill-port.js",
     "dev": "nodemon src/index.ts",
+    "kill": "node scripts/kill-port.js",
+    "fresh": "node scripts/kill-port.js && nodemon src/index.ts",
     "build": "prisma generate && tsc",
     "start": "node dist/index.js"
   },

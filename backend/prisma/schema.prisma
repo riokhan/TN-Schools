@@ -51,6 +51,7 @@ model User {
   school       School?  @relation(fields: [schoolId], references: [id])
   student      Student?
   teacher      Teacher?
+  notifications Notification[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -113,6 +114,28 @@ model Teacher {
   joiningDate   DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+// ─── ClassRoom Entity ──────────────────────────────────────────
+
+model ClassRoom {
+  id           String   @id @default(uuid())
+  schoolId     String
+  teacherId    String?  // UUID of teacher user
+  className    String   // e.g. "10"
+  section      String   // e.g. "A"
+  subject      String   // e.g. "Mathematics"
+  academicYear String   @default("2024-25")
+  roomNumber   String?  // e.g. "Room 12"
+  schedule     String?  // e.g. "Mon/Wed/Fri 9AM"
+  totalStudents Int     @default(0)
+  description  String?
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([teacherId])
 }
 
 // ─── Academic Entities ─────────────────────────────────────────
@@ -632,4 +655,15 @@ model SportsHealthLog {
   createdAt       DateTime @default(now())
 
   @@index([sportsProfileId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
 }

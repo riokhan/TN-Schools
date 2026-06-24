@@ -104,10 +104,71 @@ export default function PortalLayout({
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState<"English" | "தமிழ்">("English");
   const [isLanguageDropdownOpen, setIsLanguageDropdownOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(3);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [notificationsList, setNotificationsList] = useState<any[]>([]);
   const [activeStudentLevel, setActiveStudentLevel] = useState("STUDENT_HIGHER");
   const [disabledRoutes, setDisabledRoutes] = useState<Set<string>>(new Set());
   const { data: session, status } = useSession();
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  const fetchNotifications = async () => {
+    if (!session?.user) return;
+    const userId = (session.user as any).id;
+    if (!userId) return;
+    try {
+      const res = await fetch(`${API_URL}/api/notifications?userId=${userId}`);
+      const data = await res.json();
+      if (data.success && Array.isArray(data.data)) {
+        setNotificationsList(data.data);
+        setUnreadCount(data.data.filter((n: any) => !n.read).length);
+      }
+    } catch (err) {
+      console.error("Error fetching notifications", err);
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    if (!session?.user) return;
+    const userId = (session.user as any).id;
+    if (!userId) return;
+    try {
+      const res = await fetch(`${API_URL}/api/notifications/read-all`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotificationsList(notificationsList.map(n => ({ ...n, read: true })));
+        setUnreadCount(0);
+      }
+    } catch (err) {
+      console.error("Error marking notifications as read", err);
+    }
+  };
+
+  const handleMarkSingleRead = async (id: string) => {
+    try {
+      const res = await fetch(`${API_URL}/api/notifications/${id}/read`, {
+        method: "PUT",
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotificationsList(notificationsList.map(n => n.id === id ? { ...n, read: true } : n));
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (err) {
+      console.error("Error marking notification as read", err);
+    }
+  };
+
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      fetchNotifications();
+      const interval = setInterval(fetchNotifications, 10000);
+      return () => clearInterval(interval);
+    }
+  }, [status, session]);
   
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -524,17 +585,31 @@ export default function PortalLayout({
                   <div className="p-4 border-b border-[var(--border)] flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/10">
                     <span className="text-xs font-bold text-[var(--text-heading)]">{t.notificationsTitle}</span>
                     <button 
-                      onClick={() => setUnreadCount(0)}
+                      onClick={handleMarkAllRead}
                       className="text-[10px] text-[var(--primary)] hover:underline font-semibold"
                     >
                       {t.markAllRead}
                     </button>
                   </div>
                   <div className="max-h-60 overflow-y-auto">
-                    {roleNotifications.length > 0 && unreadCount > 0 ? (
-                      roleNotifications.map((notif: string, i: number) => (
-                        <div key={i} className="p-3.5 text-xs text-[var(--text-main)] border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors">
-                          {notif}
+                    {notificationsList.length > 0 ? (
+                      notificationsList.map((notif: any) => (
+                        <div
+                          key={notif.id}
+                          onClick={() => !notif.read && handleMarkSingleRead(notif.id)}
+                          className={`p-3.5 text-xs text-[var(--text-main)] border-b border-[var(--border)] hover:bg-[var(--bg-card-hover)] transition-colors cursor-pointer flex justify-between items-start gap-2 ${
+                            !notif.read ? "bg-[var(--primary)]/5 font-semibold text-[var(--text-heading)]" : ""
+                          }`}
+                        >
+                          <div>
+                            <div>{notif.message}</div>
+                            <div className="text-[9px] text-[var(--text-muted)] mt-1 font-normal">
+                              {new Date(notif.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </div>
+                          </div>
+                          {!notif.read && (
+                            <span className="w-1.5 h-1.5 bg-red-500 rounded-full shrink-0 mt-1.5" />
+                          )}
                         </div>
                       ))
                     ) : (

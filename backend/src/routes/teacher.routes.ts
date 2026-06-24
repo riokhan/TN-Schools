@@ -27,7 +27,7 @@ router.get('/materials', async (req: Request, res: Response) => {
 // POST /api/teacher/materials
 router.post('/materials', async (req: Request, res: Response) => {
   try {
-    const { title, category, classSection, format, size, schoolId } = req.body;
+    const { title, category, classSection, format, size, schoolId, userId } = req.body;
     if (!title || !category || !classSection) {
       return res.status(400).json({ success: false, error: 'title, category, and classSection are required' });
     }
@@ -42,6 +42,14 @@ router.post('/materials', async (req: Request, res: Response) => {
         schoolId: schoolId || null,
       },
     });
+    if (userId) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          message: `Uploaded new study material "${title}" for ${classSection}`,
+        }
+      });
+    }
     res.status(201).json({ success: true, data: material });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
@@ -85,7 +93,7 @@ router.get('/announcements', async (req: Request, res: Response) => {
 // POST /api/teacher/announcements
 router.post('/announcements', async (req: Request, res: Response) => {
   try {
-    const { title, body, target, sender, pinned, schoolId } = req.body;
+    const { title, body, target, sender, pinned, schoolId, userId } = req.body;
     if (!title || !body || !target) {
       return res.status(400).json({ success: false, error: 'title, body, and target are required' });
     }
@@ -100,6 +108,14 @@ router.post('/announcements', async (req: Request, res: Response) => {
         schoolId: schoolId || null,
       },
     });
+    if (userId) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          message: `Posted new announcement: "${title}"`,
+        }
+      });
+    }
     res.status(201).json({ success: true, data: announcement });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
@@ -143,7 +159,7 @@ router.get('/homework', async (req: Request, res: Response) => {
 // POST /api/teacher/homework
 router.post('/homework', async (req: Request, res: Response) => {
   try {
-    const { title, className, dueDate, status, description, schoolId } = req.body;
+    const { title, className, dueDate, status, description, schoolId, userId } = req.body;
     if (!title || !className || !dueDate) {
       return res.status(400).json({ success: false, error: 'title, className, and dueDate are required' });
     }
@@ -158,6 +174,15 @@ router.post('/homework', async (req: Request, res: Response) => {
         schoolId: schoolId || null,
       },
     });
+
+    if (userId) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          message: `Assigned new homework "${title}" for ${className}`,
+        }
+      });
+    }
 
     // Automatically seed submissions for all students in the class
     // We parse class number from className, e.g. "10A - Mathematics" -> class "10", section "A"
@@ -300,7 +325,7 @@ router.get('/labs', async (req: Request, res: Response) => {
 // POST /api/teacher/labs
 router.post('/labs', async (req: Request, res: Response) => {
   try {
-    const { name, classSection, status, date, safetyCheck, schoolId } = req.body;
+    const { name, classSection, status, date, safetyCheck, schoolId, userId } = req.body;
     const lab = await prisma.labEquipment.create({
       data: {
         name,
@@ -311,6 +336,14 @@ router.post('/labs', async (req: Request, res: Response) => {
         schoolId: schoolId || null,
       },
     });
+    if (userId) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          message: `Scheduled new science lab "${name}" for ${classSection}`,
+        }
+      });
+    }
     res.status(201).json({ success: true, data: lab });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
@@ -351,7 +384,7 @@ router.get('/leave', async (req: Request, res: Response) => {
 // POST /api/teacher/leave
 router.post('/leave', async (req: Request, res: Response) => {
   try {
-    const { type, duration, reason, proxy, schoolId } = req.body;
+    const { type, duration, reason, proxy, schoolId, userId } = req.body;
     const leave = await prisma.leaveRequest.create({
       data: {
         type,
@@ -362,6 +395,14 @@ router.post('/leave', async (req: Request, res: Response) => {
         schoolId: schoolId || null,
       },
     });
+    if (userId) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          message: `Submitted leave request (${type}) for ${duration}`,
+        }
+      });
+    }
     res.status(201).json({ success: true, data: leave });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
@@ -389,7 +430,7 @@ router.get('/lessons', async (req: Request, res: Response) => {
 // POST /api/teacher/lessons
 router.post('/lessons', async (req: Request, res: Response) => {
   try {
-    const { syllabus, grade, subject, topic, duration, planData, schoolId } = req.body;
+    const { syllabus, grade, subject, topic, duration, planData, schoolId, userId } = req.body;
     const lesson = await prisma.lessonPlan.create({
       data: {
         syllabus,
@@ -401,6 +442,14 @@ router.post('/lessons', async (req: Request, res: Response) => {
         schoolId: schoolId || null,
       },
     });
+    if (userId) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          message: `Generated AI Lesson Plan for "${topic}" (Grade ${grade})`,
+        }
+      });
+    }
     res.status(201).json({ success: true, data: lesson });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
@@ -465,7 +514,7 @@ router.get('/questions', async (req: Request, res: Response) => {
 // POST /api/teacher/questions
 router.post('/questions', async (req: Request, res: Response) => {
   try {
-    const { questions, schoolId } = req.body; // Array of questions
+    const { questions, schoolId, userId } = req.body; // Array of questions
     if (!Array.isArray(questions) || questions.length === 0) {
       return res.status(400).json({ success: false, error: 'questions array is required' });
     }
@@ -484,6 +533,14 @@ router.post('/questions', async (req: Request, res: Response) => {
     }));
 
     await prisma.question.createMany({ data: records });
+    if (userId) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          message: `Added ${questions.length} question(s) to the Question Bank for ${records[0]?.subject || 'Science'}`,
+        }
+      });
+    }
     res.status(201).json({ success: true, count: records.length });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
@@ -542,7 +599,7 @@ router.get('/badges', async (req: Request, res: Response) => {
 // POST /api/teacher/badges
 router.post('/badges', async (req: Request, res: Response) => {
   try {
-    const { studentId, studentName, classSection, badge, remark } = req.body;
+    const { studentId, studentName, classSection, badge, remark, userId } = req.body;
     if (!studentId || !studentName || !badge) {
       return res.status(400).json({ success: false, error: 'studentId, studentName, and badge are required' });
     }
@@ -555,6 +612,14 @@ router.post('/badges', async (req: Request, res: Response) => {
         remark,
       },
     });
+    if (userId) {
+      await prisma.notification.create({
+        data: {
+          userId,
+          message: `Awarded "${badge}" badge to ${studentName} (${classSection})`,
+        }
+      });
+    }
     res.status(201).json({ success: true, data: record });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
