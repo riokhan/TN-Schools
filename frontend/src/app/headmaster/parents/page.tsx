@@ -14,6 +14,18 @@ const getApiBase = () => {
 
 const API_BASE = getApiBase();
 
+interface StudentLinkInfo {
+  linkId: string;
+  isPrimary: boolean;
+  student: {
+    id: string;
+    class: string;
+    section: string;
+    rollNumber: string | null;
+    user: { name: string };
+  };
+}
+
 interface CommitteeMember {
   id?: string;
   name: string;
@@ -25,6 +37,25 @@ interface CommitteeMember {
   term: string;
   password?: string;
   createdAt?: string;
+  linkedStudents?: StudentLinkInfo[];
+}
+
+interface Student {
+  id: string;
+  class: string;
+  section: string;
+  rollNumber: string | null;
+  user: { name: string };
+}
+
+interface PTAMeeting {
+  id: string;
+  title: string;
+  description: string | null;
+  meetingDate: string;
+  venue: string;
+  status: "Upcoming" | "Completed" | "Cancelled";
+  agenda: string[];
 }
 
 interface ParsedPreviewPTAMember {
@@ -51,6 +82,8 @@ interface Grievance {
 
 export default function ParentsPage() {
   const [committee, setCommittee] = useState<CommitteeMember[]>([]);
+  const [students, setStudents] = useState<Student[]>([]);
+  const [ptaMeetings, setPtaMeetings] = useState<PTAMeeting[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -61,18 +94,28 @@ export default function ParentsPage() {
   ]);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPtaModalOpen, setIsPtaModalOpen] = useState(false);
+
+  // Parent Form
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("Committee Member (Parent)");
   const [newPhone, setNewPhone] = useState("");
   const [newEmail, setNewEmail] = useState("");
-  const [newStudentName, setNewStudentName] = useState("");
-  const [newStudentClass, setNewStudentClass] = useState("Class 10A");
   const [newTerm, setNewTerm] = useState("2025-26");
   const [newPassword, setNewPassword] = useState("123456");
+  const [selectedStudentId, setSelectedStudentId] = useState("");
+
+  // PTA Meeting Form
+  const [newPtaTitle, setNewPtaTitle] = useState("");
+  const [newPtaDesc, setNewPtaDesc] = useState("");
+  const [newPtaDate, setNewPtaDate] = useState("");
+  const [newPtaVenue, setNewPtaVenue] = useState("School Auditorium");
+  const [newPtaAgenda, setNewPtaAgenda] = useState("");
 
   const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
   const [parentToDelete, setParentToDelete] = useState<CommitteeMember | null>(null);
+  const [meetingToDelete, setMeetingToDelete] = useState<PTAMeeting | null>(null);
   const [previewMembers, setPreviewMembers] = useState<ParsedPreviewPTAMember[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -82,30 +125,36 @@ export default function ParentsPage() {
     setTimeout(() => setToast(null), 4500);
   };
 
-  // ── Fetch PTA committee members from PostgreSQL on mount ──────────
-  const fetchCommittee = useCallback(async () => {
+  const fetchData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/headmaster/parents`);
-      const json = await res.json();
-      if (json.success) {
-        setCommittee(json.data);
-      } else {
-        showToast("⚠️ Could not load PTA Committee from server.", "error");
-      }
+      const [parRes, stuRes, ptaRes] = await Promise.all([
+        fetch(`${API_BASE}/api/headmaster/parents`),
+        fetch(`${API_BASE}/api/students`),
+        fetch(`${API_BASE}/api/headmaster/pta-meetings`)
+      ]);
+      const [parJson, stuJson, ptaJson] = await Promise.all([
+        parRes.json(),
+        stuRes.json(),
+        ptaRes.json()
+      ]);
+
+      if (parJson.success) setCommittee(parJson.data);
+      if (stuJson.success) setStudents(stuJson.data);
+      if (ptaJson.success) setPtaMeetings(ptaJson.data);
     } catch {
-      showToast("🔴 Server offline — could not load PTA Committee.", "error");
+      showToast("🔴 Server offline — could not load data.", "error");
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchCommittee();
-  }, [fetchCommittee]);
+    fetchData();
+  }, [fetchData]);
 
   // ── Delete a committee member ────────────────────────────────────
-  const confirmDelete = async () => {
+  const confirmDeleteParent = async () => {
     if (!parentToDelete) return;
     try {
       const res = await fetch(`${API_BASE}/api/headmaster/parents/${parentToDelete.id}`, { method: "DELETE" });
@@ -123,14 +172,33 @@ export default function ParentsPage() {
     }
   };
 
+  // ── Delete PTA meeting ────────────────────────────────────
+  const confirmDeleteMeeting = async () => {
+    if (!meetingToDelete) return;
+    try {
+      const res = await fetch(`${API_BASE}/api/headmaster/pta-meetings/${meetingToDelete.id}`, { method: "DELETE" });
+      const json = await res.json();
+      if (json.success) {
+        showToast("🎉 PTA meeting removed successfully.");
+        setPtaMeetings(prev => prev.filter(p => p.id !== meetingToDelete.id));
+      } else {
+        showToast("❌ Failed to remove PTA meeting.", "error");
+      }
+    } catch {
+      showToast("🔴 Network error — could not remove PTA meeting.", "error");
+    } finally {
+      setMeetingToDelete(null);
+    }
+  };
+
   const downloadExcelTemplate = () => {
     const headers = [
-      "Parent Name", 
-      "Committee Role", 
-      "Phone Number", 
-      "Email Address", 
-      "Ward Name", 
-      "Ward Class & Section", 
+      "Parent Name",
+      "Committee Role",
+      "Phone Number",
+      "Email Address",
+      "Ward Name",
+      "Ward Class & Section",
       "Committee Term",
       "Password"
     ];
@@ -142,16 +210,6 @@ export default function ParentsPage() {
         "Email Address": "kumar.r@gmail.com",
         "Ward Name": "K. Ramesh",
         "Ward Class & Section": "Class 10A",
-        "Committee Term": "2025-26",
-        "Password": "password123"
-      },
-      {
-        "Parent Name": "Mrs. N. Lakshmi",
-        "Committee Role": "Vice President (Parent)",
-        "Phone Number": "+91 98765 43211",
-        "Email Address": "lakshmi.n@gmail.com",
-        "Ward Name": "L. Karthik",
-        "Ward Class & Section": "Class 9B",
         "Committee Term": "2025-26",
         "Password": "password123"
       }
@@ -225,26 +283,18 @@ export default function ParentsPage() {
             term,
             password,
             isValid,
-            validationError: !name 
-              ? "Parent Name is missing" 
-              : !role 
-                ? "Committee Role is missing" 
-                : !phone 
-                  ? "Phone Number is missing"
-                  : undefined
+            validationError: !name ? "Parent Name missing" : !role ? "Role missing" : !phone ? "Phone missing" : undefined
           };
         });
 
         setPreviewMembers(validated);
-        showToast(`📊 Loaded ${validated.length} PTA officers. Review preview in the modal.`);
+        showToast(`📊 Loaded ${validated.length} PTA officers.`);
       } catch (err) {
         console.error(err);
-        showToast("❌ Failed to parse file. Make sure it is a valid Excel or CSV sheet.", "error");
+        showToast("❌ Failed to parse file.", "error");
       } finally {
         setIsUploading(false);
-        if (fileInputRef.current) {
-          fileInputRef.current.value = "";
-        }
+        if (fileInputRef.current) fileInputRef.current.value = "";
       }
     };
     reader.readAsBinaryString(file);
@@ -278,14 +328,14 @@ export default function ParentsPage() {
       const json = await res.json();
       if (json.success) {
         showToast(`🎉 Successfully imported ${json.created} PTA committee officers!`);
-        fetchCommittee();
+        fetchData();
         setPreviewMembers([]);
         setIsModalOpen(false);
       } else {
         showToast("❌ Failed to save PTA officers.", "error");
       }
     } catch {
-      showToast("🔴 Network error — could not save imported officers.", "error");
+      showToast("🔴 Network error.", "error");
     } finally {
       setIsSaving(false);
     }
@@ -297,6 +347,10 @@ export default function ParentsPage() {
 
     setIsSaving(true);
     try {
+      const selStudent = students.find(s => s.id === selectedStudentId);
+      const studentName = selStudent ? selStudent.user.name : "N/A";
+      const studentClass = selStudent ? `Class ${selStudent.class}${selStudent.section}` : "N/A";
+
       const res = await fetch(`${API_BASE}/api/headmaster/parents`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -305,21 +359,28 @@ export default function ParentsPage() {
           role: newRole,
           phone: newPhone,
           email: newEmail || null,
-          studentName: newStudentName || "N/A",
-          studentClass: newStudentClass || "N/A",
+          studentName,
+          studentClass,
           term: newTerm,
           password: newPassword || "123456",
         })
       });
       const json = await res.json();
       if (json.success) {
+        // Now link student
+        if (selectedStudentId) {
+          await fetch(`${API_BASE}/api/headmaster/parents/${json.data.id}/link-student`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ studentId: selectedStudentId, isPrimary: true })
+          });
+        }
         showToast(`🎉 PTA Officer ${newName} successfully registered.`);
-        fetchCommittee();
+        fetchData();
         setNewName("");
         setNewPhone("");
         setNewEmail("");
-        setNewStudentName("");
-        setNewStudentClass("Class 10A");
+        setSelectedStudentId("");
         setNewTerm("2025-26");
         setNewPassword("123456");
         setIsModalOpen(false);
@@ -332,6 +393,45 @@ export default function ParentsPage() {
       setIsSaving(false);
     }
   };
+
+  const handleCreateMeeting = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPtaTitle || !newPtaDate) return;
+    setIsSaving(true);
+    try {
+      const agendaArray = newPtaAgenda.split("\n").filter(a => a.trim() !== "");
+      const res = await fetch(`${API_BASE}/api/headmaster/pta-meetings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newPtaTitle,
+          description: newPtaDesc,
+          meetingDate: newPtaDate,
+          venue: newPtaVenue,
+          agenda: agendaArray,
+        })
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast(`🎉 PTA Meeting created.`);
+        fetchData();
+        setNewPtaTitle("");
+        setNewPtaDesc("");
+        setNewPtaDate("");
+        setNewPtaAgenda("");
+        setIsPtaModalOpen(false);
+      } else {
+        showToast("❌ Failed to save meeting.", "error");
+      }
+    } catch {
+      showToast("🔴 Network error.", "error");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const nextUpcomingMeeting = ptaMeetings.find(m => m.status === "Upcoming") || ptaMeetings[0];
+  const fmtDate = (d: string) => new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 
   return (
     <PortalLayout
@@ -349,14 +449,15 @@ export default function ParentsPage() {
         </div>
         <div className="text-right">
           <div className="text-xs text-slate-500">Next PTA Meeting</div>
-          <div className="text-sm font-bold text-amber-400 mt-1">July 24, 2026 · 4:30 PM</div>
+          <div className="text-sm font-bold text-amber-400 mt-1">
+            {nextUpcomingMeeting ? fmtDate(nextUpcomingMeeting.meetingDate) : "None Scheduled"}
+          </div>
         </div>
       </div>
 
       {toast && (
-        <div className={`mb-6 p-4 border text-xs rounded-xl shadow-lg ${
-          toast.type === "error" ? "bg-red-500/10 border-red-500/20 text-red-300" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
-        }`}>
+        <div className={`mb-6 p-4 border text-xs rounded-xl shadow-lg ${toast.type === "error" ? "bg-red-500/10 border-red-500/20 text-red-300" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+          }`}>
           {toast.msg}
         </div>
       )}
@@ -379,366 +480,213 @@ export default function ParentsPage() {
           <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
             {committee.length === 0 && !isLoading ? (
               <div className="text-center py-12 text-slate-500 text-xs bg-slate-900/40 rounded-xl border border-slate-850">
-                No PTA committee officers found. Click "+ Register PTA Officer" to add members.
+                No PTA committee officers found.
               </div>
             ) : (
-              committee.map((p) => (
-                <div 
-                  key={p.id} 
-                  className="p-4 border border-slate-200 rounded-xl bg-white/95 hover:bg-white text-slate-800 shadow-md hover:shadow-lg transition-all duration-200 relative group"
-                >
-                  <div className="flex justify-between items-start pr-16">
-                    <div>
-                      <div className="font-extrabold text-slate-900 text-xs sm:text-sm">{p.name}</div>
-                      <div className="text-[10px] sm:text-xs text-blue-600 font-bold mt-0.5">{p.role}</div>
+              committee.map((p) => {
+                const linkedNames = p.linkedStudents?.map(l => `${l.student.user.name} (Cls ${l.student.class})`).join(', ');
+                const displayWard = linkedNames ? linkedNames : (p.studentName !== "N/A" ? `${p.studentName} (${p.studentClass})` : "N/A");
+
+                return (
+                  <div key={p.id} className="p-4 border border-slate-200 rounded-xl bg-white/95 hover:bg-white text-slate-800 shadow-md transition-all duration-200 relative group">
+                    <div className="flex justify-between items-start pr-16">
+                      <div>
+                        <div className="font-extrabold text-slate-900 text-xs sm:text-sm">{p.name}</div>
+                        <div className="text-[10px] sm:text-xs text-blue-600 font-bold mt-0.5">{p.role}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-[10px] sm:text-xs text-slate-700 font-bold">{p.phone}</div>
+                        {p.email && <div className="text-[9px] sm:text-[10px] text-slate-500 font-medium mt-0.5">{p.email}</div>}
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <div className="text-[10px] sm:text-xs text-slate-700 font-bold">{p.phone}</div>
-                      {p.email && <div className="text-[9px] sm:text-[10px] text-slate-500 font-medium mt-0.5">{p.email}</div>}
+                    <div className="border-t border-slate-100 mt-2.5 pt-2 flex flex-col gap-1 text-[9px] sm:text-[10px] text-slate-500 font-semibold">
+                      <span>Ward: <span className="text-slate-800 font-bold">{displayWard}</span></span>
+                      <div className="flex gap-4">
+                        <span>Pwd: <span className="text-blue-650 font-bold">{p.password || "123456"}</span></span>
+                        <span>Term: {p.term}</span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="border-t border-slate-100 mt-2.5 pt-2 flex flex-wrap justify-between text-[9px] sm:text-[10px] text-slate-500 font-semibold gap-2">
-                    <span>Ward: {p.studentName !== "N/A" ? `${p.studentName} (${p.studentClass})` : "N/A"}</span>
-                    <span>Pwd: <span className="text-blue-650 font-bold">{p.password || "123456"}</span></span>
-                    <span>Term: {p.term}</span>
-                  </div>
                     <button
                       onClick={() => setParentToDelete(p)}
-                      className="absolute top-4 right-4 text-[9px] sm:text-[10px] text-red-600 hover:text-red-800 font-bold border border-red-200 hover:border-red-300 px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100/50 transition-colors shadow-sm flex items-center gap-1"
+                      className="absolute top-4 right-4 text-[9px] text-red-600 hover:text-red-800 font-bold border border-red-200 hover:border-red-300 px-2 py-1 rounded-lg bg-red-50 transition-colors shadow-sm flex items-center gap-1"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
-                      
+                      Remove
                     </button>
-                </div>
-              ))
+                  </div>
+                ))
             )}
-          </div>
-        </div>
-
-        {/* Grievances list */}
-        <div className="glass rounded-2xl p-6 border border-slate-800">
-          <h3 className="text-sm font-bold text-white mb-4">Recent Parental Grievances & Status</h3>
-          <div className="space-y-3">
-            {grievances.map((g, i) => (
-              <div key={i} className={`p-3.5 border-l-2 ${g.border} bg-slate-900/60 rounded-r-xl`}>
-                <div className="flex justify-between items-start gap-2 mb-1.5">
-                  <h4 className="text-xs font-bold text-white leading-relaxed">{g.topic}</h4>
-                  <span className={`text-[10px] uppercase font-bold px-2 py-0.5 rounded-full ${g.bg}`}>
-                    {g.status}
-                  </span>
-                </div>
-                <div className="text-[10px] text-slate-500 font-semibold">Raised by: {g.raisedBy}</div>
-              </div>
-            ))}
           </div>
         </div>
       </div>
 
-      {/* Modal */}
+      {/* Grievances list */}
+      <div className="glass rounded-2xl p-6 border border-slate-800 mb-6">
+        <h3 className="text-sm font-bold text-white mb-4">Recent Parental Grievances & Status</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {grievances.map((g, i) => (
+            <div key={i} className={`p-3.5 border-l-2 ${g.border} bg-slate-900/60 rounded-r-xl`}>
+              <div className="flex justify-between items-start gap-2 mb-1.5">
+                <h4 className="text-xs font-bold text-white leading-relaxed">{g.topic}</h4>
+                <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full ${g.bg} whitespace-nowrap`}>
+                  {g.status}
+                </span>
+              </div>
+              <div className="text-[10px] text-slate-500 font-semibold">Raised by: {g.raisedBy}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Add Parent Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div
-            className="w-full max-w-4xl rounded-3xl p-6 space-y-6 relative transition-all duration-300"
-            style={{
-              background: "#ffffff",
-              border: "1px solid rgba(0, 0, 0, 0.08)",
-              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.15)"
-            }}
-          >
+          <div className="w-full max-w-4xl rounded-3xl p-6 space-y-6 relative transition-all duration-300" style={{ background: "#ffffff", boxShadow: "0 20px 50px rgba(0, 0, 0, 0.15)" }}>
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
-              <h3 className="text-sm font-bold text-slate-800">
-                {previewMembers.length > 0 ? "📋 Preview PTA Officers Import" : "👪 Register PTA Committee Member"}
-              </h3>
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setPreviewMembers([]);
-                }}
-                className="text-slate-500 hover:text-slate-800 text-xs font-semibold"
-              >
-                ✕ Close
-              </button>
+              <h3 className="text-sm font-bold text-slate-800">👪 Register PTA Committee Member</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-slate-800 text-xs font-semibold">✕ Close</button>
             </div>
 
-            {previewMembers.length > 0 ? (
-              <div className="space-y-4">
-                <div className="flex justify-between items-center text-xs">
-                  <div className="font-bold text-emerald-600 uppercase tracking-wider">
-                    Parsed {previewMembers.length} PTA Committee Officers
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Form Input */}
+              <form onSubmit={handleManualSubmit} className="space-y-3">
+                <div className="text-xs font-bold text-blue-650 uppercase tracking-wider mb-1">Manual Entry</div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Parent Name</label>
+                    <input type="text" required value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800" />
                   </div>
-                  <div className="text-slate-500 font-semibold">
-                    {previewMembers.filter(s => !s.isValid).length} invalid rows found
+                  <div>
+                    <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Committee Role</label>
+                    <input type="text" required value={newRole} onChange={(e) => setNewRole(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800" />
                   </div>
                 </div>
 
-                <div className="max-h-[300px] overflow-y-auto border border-slate-200 rounded-xl bg-slate-50/50">
-                  <table className="w-full text-left text-xs border-collapse">
-                    <thead>
-                      <tr className="border-b border-slate-200 bg-slate-100 sticky top-0">
-                        <th className="p-3 text-slate-700 font-semibold">Parent Name</th>
-                        <th className="p-3 text-slate-700 font-semibold">Committee Role</th>
-                        <th className="p-3 text-slate-700 font-semibold">Phone Number</th>
-                        <th className="p-3 text-slate-700 font-semibold">Email Address</th>
-                        <th className="p-3 text-slate-700 font-semibold">Ward Name</th>
-                        <th className="p-3 text-slate-700 font-semibold">Ward Class</th>
-                        <th className="p-3 text-slate-700 font-semibold">Committee Term</th>
-                        <th className="p-3 text-slate-700 font-semibold">Password</th>
-                        <th className="p-3 text-slate-700 font-semibold text-right">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {previewMembers.map((s) => (
-                        <tr 
-                          key={s.id} 
-                          className={s.isValid ? "hover:bg-slate-100/80 text-slate-800" : "bg-red-50/70 hover:bg-red-100/70 text-slate-800"}
-                        >
-                          <td className="p-3 font-semibold text-slate-900">
-                            {s.name || <span className="text-red-500 italic">Name Missing</span>}
-                          </td>
-                          <td className="p-3 text-slate-700">{s.role || <span className="text-red-500 italic">Role Missing</span>}</td>
-                          <td className="p-3 text-slate-800">{s.phone}</td>
-                          <td className="p-3 text-slate-700">{s.email}</td>
-                          <td className="p-3 text-slate-700">{s.studentName}</td>
-                          <td className="p-3 text-slate-700">{s.studentClass}</td>
-                          <td className="p-3 text-slate-700">{s.term}</td>
-                          <td className="p-3 text-slate-700">{s.password}</td>
-                          <td className="p-3 text-right">
-                            {s.isValid ? (
-                              <span className="text-emerald-600 font-medium">✓ Ready</span>
-                            ) : (
-                              <span className="text-red-500 font-semibold" title={s.validationError}>
-                                ⚠️ Invalid
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Phone Number</label>
+                    <input type="text" required value={newPhone} onChange={(e) => setNewPhone(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Email Address</label>
+                    <input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800" />
+                  </div>
                 </div>
 
-                <div className="flex space-x-3 pt-2">
-                  <button
-                    onClick={handleConfirmImport}
-                    disabled={isSaving || previewMembers.filter(s => s.isValid).length === 0}
-                    className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition-colors shadow-md flex items-center justify-center space-x-2"
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Link Student (Optional but recommended)</label>
+                  <select
+                    value={selectedStudentId}
+                    onChange={e => setSelectedStudentId(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800"
                   >
-                    {isSaving && <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-                    <span>Confirm Import ({previewMembers.filter(s => s.isValid).length} Officers)</span>
-                  </button>
-                  <button
-                    onClick={() => setPreviewMembers([])}
-                    className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors border border-slate-200"
-                  >
-                    Discard
-                  </button>
+                    <option value="">-- Do not link student --</option>
+                    {students.map(s => (
+                      <option key={s.id} value={s.id}>{s.user.name} ({s.rollNumber}) - Class {s.class}{s.section}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Committee Term</label>
+                    <input type="text" required value={newTerm} onChange={(e) => setNewTerm(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800" />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Portal Password</label>
+                    <input type="text" required value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800" />
+                  </div>
+                </div>
+
+                <button type="submit" disabled={isSaving} className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2">
+                  Save Officer Roster
+                </button>
+              </form>
+
+              {/* Excel Import */}
+              <div className="border-l border-slate-200 pl-6 flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex justify-between items-center">
+                    <span>Excel Import</span>
+                    <button onClick={downloadExcelTemplate} type="button" className="text-[10px] text-blue-600 font-bold underline">📥 Template</button>
+                  </div>
+                  <div onClick={() => fileInputRef.current?.click()} className="rounded-2xl p-6 text-center cursor-pointer min-h-[160px] border-2 border-dashed border-slate-300 hover:border-emerald-500 flex flex-col items-center justify-center space-y-3">
+                    <span className="text-4xl">📊</span>
+                    <span className="text-xs font-bold text-slate-800">Import PTA Roster</span>
+                    <span className="text-[9px] text-slate-500">Drag & drop Excel or click</span>
+                  </div>
+                  <input type="file" ref={fileInputRef} onChange={(e) => { const file = e.target.files?.[0]; if (file) parseFile(file); }} accept=".xlsx,.xls,.csv" className="hidden" />
                 </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Form Input */}
-                <form onSubmit={handleManualSubmit} className="space-y-3">
-                  <div className="text-xs font-bold text-blue-650 uppercase tracking-wider mb-1">Manual Entry</div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Parent Name</label>
-                      <input
-                        type="text"
-                        required
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        placeholder="e.g. Mr. Karthikeyan"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Committee Role</label>
-                      <input
-                        type="text"
-                        required
-                        value={newRole}
-                        onChange={(e) => setNewRole(e.target.value)}
-                        placeholder="e.g. Committee Member (Parent)"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Phone Number</label>
-                      <input
-                        type="text"
-                        required
-                        value={newPhone}
-                        onChange={(e) => setNewPhone(e.target.value)}
-                        placeholder="e.g. +91 98765 43212"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Email Address</label>
-                      <input
-                        type="email"
-                        value={newEmail}
-                        onChange={(e) => setNewEmail(e.target.value)}
-                        placeholder="e.g. karthikeyan@gmail.com"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Ward / Student Name</label>
-                      <input
-                        type="text"
-                        value={newStudentName}
-                        onChange={(e) => setNewStudentName(e.target.value)}
-                        placeholder="e.g. K. Ramesh"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Ward Class & Section</label>
-                      <input
-                        type="text"
-                        value={newStudentClass}
-                        onChange={(e) => setNewStudentClass(e.target.value)}
-                        placeholder="e.g. Class 10A"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Committee Term</label>
-                      <input
-                        type="text"
-                        required
-                        value={newTerm}
-                        onChange={(e) => setNewTerm(e.target.value)}
-                        placeholder="e.g. 2025-26"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Default Portal Password</label>
-                      <input
-                        type="text"
-                        required
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="e.g. password123"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors"
-                      />
-                    </div>
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2 flex items-center justify-center gap-2"
-                  >
-                    {isSaving && <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" />}
-                    <span>Save Officer Roster</span>
-                  </button>
-                </form>
-
-                {/* Excel Import */}
-                <div className="border-l border-slate-200 pl-6 flex flex-col justify-between">
-                  <div className="space-y-4">
-                    <div className="text-xs font-bold text-emerald-600 uppercase tracking-wider flex justify-between items-center">
-                      <span>Excel Import</span>
-                      <button
-                        onClick={downloadExcelTemplate}
-                        type="button"
-                        className="text-[10px] text-blue-600 hover:text-blue-700 font-bold underline cursor-pointer"
-                      >
-                        📥 Get Template
-                      </button>
-                    </div>
-                    <div
-                      onClick={() => fileInputRef.current?.click()}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      className={`rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3 min-h-[160px] border-2 border-dashed ${
-                        isDragging 
-                          ? "border-emerald-500 bg-emerald-50" 
-                          : "border-slate-300 bg-white hover:border-emerald-500"
-                      }`}
-                    >
-                      {isUploading ? (
-                        <>
-                          <div className="w-8 h-8 rounded-full border-2 border-emerald-500/20 border-t-emerald-500 animate-spin" />
-                          <span className="text-[10px] text-slate-500">Parsing spreadsheet...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="text-4xl">📊</span>
-                          <span className="text-xs font-bold text-slate-800">Import PTA Roster</span>
-                          <span className="text-[9px] text-slate-500 leading-normal">
-                            Drag & drop Excel or click to upload
-                          </span>
-                        </>
-                      )}
-                    </div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) parseFile(file);
-                      }}
-                      accept=".xlsx,.xls,.csv"
-                      className="hidden"
-                    />
-                  </div>
-
-                  <div className="text-[10px] text-slate-400 italic leading-relaxed pt-4">
-                    * Upload template matches EMIS standard schema (Columns: Parent Name, Committee Role, Phone Number, Email Address, Ward Name, Ward Class & Section, Committee Term, Password).
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* PTA Meeting Modal */}
+      {isPtaModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-3xl p-6 space-y-4 relative bg-slate-900 border border-slate-800 shadow-2xl">
+            <div className="flex justify-between items-center border-b border-slate-800 pb-3">
+              <h3 className="text-sm font-bold text-white">🤝 Schedule PTA Meeting</h3>
+              <button onClick={() => setIsPtaModalOpen(false)} className="text-slate-400 hover:text-white text-xs font-semibold">✕ Close</button>
+            </div>
+            <form onSubmit={handleCreateMeeting} className="space-y-4">
+              <div>
+                <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Meeting Title</label>
+                <input type="text" required value={newPtaTitle} onChange={(e) => setNewPtaTitle(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" placeholder="e.g. Term 1 Review" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Date & Time</label>
+                  <input type="datetime-local" required value={newPtaDate} onChange={(e) => setNewPtaDate(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Venue</label>
+                  <input type="text" value={newPtaVenue} onChange={(e) => setNewPtaVenue(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Description / Notice</label>
+                <textarea rows={2} value={newPtaDesc} onChange={(e) => setNewPtaDesc(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" placeholder="Optional brief" />
+              </div>
+              <div>
+                <label className="block text-[10px] text-slate-400 mb-1 font-semibold">Agenda Points (One per line)</label>
+                <textarea rows={4} value={newPtaAgenda} onChange={(e) => setNewPtaAgenda(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white" placeholder="Discuss exam scores&#10;School fees&#10;Annual day" />
+              </div>
+              <button type="submit" disabled={isSaving} className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-colors">
+                Schedule Meeting
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal Parent */}
       {parentToDelete && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl relative">
-            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4 mx-auto">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
             <h3 className="text-lg font-bold text-slate-800 text-center mb-2">Remove PTA Officer?</h3>
-            <p className="text-sm text-slate-500 text-center mb-6 leading-relaxed">
-              Are you sure you want to remove <span className="font-bold text-slate-700">{parentToDelete.name}</span> from the committee? This action cannot be undone.
-            </p>
+            <p className="text-sm text-slate-500 text-center mb-6">Are you sure you want to remove <span className="font-bold text-slate-700">{parentToDelete.name}</span>?</p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setParentToDelete(null)}
-                className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-md shadow-red-600/20 text-xs flex items-center justify-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-                Yes, Remove
-              </button>
+              <button onClick={() => setParentToDelete(null)} className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">Cancel</button>
+              <button onClick={confirmDeleteParent} className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs">Yes, Remove</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal Meeting */}
+      {meetingToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl relative">
+            <h3 className="text-lg font-bold text-slate-800 text-center mb-2">Delete Meeting?</h3>
+            <p className="text-sm text-slate-500 text-center mb-6">Are you sure you want to delete <span className="font-bold text-slate-700">{meetingToDelete.title}</span>?</p>
+            <div className="flex gap-3">
+              <button onClick={() => setMeetingToDelete(null)} className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs">Cancel</button>
+              <button onClick={confirmDeleteMeeting} className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs">Yes, Delete</button>
             </div>
           </div>
         </div>

@@ -1,430 +1,226 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import { useParentChildren, getApiBase, Child } from "@/lib/useParentChildren";
 
-// Interface for subject grades and analytics
-interface SubjectDetail {
+interface SubjectMark {
   subject: string;
-  teacher: string;
-  unit1: number;
-  unit2: number;
-  midterm: number;
-  halfyearly: number;
-  grade: string;
-  classAverage: number;
-  remarks: string;
-  attendance: string;
+  [examType: string]: string | number;
 }
 
-// Simulated database response
-const performanceData: SubjectDetail[] = [
-  {
-    subject: "Mathematics",
-    teacher: "Mrs. Sumathi Devi",
-    unit1: 88,
-    unit2: 92,
-    midterm: 85,
-    halfyearly: 94,
-    grade: "A+",
-    classAverage: 71,
-    remarks: "Excellent logical skills. Eager participant in solving classroom problems.",
-    attendance: "98%"
-  },
-  {
-    subject: "Science",
-    teacher: "Mr. Rajendran K.",
-    unit1: 75,
-    unit2: 78,
-    midterm: 72,
-    halfyearly: 81,
-    grade: "A",
-    classAverage: 65,
-    remarks: "Good understanding of concepts. Can improve in experimental diagrams.",
-    attendance: "92%"
-  },
-  {
-    subject: "Tamil",
-    teacher: "Mrs. Thenmozhi M.",
-    unit1: 90,
-    unit2: 88,
-    midterm: 91,
-    halfyearly: 93,
-    grade: "O (Outstanding)",
-    classAverage: 78,
-    remarks: "Exceptional language command. Creative writing and grammar skills are top-notch.",
-    attendance: "96%"
-  },
-  {
-    subject: "English",
-    teacher: "Mr. Christopher J.",
-    unit1: 82,
-    unit2: 84,
-    midterm: 80,
-    halfyearly: 86,
-    grade: "A+",
-    classAverage: 70,
-    remarks: "Very active in reading exercises. Needs to focus slightly more on spelling consistency.",
-    attendance: "94%"
-  },
-  {
-    subject: "Social Science",
-    teacher: "Mrs. Malarvizhi S.",
-    unit1: 70,
-    unit2: 74,
-    midterm: 68,
-    halfyearly: 76,
-    grade: "B+",
-    classAverage: 62,
-    remarks: "Shows interest in historical topics. Needs more preparation for map drawing exercises.",
-    attendance: "90%"
-  }
-];
+interface RawMark {
+  id: string;
+  subject: string;
+  examType: string;
+  maxMarks: number;
+  scored: number;
+  grade: string | null;
+  academicYear: string;
+}
 
-export default function ChildPerformance() {
-  const [activeTerm, setActiveTerm] = useState<"unit1" | "unit2" | "midterm" | "halfyearly">("halfyearly");
-  const [selectedSubject, setSelectedSubject] = useState<string>("Mathematics");
+const COLORS = ["#6366f1","#10b981","#f59e0b","#3b82f6","#ec4899","#14b8a6","#f97316","#8b5cf6"];
 
-  const termLabels = {
-    unit1: "Unit Test 1",
-    unit2: "Unit Test 2",
-    midterm: "Midterm Exam",
-    halfyearly: "Half-Yearly Exam",
-  };
+function ChildSwitcher({ children, active, onChange }: { children: Child[]; active: Child | null; onChange: (c: Child) => void }) {
+  if (children.length <= 1) return null;
+  return (
+    <div className="flex items-center gap-3 mb-5 p-3 glass rounded-2xl flex-wrap">
+      <span className="text-xs text-slate-400 font-semibold">👶 Viewing:</span>
+      {children.map(c => (
+        <button key={c.studentId} onClick={() => onChange(c)}
+          className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            active?.studentId === c.studentId ? "bg-emerald-600 text-white shadow-md" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+          }`}>
+          {c.name.split(" ")[0]} · Class {c.class}{c.section}
+        </button>
+      ))}
+    </div>
+  );
+}
 
-  // Get marks for active subject to show in trend chart
-  const activeSubjectData = performanceData.find((s) => s.subject === selectedSubject);
+function ScoreBar({ scored, maxMarks, color }: { scored: number; maxMarks: number; color: string }) {
+  const pct = Math.round((scored / maxMarks) * 100);
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div className="h-full rounded-full transition-all duration-700" style={{ width: `${pct}%`, backgroundColor: color }} />
+      </div>
+      <span className="text-xs font-bold text-slate-300 w-10 text-right">{pct}%</span>
+    </div>
+  );
+}
 
-  // SVG Chart Dimensions
-  const chartWidth = 500;
-  const chartHeight = 200;
-  const padding = 30;
+export default function PerformancePage() {
+  const { parentId, children, activeChild, setActiveChild, childrenLoading } = useParentChildren();
 
-  // Convert mark to Y coordinate (0 - 100 mark mapped to chartHeight)
-  const getX = (index: number) => padding + (index * (chartWidth - padding * 2)) / 3;
-  const getY = (mark: number) => chartHeight - padding - (mark * (chartHeight - padding * 2)) / 100;
+  const [subjects, setSubjects]   = useState<SubjectMark[]>([]);
+  const [rawMarks, setRawMarks]   = useState<RawMark[]>([]);
+  const [years, setYears]         = useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string>("");
+  const [examTypes, setExamTypes] = useState<string[]>([]);
+  const [loading, setLoading]     = useState(false);
 
-  // Points for SVG path
-  const studentTrendPoints = activeSubjectData
-    ? [
-        { label: "Unit 1", x: getX(0), y: getY(activeSubjectData.unit1), val: activeSubjectData.unit1 },
-        { label: "Unit 2", x: getX(1), y: getY(activeSubjectData.unit2), val: activeSubjectData.unit2 },
-        { label: "Midterm", x: getX(2), y: getY(activeSubjectData.midterm), val: activeSubjectData.midterm },
-        { label: "Half Yearly", x: getX(3), y: getY(activeSubjectData.halfyearly), val: activeSubjectData.halfyearly },
-      ]
-    : [];
+  const fetchPerformance = useCallback(async (child: Child, year?: string) => {
+    if (!parentId) return;
+    setLoading(true);
+    try {
+      const url = `${getApiBase()}/api/parent/${parentId}/child/${child.studentId}/performance${year ? `?academicYear=${year}` : ""}`;
+      const res  = await fetch(url);
+      const json = await res.json();
+      if (json.success) {
+        setSubjects(json.data.subjects);
+        setRawMarks(json.data.rawMarks);
+        setYears(json.data.availableYears);
+        if (!year && json.data.availableYears.length > 0) {
+          setSelectedYear(json.data.availableYears[json.data.availableYears.length - 1]);
+        }
+        if (json.data.subjects.length > 0) {
+          setExamTypes(Object.keys(json.data.subjects[0]).filter(k => k !== "subject"));
+        }
+      }
+    } catch {/* offline */}
+    finally { setLoading(false); }
+  }, [parentId]);
 
-  const classAvgTrendPoints = activeSubjectData
-    ? [
-        { x: getX(0), y: getY(activeSubjectData.classAverage - 5) }, // estimated unit averages
-        { x: getX(1), y: getY(activeSubjectData.classAverage + 2) },
-        { x: getX(2), y: getY(activeSubjectData.classAverage) },
-        { x: getX(3), y: getY(activeSubjectData.classAverage + 3) },
-      ]
-    : [];
+  useEffect(() => { if (activeChild) fetchPerformance(activeChild); }, [activeChild, fetchPerformance]);
 
-  const makePath = (points: { x: number; y: number }[]) => {
-    if (points.length === 0) return "";
-    return `M ${points[0].x} ${points[0].y} ` + points.slice(1).map((p) => `L ${p.x} ${p.y}`).join(" ");
-  };
-
-  const makeAreaPath = (points: { x: number; y: number }[]) => {
-    if (points.length === 0) return "";
-    const linePath = makePath(points);
-    return `${linePath} L ${points[points.length - 1].x} ${chartHeight - padding} L ${points[0].x} ${chartHeight - padding} Z`;
-  };
+  const avgPct = rawMarks.length > 0
+    ? Math.round(rawMarks.reduce((s, m) => s + (m.scored / m.maxMarks) * 100, 0) / rawMarks.length)
+    : 0;
+  const topSubject = subjects.reduce((best, s) => {
+    const avg = examTypes.reduce((sum, et) => sum + (Number(s[et]) || 0), 0) / (examTypes.length || 1);
+    const bestAvg = examTypes.reduce((sum, et) => sum + (Number((best as any)[et]) || 0), 0) / (examTypes.length || 1);
+    return avg > bestAvg ? s : best;
+  }, subjects[0] ?? {});
+  const lowestSubject = subjects.reduce((low, s) => {
+    const avg = examTypes.reduce((sum, et) => sum + (Number(s[et]) || 0), 0) / (examTypes.length || 1);
+    const lowAvg = examTypes.reduce((sum, et) => sum + (Number((low as any)[et]) || 0), 0) / (examTypes.length || 1);
+    return avg < lowAvg ? s : low;
+  }, subjects[0] ?? {});
 
   return (
-    <PortalLayout
-      title="Child Performance Tracker"
-      subtitle="Comprehensive Academic Analytics & Progress Reports for Priya"
-    >
-      {/* TODO: Connect backend APIs to fetch actual student performance record by EMIS ID */}
-      {/* Example API Hook Placeholder:
-          useEffect(() => {
-            fetchPerformanceData(emisId).then(data => setData(data));
-          }, [emisId]);
-      */}
+    <PortalLayout>
+      <ChildSwitcher children={children} active={activeChild} onChange={setActiveChild} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Academic Overview Chart */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 fade-in">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-              <h2 className="text-base font-semibold text-white">📈 Performance Trend Chart</h2>
-              <p className="text-xs text-slate-500">Visual trend comparing Priya&apos;s score with the class average</p>
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
+        {[
+          { label: "Overall Average", value: `${avgPct}%`,      icon: "📊", color: "text-emerald-400" },
+          { label: "Grade",           value: avgPct >= 90 ? "A+" : avgPct >= 75 ? "A" : avgPct >= 60 ? "B" : avgPct >= 50 ? "C" : "D",
+            icon: "⭐", color: "text-amber-400" },
+          { label: "Best Subject",    value: (topSubject as any)?.subject?.split(" ")[0] ?? "—", icon: "🏆", color: "text-blue-400" },
+          { label: "Needs Attention", value: (lowestSubject as any)?.subject?.split(" ")[0] ?? "—", icon: "⚠️", color: "text-red-400" },
+        ].map(k => (
+          <div key={k.label} className="kpi-card">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-2xl">{k.icon}</span>
             </div>
-            {/* Subject Selector */}
-            <div className="relative">
-              <select
-                id="perf-subject-selector"
-                value={selectedSubject}
-                onChange={(e) => setSelectedSubject(e.target.value)}
-                className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
-              >
-                {performanceData.map((s) => (
-                  <option key={s.subject} value={s.subject}>
-                    {s.subject}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {loading || childrenLoading
+              ? <div className="h-8 w-20 bg-slate-700 rounded animate-pulse mb-1" />
+              : <div className={`text-2xl font-bold ${k.color} mb-1 truncate`}>{k.value}</div>
+            }
+            <div className="text-xs text-slate-500">{k.label}</div>
           </div>
-
-          {/* SVG Line Chart */}
-          <div className="relative flex justify-center py-4 bg-slate-950/40 rounded-2xl border border-slate-800/80">
-            {activeSubjectData ? (
-              <svg width="100%" height={chartHeight} viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="max-w-full">
-                <defs>
-                  {/* Glowing effects */}
-                  <linearGradient id="studentGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
-                  </linearGradient>
-                </defs>
-
-                {/* Y-axis guidelines */}
-                {[0, 25, 50, 75, 100].map((level) => (
-                  <g key={level}>
-                    <line
-                      x1={padding}
-                      y1={getY(level)}
-                      x2={chartWidth - padding}
-                      y2={getY(level)}
-                      stroke="#1e293b"
-                      strokeWidth="1"
-                      strokeDasharray={level === 0 || level === 100 ? "0" : "4 4"}
-                    />
-                    <text
-                      x={padding - 5}
-                      y={getY(level) + 4}
-                      fill="#64748b"
-                      fontSize="9"
-                      textAnchor="end"
-                    >
-                      {level}
-                    </text>
-                  </g>
-                ))}
-
-                {/* Area under Student Line */}
-                <path d={makeAreaPath(studentTrendPoints)} fill="url(#studentGrad)" />
-
-                {/* Class Average Line (Dashed) */}
-                <path
-                  d={makePath(classAvgTrendPoints)}
-                  fill="none"
-                  stroke="#ef4444"
-                  strokeWidth="2"
-                  strokeDasharray="4 4"
-                  opacity="0.6"
-                />
-
-                {/* Student Mark Line */}
-                <path
-                  d={makePath(studentTrendPoints)}
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="3"
-                />
-
-                {/* Data Points */}
-                {studentTrendPoints.map((pt, i) => (
-                  <g key={i}>
-                    <circle
-                      cx={pt.x}
-                      cy={pt.y}
-                      r="5"
-                      fill="#10b981"
-                      stroke="#0f172a"
-                      strokeWidth="2"
-                    />
-                    <text
-                      x={pt.x}
-                      y={pt.y - 10}
-                      fill="#fff"
-                      fontSize="10"
-                      fontWeight="bold"
-                      textAnchor="middle"
-                    >
-                      {pt.val}%
-                    </text>
-                    <text
-                      x={pt.x}
-                      y={chartHeight - 8}
-                      fill="#64748b"
-                      fontSize="9"
-                      textAnchor="middle"
-                    >
-                      {pt.label}
-                    </text>
-                  </g>
-                ))}
-              </svg>
-            ) : (
-              <div className="text-xs text-slate-500">No subject selected</div>
-            )}
-          </div>
-          <div className="flex justify-center gap-6 mt-4 text-[10px]">
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-1 bg-emerald-500 rounded-full"></span>
-              <span className="text-slate-400">Priya&apos;s Marks</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-3 h-1 bg-red-500 border border-dashed rounded-full"></span>
-              <span className="text-slate-400">Class Average</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Highlights Card */}
-        <div className="glass rounded-2xl p-6 fade-in-2 flex flex-col justify-between">
-          <div>
-            <h2 className="text-base font-semibold text-white mb-4">🏆 Quick Highlights</h2>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <span className="text-xl bg-emerald-500/10 p-2 rounded-xl text-emerald-400">🚀</span>
-                <div>
-                  <h4 className="text-xs font-semibold text-white">Strength Area</h4>
-                  <p className="text-xs text-slate-400 mt-0.5">Top performing in <strong>Mathematics</strong> &amp; <strong>Tamil</strong> (exceeding 90% in both).</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xl bg-amber-500/10 p-2 rounded-xl text-amber-400">📈</span>
-                <div>
-                  <h4 className="text-xs font-semibold text-white">Improvement Area</h4>
-                  <p className="text-xs text-slate-400 mt-0.5">Showed a 5% gain in <strong>Science</strong> from Midterm (72%) to Half-Yearly (81%).</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <span className="text-xl bg-blue-500/10 p-2 rounded-xl text-blue-400">💡</span>
-                <div>
-                  <h4 className="text-xs font-semibold text-white">Class Position</h4>
-                  <p className="text-xs text-slate-400 mt-0.5">Currently holds <strong>Rank #5</strong> out of 42 students based on Class 9B composite score.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-slate-800/80 pt-4 mt-4">
-            <div className="bg-slate-900/60 rounded-xl p-3 border border-slate-800">
-              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Upcoming Assessment</div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-300 font-medium">Class 9B Revision Test</span>
-                <span className="text-amber-400 font-semibold">June 28, 2025</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Main Marks breakdown and exam view */}
-      <div className="glass rounded-2xl p-6 mb-6 fade-in-3">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-slate-800 pb-5">
-          <div>
-            <h2 className="text-base font-semibold text-white">📊 Mark Distribution & Teacher Feedback</h2>
-            <p className="text-xs text-slate-500">Change terms to view marks and specific teacher feedback</p>
-          </div>
-          {/* Term Selector Tabs */}
-          <div className="flex bg-slate-950/60 border border-slate-800 p-1.5 rounded-xl gap-1">
-            {(["unit1", "unit2", "midterm", "halfyearly"] as const).map((term) => (
-              <button
-                key={term}
-                id={`term-tab-${term}`}
-                onClick={() => setActiveTerm(term)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  activeTerm === term
-                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-700/20"
-                    : "text-slate-400 hover:text-white"
-                }`}
-              >
-                {termLabels[term]}
-              </button>
-            ))}
-          </div>
+      {/* Year Selector */}
+      {years.length > 1 && (
+        <div className="flex items-center gap-3 mb-5">
+          <span className="text-xs text-slate-400">Academic Year:</span>
+          {years.map(y => (
+            <button key={y} onClick={() => { setSelectedYear(y); if (activeChild) fetchPerformance(activeChild, y); }}
+              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${selectedYear === y ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700"}`}>
+              {y}
+            </button>
+          ))}
         </div>
+      )}
 
-        {/* Marks Table */}
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Subject</th>
-                <th>Subject Teacher</th>
-                <th className="text-center">Score Obtained</th>
-                <th className="text-center">Class Average</th>
-                <th>Remarks & Suggested Actions</th>
-                <th>Attendance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {performanceData.map((s) => {
-                const score = s[activeTerm];
-                const passing = score >= 40;
-                return (
-                  <tr key={s.subject} className="group">
-                    <td className="font-semibold text-white">{s.subject}</td>
-                    <td className="text-slate-400 text-xs">{s.teacher}</td>
-                    <td className="text-center font-bold">
-                      <span className={`text-base ${score >= 85 ? "text-emerald-400" : score >= 75 ? "text-blue-400" : score >= 50 ? "text-amber-400" : "text-red-400"}`}>
-                        {score}
-                      </span>
-                      <span className="text-slate-600 text-xs font-normal"> / 100</span>
-                    </td>
-                    <td className="text-center font-medium text-slate-400 text-xs">
-                      {s.classAverage}%
-                    </td>
-                    <td className="max-w-xs text-xs text-slate-300 leading-relaxed truncate group-hover:whitespace-normal group-hover:overflow-visible">
-                      {s.remarks}
-                    </td>
-                    <td>
-                      <span className={`badge ${parseInt(s.attendance) >= 92 ? "badge-green" : "badge-yellow"}`}>
-                        {s.attendance}
-                      </span>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+      {/* Subject Marks Table */}
+      <div className="glass rounded-2xl p-6 mb-6 fade-in-2">
+        <h2 className="text-base font-semibold text-white mb-5">📋 Subject-wise Mark Sheet</h2>
+        {loading ? (
+          <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-14 bg-slate-800 rounded-xl animate-pulse" />)}</div>
+        ) : subjects.length === 0 ? (
+          <div className="text-center py-10 text-slate-500 text-sm">
+            No marks recorded yet{activeChild ? ` for ${activeChild.name}` : ""}.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th className="w-40">Subject</th>
+                  {examTypes.map(et => <th key={et}>{et}</th>)}
+                  <th>Avg %</th>
+                  <th>Progress</th>
+                  <th>Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                {subjects.map((s, idx) => {
+                  const color = COLORS[idx % COLORS.length];
+                  const vals = examTypes.map(et => Number(s[et]) || 0);
+                  const avg = vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+                  const last = vals[vals.length - 1] ?? 0;
+                  const prev = vals[vals.length - 2] ?? last;
+                  return (
+                    <tr key={s.subject}>
+                      <td className="font-semibold text-white" style={{ borderLeft: `3px solid ${color}` }}>
+                        <span className="pl-2">{s.subject}</span>
+                      </td>
+                      {examTypes.map(et => (
+                        <td key={et}>
+                          <span className={`font-bold ${Number(s[et]) >= 75 ? "text-emerald-400" : Number(s[et]) >= 50 ? "text-amber-400" : "text-red-400"}`}>
+                            {s[et] ?? "—"}
+                          </span>
+                        </td>
+                      ))}
+                      <td className="font-bold text-blue-400">{avg}%</td>
+                      <td className="w-32"><ScoreBar scored={avg} maxMarks={100} color={color} /></td>
+                      <td>
+                        <span className={`badge ${last >= prev ? "badge-green" : "badge-red"}`}>
+                          {last >= prev ? "↑ Up" : "↓ Down"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
-      {/* Skills Analysis */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 fade-in-4">
-        {/* Core Strengths */}
-        <div className="glass rounded-2xl p-6 border-l-4 border-l-emerald-500">
-          <h3 className="text-sm font-semibold text-white mb-3">🌟 Priya&apos;s Core Strengths</h3>
-          <ul className="space-y-3">
-            {[
-              { title: "Mathematical Thinking", desc: "Solves linear equations and algebra problems very fast. Shows strong abstract reasoning." },
-              { title: "Verbal Command", desc: "Fluent reading comprehension in both Tamil and English. Displays solid vocabulary retention." },
-              { title: "Class Engagement", desc: "Highly cooperative, asks meaningful questions during classroom teaching, and coordinates well in team sessions." }
-            ].map((strength) => (
-              <li key={strength.title} className="bg-slate-900/40 rounded-xl p-3 border border-slate-800">
-                <div className="text-xs font-bold text-emerald-400 mb-0.5">{strength.title}</div>
-                <p className="text-xs text-slate-400">{strength.desc}</p>
-              </li>
-            ))}
-          </ul>
+      {/* Detailed Raw Marks */}
+      {rawMarks.length > 0 && (
+        <div className="glass rounded-2xl p-6 fade-in-4">
+          <h2 className="text-base font-semibold text-white mb-4">📝 Detailed Mark Records</h2>
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr><th>Subject</th><th>Exam Type</th><th>Scored</th><th>Max</th><th>%</th><th>Grade</th><th>Year</th></tr>
+              </thead>
+              <tbody>
+                {rawMarks.map(m => {
+                  const pct = Math.round((m.scored / m.maxMarks) * 100);
+                  return (
+                    <tr key={m.id}>
+                      <td className="font-medium text-white">{m.subject}</td>
+                      <td><span className="badge badge-blue">{m.examType}</span></td>
+                      <td className="font-bold text-emerald-400">{m.scored}</td>
+                      <td className="text-slate-400">{m.maxMarks}</td>
+                      <td className={`font-bold ${pct >= 75 ? "text-emerald-400" : pct >= 50 ? "text-amber-400" : "text-red-400"}`}>{pct}%</td>
+                      <td><span className="badge badge-green">{m.grade ?? "—"}</span></td>
+                      <td className="text-slate-400 text-xs">{m.academicYear}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
-
-        {/* Recommended Focus Areas */}
-        <div className="glass rounded-2xl p-6 border-l-4 border-l-amber-500">
-          <h3 className="text-sm font-semibold text-white mb-3">⚠️ Recommended Focus Areas</h3>
-          <ul className="space-y-3">
-            {[
-              { title: "Scientific Illustration", desc: "Needs practice in biological and physical system diagrams (labeling plants, electric circuits)." },
-              { title: "Conceptual Social Science", desc: "Geography map markings and chronological historical timelines need additional practice." },
-              { title: "Calculative Speed under pressure", desc: "Tends to perform silly operational mistakes during exam timed-pressure. Suggesting daily practice." }
-            ].map((focus) => (
-              <li key={focus.title} className="bg-slate-900/40 rounded-xl p-3 border border-slate-800">
-                <div className="text-xs font-bold text-amber-400 mb-0.5">{focus.title}</div>
-                <p className="text-xs text-slate-400">{focus.desc}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
+      )}
     </PortalLayout>
   );
 }

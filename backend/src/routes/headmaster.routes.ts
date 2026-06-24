@@ -504,6 +504,17 @@ router.get('/parents', async (req: Request, res: Response) => {
     const { schoolId } = req.query;
     const parents = await prisma.headmasterParent.findMany({
       where: schoolId ? { schoolId: String(schoolId) } : undefined,
+      include: {
+        linkedStudents: {
+          include: {
+            student: {
+              include: {
+                user: { select: { name: true } }
+              }
+            }
+          }
+        }
+      },
       orderBy: { createdAt: 'desc' },
     });
     res.json({ success: true, count: parents.length, data: parents });
@@ -663,6 +674,145 @@ router.delete('/alumni/:id', async (req: Request, res: Response) => {
   try {
     await prisma.headmasterAlumni.delete({ where: { id: req.params.id } });
     res.json({ success: true, message: 'Alumni contribution record removed' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// ─── PTA Meeting Endpoints (Headmaster creates, parents view) ─────
+
+// GET /api/headmaster/pta-meetings
+router.get('/pta-meetings', async (req: Request, res: Response) => {
+  try {
+    const { schoolId } = req.query;
+    const meetings = await prisma.pTAMeeting.findMany({
+      where: schoolId ? { schoolId: String(schoolId) } : undefined,
+      orderBy: { meetingDate: 'asc' },
+    });
+    res.json({ success: true, count: meetings.length, data: meetings });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// POST /api/headmaster/pta-meetings
+router.post('/pta-meetings', async (req: Request, res: Response) => {
+  try {
+    const { schoolId, title, description, meetingDate, venue, status, agenda } = req.body;
+    if (!title || !meetingDate) {
+      return res.status(400).json({ success: false, error: 'title and meetingDate are required' });
+    }
+    const meeting = await prisma.pTAMeeting.create({
+      data: {
+        schoolId: schoolId || null,
+        title,
+        description: description || null,
+        meetingDate: new Date(meetingDate),
+        venue: venue || 'School Auditorium',
+        status: status || 'Upcoming',
+        agenda: Array.isArray(agenda) ? agenda : [],
+      },
+    });
+    res.status(201).json({ success: true, data: meeting });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// PUT /api/headmaster/pta-meetings/:id
+router.put('/pta-meetings/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { title, description, meetingDate, venue, status, agenda } = req.body;
+    const meeting = await prisma.pTAMeeting.update({
+      where: { id },
+      data: {
+        ...(title && { title }),
+        ...(description !== undefined && { description }),
+        ...(meetingDate && { meetingDate: new Date(meetingDate) }),
+        ...(venue && { venue }),
+        ...(status && { status }),
+        ...(Array.isArray(agenda) && { agenda }),
+      },
+    });
+    res.json({ success: true, data: meeting });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// DELETE /api/headmaster/pta-meetings/:id
+router.delete('/pta-meetings/:id', async (req: Request, res: Response) => {
+  try {
+    await prisma.pTAMeeting.delete({ where: { id: req.params.id } });
+    res.json({ success: true, message: 'PTA meeting removed' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// ─── Parent → Student Link (Headmaster action) ────────────────────
+
+// POST /api/headmaster/parents/:id/link-student
+// Body: { studentId, isPrimary? }
+router.post('/parents/:id/link-student', async (req: Request, res: Response) => {
+  try {
+    const parentId = req.params.id;
+    const { studentId, isPrimary } = req.body;
+    if (!studentId) {
+      return res.status(400).json({ success: false, error: 'studentId is required' });
+    }
+    const link = await prisma.parentStudentLink.upsert({
+      where: { parentId_studentId: { parentId, studentId } },
+      update: { isPrimary: isPrimary ?? false },
+      create: { parentId, studentId, isPrimary: isPrimary ?? false },
+    });
+    res.status(201).json({ success: true, data: link });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// DELETE /api/headmaster/parents/:id/link-student
+// Body: { studentId }
+router.delete('/parents/:id/link-student', async (req: Request, res: Response) => {
+  try {
+    const parentId = req.params.id;
+    const { studentId } = req.body;
+    await prisma.parentStudentLink.delete({
+      where: { parentId_studentId: { parentId, studentId } },
+    });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// GET /api/headmaster/parents/:id/linked-students
+router.get('/parents/:id/linked-students', async (req: Request, res: Response) => {
+  try {
+    const { id: parentId } = req.params;
+    const links = await prisma.parentStudentLink.findMany({
+      where: { parentId },
+      include: {
+        student: {
+          include: { user: { select: { name: true } } },
+        },
+      },
+      orderBy: [{ isPrimary: 'desc' }],
+    });
+    res.json({
+      success: true,
+      data: links.map(l => ({
+        linkId: l.id,
+        studentId: l.student.id,
+        name: l.student.user.name,
+        class: l.student.class,
+        section: l.student.section,
+        rollNumber: l.student.rollNumber,
+        isPrimary: l.isPrimary,
+      })),
+    });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
   }

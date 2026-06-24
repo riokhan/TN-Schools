@@ -1,156 +1,177 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import { useSession } from "next-auth/react";
+import { getApiBase } from "@/lib/useParentChildren";
 
-interface PtaMeeting {
+interface PTAMeeting {
   id: string;
-  date: string;
-  time: string;
-  mode: "Offline" | "Online";
-  location: string;
+  title: string;
+  description: string | null;
+  meetingDate: string;
+  venue: string;
+  status: "Upcoming" | "Completed" | "Cancelled";
   agenda: string[];
-  organizer: string;
+  createdAt: string;
 }
 
-const upcomingMeeting: PtaMeeting = {
-  id: "pta-meet-105",
-  date: "Wednesday, June 25, 2025",
-  time: "10:00 AM - 11:30 AM",
-  mode: "Offline",
-  location: "School Assembly Hall, GHS Coimbatore",
-  organizer: "Mrs. Sumathi Devi (Class 9B Advisor)",
-  agenda: [
-    "Discussion of Midterm examination grades and subject-wise averages",
-    "Student safety, attendance tracking policies, and leave submissions",
-    "Implementation feedback for the AI Smart Learning Ecosystem modules",
-    "Discussion on Class 9 revision tests schedule (June 28 to July 3)"
-  ]
-};
-
-const pastMeetings = [
-  {
-    id: "pta-meet-104",
-    date: "March 15, 2025",
-    type: "Term 2 Review",
-    summary: "Reviewed Term 2 performance, discussed smart classroom projector installation, and finalized the dietary tracking system in mid-day school meals."
-  },
-  {
-    id: "pta-meet-103",
-    date: "January 10, 2025",
-    type: "New Year Planning",
-    summary: "Discussed winter unit assessment results, coordinated distribution of free school uniform sets, and announced winter athletic meet dates."
-  }
-];
-
 export default function PtaMeetingsPage() {
-  const [rsvpStatus, setRsvpStatus] = useState<"Accept" | "Decline" | "Tentative" | null>(null);
-  const [rsvpFeedback, setRsvpFeedback] = useState("");
+  const { data: session } = useSession();
+  const schoolId = (session?.user as any)?.schoolId as string | undefined;
+
+  const [meetings, setMeetings]   = useState<PTAMeeting[]>([]);
+  const [loading, setLoading]     = useState(true);
+  const [rsvpStatus, setRsvpStatus] = useState<Record<string, "Accept" | "Decline" | "Tentative">>({});
   const [preSubmittedQuestions, setPreSubmittedQuestions] = useState<string[]>([]);
   const [newQuestion, setNewQuestion] = useState("");
 
-  const handleRsvp = (status: "Accept" | "Decline" | "Tentative") => {
-    setRsvpStatus(status);
-    setRsvpFeedback(`✅ RSVP status saved: "${status}". The class advisor has been notified.`);
+  const fetchMeetings = useCallback(async () => {
+    setLoading(true);
+    try {
+      const qs = schoolId ? `?schoolId=${schoolId}` : "";
+      const res  = await fetch(`${getApiBase()}/api/parent/pta-meetings${qs}`);
+      const json = await res.json();
+      if (json.success) setMeetings(json.data);
+    } catch {/* offline */}
+    finally { setLoading(false); }
+  }, [schoolId]);
+
+  useEffect(() => { fetchMeetings(); }, [fetchMeetings]);
+
+  const handleRsvp = (meetingId: string, status: "Accept" | "Decline" | "Tentative") => {
+    setRsvpStatus(prev => ({ ...prev, [meetingId]: status }));
   };
 
   const handleQuestionSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newQuestion.trim()) return;
-
-    setPreSubmittedQuestions([...preSubmittedQuestions, newQuestion.trim()]);
+    setPreSubmittedQuestions(prev => [...prev, newQuestion.trim()]);
     setNewQuestion("");
   };
+
+  const upcoming  = meetings.filter(m => m.status === "Upcoming");
+  const completed = meetings.filter(m => m.status === "Completed");
+  const nextMeeting = upcoming[0];
+
+  const fmtDate = (d: string) =>
+    new Date(d).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const fmtTime = (d: string) =>
+    new Date(d).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
 
   return (
     <PortalLayout
       title="Parent-Teacher Meetings"
       subtitle="Verify upcoming PTA agendas, RSVP status, and submit topics for classroom discussions"
     >
-      {/* TODO: Connect backend calendar integrations (Google Calendar / Microsoft Teams for online meets) */}
+      {/* KPI Row */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
+        {[
+          { label: "Upcoming",  value: String(upcoming.length),  icon: "📅", color: "text-emerald-400" },
+          { label: "Completed", value: String(completed.length), icon: "✅", color: "text-blue-400" },
+          { label: "My Questions", value: String(preSubmittedQuestions.length), icon: "✍️", color: "text-amber-400" },
+          { label: "Total Meetings", value: String(meetings.length), icon: "🤝", color: "text-purple-400" },
+        ].map(k => (
+          <div key={k.label} className="kpi-card">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-2xl">{k.icon}</span>
+            </div>
+            {loading
+              ? <div className="h-8 w-12 bg-slate-700 rounded animate-pulse mb-1" />
+              : <div className={`text-3xl font-bold ${k.color} mb-1`}>{k.value}</div>
+            }
+            <div className="text-xs text-slate-500">{k.label}</div>
+          </div>
+        ))}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Next PTA meeting card */}
+        {/* Next PTA Meeting Card */}
         <div className="lg:col-span-2 glass rounded-2xl p-6 fade-in flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-start gap-4 mb-4">
-              <div>
-                <span className="text-[10px] font-bold text-emerald-400 uppercase bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/10 rounded-full">
-                  Upcoming Meeting
-                </span>
-                <h2 className="text-base font-semibold text-white mt-1.5">{upcomingMeeting.date}</h2>
-              </div>
-              <span className="badge badge-green">{upcomingMeeting.mode}</span>
+          {loading ? (
+            <div className="space-y-4">
+              <div className="h-6 w-48 bg-slate-700 rounded animate-pulse" />
+              <div className="h-4 w-64 bg-slate-700 rounded animate-pulse" />
+              <div className="h-4 w-56 bg-slate-700 rounded animate-pulse" />
+              <div className="h-32 bg-slate-800 rounded-xl animate-pulse" />
             </div>
+          ) : nextMeeting ? (
+            <div>
+              <div className="flex justify-between items-start gap-4 mb-4">
+                <div>
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/10 rounded-full">
+                    Upcoming Meeting
+                  </span>
+                  <h2 className="text-base font-semibold text-white mt-1.5">{nextMeeting.title}</h2>
+                  <p className="text-sm text-slate-300 mt-0.5">{fmtDate(nextMeeting.meetingDate)}</p>
+                </div>
+                <span className="badge badge-green">{nextMeeting.status}</span>
+              </div>
 
-            <div className="space-y-3.5 mb-6 text-xs">
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500">⏰ Time:</span>
-                <strong className="text-white">{upcomingMeeting.time}</strong>
+              <div className="space-y-3.5 mb-6 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500">⏰ Time:</span>
+                  <strong className="text-white">{fmtTime(nextMeeting.meetingDate)}</strong>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500">📍 Venue:</span>
+                  <strong className="text-white">{nextMeeting.venue}</strong>
+                </div>
+                {nextMeeting.description && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500">📝 Note:</span>
+                    <strong className="text-white">{nextMeeting.description}</strong>
+                  </div>
+                )}
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500">📍 Venue:</span>
-                <strong className="text-white">{upcomingMeeting.location}</strong>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500">👤 Organizer:</span>
-                <strong className="text-white">{upcomingMeeting.organizer}</strong>
-              </div>
-            </div>
 
-            <div className="border-t border-slate-800/80 pt-4">
-              <h3 className="text-xs font-bold text-slate-400 mb-2.5">📋 Agenda Points:</h3>
-              <ul className="space-y-2 text-xs text-slate-300 leading-normal pl-4 list-decimal">
-                {upcomingMeeting.agenda.map((item, idx) => (
-                  <li key={idx}>{item}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
+              {nextMeeting.agenda.length > 0 && (
+                <div className="border-t border-slate-800/80 pt-4">
+                  <h3 className="text-xs font-bold text-slate-400 mb-2.5">📋 Agenda Points:</h3>
+                  <ul className="space-y-2 text-xs text-slate-300 leading-normal pl-4 list-decimal">
+                    {nextMeeting.agenda.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
-          {/* RSVP Selector */}
-          <div className="border-t border-slate-800/80 pt-5 mt-6">
-            <h4 className="text-xs font-semibold text-slate-400 mb-3">Will you attend this meeting?</h4>
-            <div className="flex flex-wrap gap-3 items-center">
-              <button
-                id="pta-rsvp-accept"
-                onClick={() => handleRsvp("Accept")}
-                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  rsvpStatus === "Accept"
-                    ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20"
-                    : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
-                }`}
-              >
-                ✓ Accept
-              </button>
-              <button
-                id="pta-rsvp-tentative"
-                onClick={() => handleRsvp("Tentative")}
-                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  rsvpStatus === "Tentative"
-                    ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20"
-                    : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
-                }`}
-              >
-                ? Tentative
-              </button>
-              <button
-                id="pta-rsvp-decline"
-                onClick={() => handleRsvp("Decline")}
-                className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  rsvpStatus === "Decline"
-                    ? "bg-red-500 text-slate-950 shadow-lg shadow-red-500/20"
-                    : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
-                }`}
-              >
-                ✕ Decline
-              </button>
+              {/* RSVP Selector */}
+              <div className="border-t border-slate-800/80 pt-5 mt-6">
+                <h4 className="text-xs font-semibold text-slate-400 mb-3">Will you attend this meeting?</h4>
+                <div className="flex flex-wrap gap-3 items-center">
+                  {(["Accept", "Decline", "Tentative"] as const).map(status => {
+                    const current = rsvpStatus[nextMeeting.id];
+                    const colors = status === "Accept"
+                      ? current === status ? "bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20" : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                      : status === "Tentative"
+                      ? current === status ? "bg-amber-500 text-slate-950 shadow-lg shadow-amber-500/20" : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white"
+                      : current === status ? "bg-red-500 text-slate-950 shadow-lg shadow-red-500/20" : "bg-slate-900 border border-slate-800 text-slate-400 hover:text-white";
+                    const icon = status === "Accept" ? "✓" : status === "Tentative" ? "?" : "✕";
+                    return (
+                      <button key={status} onClick={() => handleRsvp(nextMeeting.id, status)}
+                        className={`px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${colors}`}>
+                        {icon} {status}
+                      </button>
+                    );
+                  })}
+                </div>
+                {rsvpStatus[nextMeeting.id] && (
+                  <p className="text-xs font-medium text-emerald-400 mt-3">
+                    ✅ RSVP status saved: &quot;{rsvpStatus[nextMeeting.id]}&quot;. The class advisor has been notified.
+                  </p>
+                )}
+              </div>
             </div>
-            {rsvpFeedback && (
-              <p className="text-xs font-medium text-emerald-450 mt-3" id="pta-rsvp-feedback">
-                {rsvpFeedback}
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-5xl mb-4">📅</div>
+              <h3 className="text-white font-semibold mb-2">No Upcoming PTA Meetings</h3>
+              <p className="text-slate-400 text-sm">
+                The Headmaster has not scheduled any upcoming meetings yet.
+                Check back later or contact the school office.
               </p>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Submit Question for Discussion Form */}
@@ -183,9 +204,8 @@ export default function PtaMeetingsPage() {
             </form>
           </div>
 
-          {/* User Submitted Questions */}
           {preSubmittedQuestions.length > 0 && (
-            <div className="mt-5 border-t border-slate-800 pt-4" id="pta-submitted-questions">
+            <div className="mt-5 border-t border-slate-800 pt-4">
               <h4 className="text-xs font-bold text-slate-400 mb-2">Submitted Topics:</h4>
               <ul className="space-y-2">
                 {preSubmittedQuestions.map((q, idx) => (
@@ -199,25 +219,62 @@ export default function PtaMeetingsPage() {
         </div>
       </div>
 
+      {/* Other Upcoming Meetings (if more than 1) */}
+      {upcoming.length > 1 && (
+        <div className="glass rounded-2xl p-6 mb-6 fade-in-3">
+          <h2 className="text-base font-semibold text-white mb-4">📅 Other Upcoming Meetings</h2>
+          <div className="space-y-3">
+            {upcoming.slice(1).map(m => (
+              <div key={m.id} className="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-sm font-bold text-white">{m.title}</h3>
+                    <p className="text-xs text-slate-400 mt-1">{fmtDate(m.meetingDate)} at {fmtTime(m.meetingDate)}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">📍 {m.venue}</p>
+                  </div>
+                  <span className="badge badge-green text-xs">{m.status}</span>
+                </div>
+                {m.agenda.length > 0 && (
+                  <div className="mt-3 pt-3 border-t border-emerald-500/10">
+                    <p className="text-xs text-slate-400">{m.agenda.length} agenda point{m.agenda.length > 1 ? "s" : ""}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Past PTA Meetings Log */}
       <div className="glass rounded-2xl p-6 fade-in-3">
         <h2 className="text-base font-semibold text-white mb-4">🤝 Past Meetings History & Minutes</h2>
-        <div className="space-y-4">
-          {pastMeetings.map((meet) => (
-            <div key={meet.id} className="bg-slate-900/40 rounded-2xl p-4.5 border border-slate-800/80 flex flex-col justify-between hover:border-slate-700/80 transition-colors">
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 mb-2.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
-                    {meet.id}
-                  </span>
-                  <h4 className="text-xs font-bold text-white">{meet.type}</h4>
+        {completed.length === 0 && !loading ? (
+          <div className="text-center py-8 text-slate-500 text-sm">No past meetings on record yet.</div>
+        ) : (
+          <div className="space-y-4">
+            {completed.map((meet) => (
+              <div key={meet.id} className="bg-slate-900/40 rounded-2xl p-4 border border-slate-800/80 hover:border-slate-700/80 transition-colors">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-1.5 mb-2.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                      Completed
+                    </span>
+                    <h4 className="text-xs font-bold text-white">{meet.title}</h4>
+                  </div>
+                  <span className="text-[10px] text-slate-500 font-semibold">{fmtDate(meet.meetingDate)}</span>
                 </div>
-                <span className="text-[10px] text-slate-500 font-semibold">{meet.date}</span>
+                {meet.description && (
+                  <p className="text-xs text-slate-400 leading-relaxed">{meet.description}</p>
+                )}
+                {meet.agenda.length > 0 && (
+                  <div className="mt-2 pt-2 border-t border-slate-700/50">
+                    <p className="text-xs text-slate-500">📋 Discussed: {meet.agenda.join(" · ")}</p>
+                  </div>
+                )}
               </div>
-              <p className="text-xs text-slate-350 leading-relaxed">{meet.summary}</p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </PortalLayout>
   );

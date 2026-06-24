@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import { useParentChildren, getApiBase, Child } from "@/lib/useParentChildren";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -8,70 +9,150 @@ interface ChatMessage {
   time: string;
 }
 
-const suggestedPrompts = [
-  "How can Priya improve in Science?",
-  "Generate a weekly study schedule for Priya",
-  "What scholarships is Priya eligible for?",
-  "Check Priya's academic summary",
-];
+function ChildSwitcher({ children, active, onChange }: { children: Child[]; active: Child | null; onChange: (c: Child) => void }) {
+  if (children.length <= 1) return null;
+  return (
+    <div className="flex items-center gap-3 mb-5 p-3 glass rounded-2xl flex-wrap">
+      <span className="text-xs text-slate-400 font-semibold">👶 Chatting about:</span>
+      {children.map(c => (
+        <button key={c.studentId} onClick={() => onChange(c)}
+          className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            active?.studentId === c.studentId ? "bg-emerald-600 text-white shadow-md" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+          }`}>
+          {c.name.split(" ")[0]} · Class {c.class}{c.section}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function AIAssistantPage() {
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      role: "assistant",
-      content: "வணக்கம்! 👋 I am your AI Parent Assistant. I can help you track Priya's academic performance, suggest learning activities, or answer queries about school policies in English & Tamil.\n\n*(Hello! Ask me any questions about Priya's progress, homework, or exam prep!)*",
-      time: "Now",
-    },
-  ]);
+  const { parentId, children, activeChild, setActiveChild } = useParentChildren();
+  const childName = activeChild?.name?.split(" ")[0] ?? "your child";
+  const childLabel = activeChild ? `${activeChild.name} - Class ${activeChild.class}${activeChild.section}` : "Select a child";
+
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [activeLanguage, setActiveLanguage] = useState<"bilingual" | "tamil" | "english">("bilingual");
 
-  const simulatedResponses = (query: string): string => {
+  // Reset chat when child changes
+  useEffect(() => {
+    setMessages([{
+      role: "assistant",
+      content: `வணக்கம்! 👋 I am your AI Parent Assistant. I can help you track ${childName}'s academic performance, suggest learning activities, or answer queries about school policies in English & Tamil.\n\n*(Hello! Ask me any questions about ${childName}'s progress, homework, or exam prep!)*`,
+      time: "Now",
+    }]);
+  }, [childName]);
+
+  const suggestedPrompts = [
+    `How can ${childName} improve in Science?`,
+    `Generate a weekly study schedule for ${childName}`,
+    `What scholarships is ${childName} eligible for?`,
+    `Check ${childName}'s academic summary`,
+  ];
+
+  // Fetch real summary data for AI context
+  const generateContextualResponse = useCallback(async (query: string): Promise<string> => {
     const q = query.toLowerCase();
-    if (q.includes("science") || q.includes("improve")) {
-      return `Priya has a solid average score in Mathematics (92%) and Tamil (93%). However, her score in **Science** was 72% in the midterm, though it improved to 81% in the half-yearly exam.\n\n**Suggestions for improvement:**\n1. Focus on drawing scientific diagrams (digestive system, electricity circuits).\n2. Practice Unit 3 (Structure of Atom) quizzes. I can recommend some modules.\n3. Make sure she reviews the feedback provided by Mr. Rajendran.`;
+
+    // Try fetching real data for context
+    if (parentId && activeChild) {
+      try {
+        const summaryRes = await fetch(`${getApiBase()}/api/parent/${parentId}/child/${activeChild.studentId}/summary`);
+        const summaryJson = await summaryRes.json();
+
+        if (summaryJson.success) {
+          const data = summaryJson.data;
+          const kpis = data.kpis;
+
+          if (q.includes("summary") || q.includes("academic") || q.includes(childName.toLowerCase())) {
+            return `Here is ${childName}'s Academic Summary Profile:\n\n` +
+              `- **Current Class:** ${data.class}${data.section}\n` +
+              `- **Overall Grade:** ${kpis.grade.value} (${kpis.grade.raw}%)\n` +
+              `- **Rank in Class:** ${kpis.rank.value} (${kpis.rank.sub})\n` +
+              `- **Attendance Rate:** ${kpis.attendance.value}\n` +
+              `- **Homework Submission:** ${kpis.homework.value}\n\n` +
+              `*(Data pulled from live school records)*`;
+          }
+
+          if (q.includes("attendance")) {
+            const pct = kpis.attendance.raw;
+            const warning = pct < 85
+              ? `\n\n⚠️ **Alert:** ${childName}'s attendance is below the 85% threshold. Frequent absences may affect grades and scholarship eligibility.`
+              : `\n\n✅ ${childName}'s attendance is above the recommended 85% threshold — great job!`;
+            return `${childName}'s current month attendance: **${kpis.attendance.value}**${warning}`;
+          }
+        }
+      } catch {
+        // offline — fall through to simulated
+      }
+
+      // Try performance data for subject questions
+      if (q.includes("science") || q.includes("improve") || q.includes("subject")) {
+        try {
+          const perfRes = await fetch(`${getApiBase()}/api/parent/${parentId}/child/${activeChild.studentId}/performance`);
+          const perfJson = await perfRes.json();
+          if (perfJson.success && perfJson.data.subjects.length > 0) {
+            const subjects = perfJson.data.subjects;
+            const subjectSummary = subjects.map((s: any) => {
+              const exams = Object.keys(s).filter(k => k !== "subject");
+              const avg = exams.length > 0
+                ? Math.round(exams.reduce((sum: number, e: string) => sum + (Number(s[e]) || 0), 0) / exams.length)
+                : 0;
+              return `- **${s.subject}:** ${avg}% average`;
+            }).join("\n");
+
+            return `Here are ${childName}'s subject-wise averages:\n\n${subjectSummary}\n\n` +
+              `**Suggestions:** Focus on the subjects below 75% with extra practice sessions, diagram work, and regular revision.`;
+          }
+        } catch {/* offline */}
+      }
     }
+
+    // Fallback simulated responses
     if (q.includes("schedule") || q.includes("timetable")) {
-      return `Based on Priya's class syllabus and current strengths, here is a recommended weekly study schedule (1.5 hours daily):\n\n- **Monday & Wednesday:** Mathematics (6:00 PM - 7:15 PM) - focus on practicing problem sets.\n- **Tuesday & Thursday:** Science (6:00 PM - 7:15 PM) - focus on diagram labeling and formula reviews.\n- **Friday:** Social Science & English (5:30 PM - 7:00 PM).\n- **Saturday:** Tamil & revision of weak spots (10:00 AM - 11:30 AM).\n- **Sunday:** Complete relaxation & light reading.`;
+      return `Based on ${childName}'s class syllabus, here is a recommended weekly study schedule (1.5 hours daily):\n\n` +
+        `- **Monday & Wednesday:** Mathematics (6:00 PM - 7:15 PM) - focus on problem sets.\n` +
+        `- **Tuesday & Thursday:** Science (6:00 PM - 7:15 PM) - diagram labeling & formulas.\n` +
+        `- **Friday:** Social Science & English (5:30 PM - 7:00 PM).\n` +
+        `- **Saturday:** Tamil & revision (10:00 AM - 11:30 AM).\n` +
+        `- **Sunday:** Relaxation & light reading.`;
     }
     if (q.includes("scholarship")) {
-      return `Priya qualifies for two major schemes:\n\n1. **National Means-cum-Merit Scholarship (NMMS):** Requires score above 55% in Class 8 exams (Priya had 79%) and parents' annual income under ₹3.5 Lakhs.\n2. **TRUSTS (Tamil Nadu Rural Students Talent Search):** For government school students. Exam happens in September.\n\n**Action required:** The deadline to submit the application form and upload the income certificate is **June 30, 2025**.`;
+      return `${childName} may qualify for these schemes:\n\n` +
+        `1. **National Means-cum-Merit Scholarship (NMMS)**\n` +
+        `2. **TRUSTS (Tamil Nadu Rural Students Talent Search)**\n` +
+        `3. **BC/MBC Scholarship** — based on caste certificate\n` +
+        `4. **SC/ST Scholarship** — if applicable\n\n` +
+        `Contact the school office for eligibility details and application deadlines.`;
     }
-    if (q.includes("summary") || q.includes("academic") || q.includes("priya")) {
-      return `Here is Priya's Academic Summary Profile:\n\n- **Current Class:** 9B\n- **Overall Grade:** A (Above average)\n- **Rank in Class:** #5 out of 42\n- **Attendance Rate:** 91%\n- **Top Subjects:** Tamil (93%), Mathematics (94%)\n- **Action Items:** Submit leave certificates for June 10-11 absence, and practice Science diagrams.`;
-    }
-    return `Thank you for your question! 🎯\n\nI am processing your query regarding: *"${query}"*.\n\n*(In production, this connects to Gemini AI with active school database records to retrieve exact stats and syllabus directives.)*`;
-  };
 
-  const handleSendMessage = (textToSend?: string) => {
+    return `Thank you for your question! 🎯\n\nI am processing your query regarding: *"${query}"*.\n\n` +
+      `*(In production, this connects to Gemini AI with active school database records to retrieve exact stats and syllabus directives.)*`;
+  }, [parentId, activeChild, childName]);
+
+  const handleSendMessage = async (textToSend?: string) => {
     const text = textToSend || input;
     if (!text.trim()) return;
 
     const userMsg: ChatMessage = { role: "user", content: text, time: "Now" };
-    setMessages((prev) => [...prev, userMsg]);
+    setMessages(prev => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
-    // Simulate response delay
-    setTimeout(() => {
-      const responseContent = simulatedResponses(text);
-      const aiMsg: ChatMessage = {
-        role: "assistant",
-        content: responseContent,
-        time: "Now",
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-      setIsTyping(false);
-    }, 1500);
+    const responseContent = await generateContextualResponse(text);
+    const aiMsg: ChatMessage = { role: "assistant", content: responseContent, time: "Now" };
+    setMessages(prev => [...prev, aiMsg]);
+    setIsTyping(false);
   };
 
   return (
     <PortalLayout
       title="AI Parent Assistant"
-      subtitle="Bilingual AI advisor to help you stay updated and guide Priya's studies"
+      subtitle={`Bilingual AI advisor to help you stay updated and guide ${childName}'s studies`}
     >
-      {/* TODO: Connect to backend LLM chat controller API with Parent / Student system context */}
+      <ChildSwitcher children={children} active={activeChild} onChange={setActiveChild} />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-180px)]">
         {/* Left Control Column */}
@@ -123,11 +204,11 @@ export default function AIAssistantPage() {
               <div className="text-sm font-semibold text-white">AI Parent Assistant</div>
               <div className="text-xs text-slate-500 flex items-center gap-1.5">
                 <span className="pulse-dot w-2 h-2"></span>
-                Bilingual Mode Active
+                {activeLanguage === "bilingual" ? "Bilingual Mode" : activeLanguage === "tamil" ? "Tamil Mode" : "English Mode"} Active
               </div>
             </div>
             <div className="ml-auto">
-              <span className="badge badge-green">Priya - Class 9B</span>
+              <span className="badge badge-green">{childLabel}</span>
             </div>
           </div>
 
@@ -154,7 +235,7 @@ export default function AIAssistantPage() {
                   </div>
                   {!isAssistant && (
                     <div className="w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 flex items-center justify-center text-sm font-bold flex-shrink-0 mt-0.5">
-                      R
+                      P
                     </div>
                   )}
                 </div>
@@ -185,7 +266,7 @@ export default function AIAssistantPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                placeholder="Ask about grades, attendance, study schedules..."
+                placeholder={`Ask about ${childName}'s grades, attendance, study schedules...`}
                 className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white placeholder-slate-650 focus:outline-none focus:border-emerald-500 transition-colors"
               />
               <button
