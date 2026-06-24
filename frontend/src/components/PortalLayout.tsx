@@ -352,7 +352,20 @@ export default function PortalLayout({
               );
             }
 
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            const isActive = pathname === item.href || (
+              pathname.startsWith(item.href + "/") &&
+              !filteredNavItems.some(otherItem => 
+                otherItem.href !== item.href && 
+                otherItem.href !== "#" && 
+                pathname.startsWith(otherItem.href + "/") && 
+                otherItem.href.length > item.href.length
+              ) &&
+              !filteredNavItems.some(otherItem =>
+                otherItem.href !== item.href &&
+                otherItem.href !== "#" &&
+                pathname === otherItem.href
+              )
+            );
             return (
               <Link
                 key={item.href}
