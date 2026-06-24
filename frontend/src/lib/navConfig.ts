@@ -136,7 +136,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Extracurriculars", href: "/student/activities", icon: "🎭" },
       { label: "Sports & Athletics", href: "/student/sports", icon: "⚽" },
       { label: "Wellness", href: "/student/wellness", icon: "💚" },
-      { label: "Coding Academy", href: "/student/coding", icon: "💻" },
+      // { label: "Coding Academy", href: "/student/coding", icon: "💻" },
       { label: "Learning Platform", href: "/student/middle-school/learning-platform", icon: "💻" },
     ],
   },
