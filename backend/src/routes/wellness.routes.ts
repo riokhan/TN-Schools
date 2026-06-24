@@ -33,12 +33,7 @@ import { Wellness } from '../models/mongo';
 
 const router = Router();
 
-// Helper: get start of today (midnight) for date-range matching
-function startOfToday(): Date {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
+
 
 // POST /api/wellness — Log mood and/or journal notes (upserts today's entry)
 router.post('/', async (req: Request, res: Response) => {
@@ -48,16 +43,11 @@ router.post('/', async (req: Request, res: Response) => {
     if (!studentId) {
       return res.status(400).json({ success: false, error: 'studentId is required' });
     }
+console.log("WELLNESS REQUEST BODY:", req.body);
 
-    const todayStart = startOfToday();
-
-    // Look for an entry already created today for this student
-    console.log("WELLNESS REQUEST BODY:", req.body);
-    const existing = await Wellness.findOne({
-      studentId,
-      date: { $gte: todayStart },
-    });
-
+const existing = await Wellness.findOne({
+  studentId,
+});
     if (existing) {
       // Merge in whatever new fields were sent (mood click OR journal save)
       if (mood !== undefined) existing.mood = mood;

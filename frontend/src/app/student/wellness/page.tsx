@@ -1,6 +1,5 @@
-
 "use client";
-
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
@@ -81,6 +80,7 @@ const t = {
 };
 
 export default function WellnessPage() {
+  const { data: session } = useSession();
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [journalText, setJournalText] = useState("");
   const [lang, setLang] = useState<"en" | "ta">("en");
@@ -125,50 +125,78 @@ export default function WellnessPage() {
     }, 800);
   };
 
-  const saveJournal = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/wellness", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          studentId: "HM10103",
-          mood: selectedMood || "good",
-          stressScore:
-            selectedMood === "stressed" ? 9 :
-            selectedMood === "tired" ? 7 :
-            selectedMood === "okay" ? 5 :
-            selectedMood === "good" ? 3 : 1,
-          notes: journalText,
-        }),
-      });
+ const saveJournal = async () => {
 
-      const data = await res.json();
+  if (!journalText.trim()) {
+    setAlertModal({
+      isOpen: true,
+      message:
+        lang === "ta"
+          ? "தயவுசெய்து உங்கள் நன்றியுணர்வு பதிவை உள்ளிடவும்."
+          : "Please enter your gratitude journal entry.",
+      status: "error",
+    });
+    return;
+  }
 
-      if (data.success) {
-        setAlertModal({
-          isOpen: true,
-          message: lang === 'ta' ? "நல்வாழ்வுப் பதிவு வெற்றிகரமாகச் சேமிக்கப்பட்டது!" : "Wellness entry saved successfully!",
-          status: "success",
-        });
-      } else {
-        setAlertModal({
-          isOpen: true,
-          message: data.error || (lang === 'ta' ? "ஏதோ தவறு நடந்துவிட்டது." : "An error occurred."),
-          status: "error",
-        });
-      }
-    } catch (err) {
-      console.error("Save Error:", err);
+  try {
+    const res = await fetch("http://localhost:5000/api/wellness", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        studentId: (session?.user as any)?.id,
+        mood: selectedMood || "good",
+        stressScore:
+          selectedMood === "stressed" ? 9 :
+          selectedMood === "tired" ? 7 :
+          selectedMood === "okay" ? 5 :
+          selectedMood === "good" ? 3 : 1,
+        notes: journalText,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
       setAlertModal({
         isOpen: true,
-        message: lang === 'ta' ? "சேவையகத்துடன் இணைக்க முடியவில்லை." : "Could not connect to server.",
+        message:
+          lang === "ta"
+            ? "நல்வாழ்வுப் பதிவு வெற்றிகரமாகச் சேமிக்கப்பட்டது!"
+            : "Wellness entry saved successfully!",
+        status: "success",
+      });
+
+      // Optional: Clear journal after save
+      setJournalText("");
+      setSelectedMood(null);
+
+    } else {
+      setAlertModal({
+        isOpen: true,
+        message:
+          data.error ||
+          (lang === "ta"
+            ? "ஏதோ தவறு நடந்துவிட்டது."
+            : "An error occurred."),
         status: "error",
       });
     }
-  };
+  } catch (err) {
+    console.error("Save Error:", err);
 
+    setAlertModal({
+      isOpen: true,
+      message:
+        lang === "ta"
+          ? "சேவையகத்துடன் இணைக்க முடியவில்லை."
+          : "Could not connect to server.",
+      status: "error",
+    });
+  }
+};
   return (
     <PortalLayout
       title={lang === 'ta' ? "மாணவர் நல்வாழ்வு மையம்" : "Student Wellness Hub"}
@@ -350,12 +378,17 @@ export default function WellnessPage() {
               placeholder={lang === 'ta' ? 'இன்று நீங்கள் எதற்கு நன்றியுடன் இருக்கிறீர்கள்?' : 'What are you thankful for today?'}
               className="w-full h-24 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700 rounded-xl p-3 text-xs sm:text-sm text-black dark:text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-colors resize-none mb-3"
             />
-            <button
-              onClick={saveJournal}
-              className="w-full py-2 sm:py-2.5 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 rounded-xl text-xs sm:text-sm font-bold hover:bg-emerald-500/30 transition-colors"
-            >
-              {lang === 'ta' ? 'பதிவைச் சேமிக்கவும்' : 'Save Entry'}
-            </button>
+          <button
+  onClick={saveJournal}
+  disabled={!journalText.trim()}
+  className={`w-full py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-colors ${
+    !journalText.trim()
+      ? "bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed"
+      : "bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30"
+  }`}
+>
+  {lang === 'ta' ? 'பதிவைச் சேமிக்கவும்' : 'Save Entry'}
+</button>
           </div>
 
         </div>
