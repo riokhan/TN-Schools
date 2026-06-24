@@ -214,34 +214,66 @@
 
 import PortalLayout from "@/components/PortalLayout";
 import Link from "next/link";
-import { useState } from "react";
-
-const myClubs = [
-  { name: "Robotics Club", role: "Member", icon: "🤖", color: "from-blue-500 to-indigo-600", nextEvent: "Build Session - Friday 4 PM" },
-  { name: "Debate Society", role: "Vice President", icon: "🎙️", color: "from-rose-500 to-pink-600", nextEvent: "Mock UN - Saturday 10 AM" },
-];
-
-const discoverClubs = [
-  { name: "Eco Warriors", category: "Environment", members: 45, icon: "🌱", color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/20", tagBg: "bg-emerald-500/20" },
-  { name: "Drama Troupe", category: "Arts", members: 32, icon: "🎭", color: "text-purple-600 dark:text-purple-400", bg: "bg-purple-500/10 border-purple-500/20", tagBg: "bg-purple-500/20" },
-  { name: "Math Olympiad", category: "Academics", members: 28, icon: "♾️", color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-500/10 border-blue-500/20", tagBg: "bg-blue-500/20" },
-  { name: "Creative Writing", category: "Literature", members: 50, icon: "✍️", color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-500/10 border-amber-500/20", tagBg: "bg-amber-500/20" },
-  { name: "Photography", category: "Arts", members: 65, icon: "📸", color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-500/10 border-cyan-500/20", tagBg: "bg-cyan-500/20" },
-  { name: "Astronomy Club", category: "Science", members: 40, icon: "🔭", color: "text-indigo-600 dark:text-indigo-400", bg: "bg-indigo-500/10 border-indigo-500/20", tagBg: "bg-indigo-500/20" },
-];
-
-const upcomingEvents = [
-  { title: "Annual Science Fair", date: "Oct 15, 2026", type: "School-wide", icon: "🔬", color: "text-emerald-600 dark:text-emerald-400" },
-  { title: "Inter-school Debate", date: "Oct 22, 2026", type: "Competition", icon: "🏆", color: "text-amber-600 dark:text-amber-400" },
-  { title: "Autumn Art Exhibition", date: "Nov 05, 2026", type: "Showcase", icon: "🎨", color: "text-purple-600 dark:text-purple-400" },
-];
+import { useState, useEffect } from "react";
 
 export default function ExtracurricularsPage() {
   const [activeTab, setActiveTab] = useState("all");
+  
+  const [discoverClubs, setDiscoverClubs] = useState<any[]>([]);
+  const [myClubs, setMyClubs] = useState<any[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchActivities() {
+      try {
+        const res = await fetch("http://localhost:5000/api/activities");
+        const json = await res.json();
+        
+        if (json.success) {
+          setDiscoverClubs(json.data.discoverClubs);
+          setMyClubs(json.data.myClubs);
+          
+          // Format the dates
+          const formattedEvents = json.data.upcomingEvents.map((e: any) => {
+            const dateObj = new Date(e.eventDate);
+            return {
+              ...e,
+              date: dateObj.toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' })
+            };
+          });
+          setUpcomingEvents(formattedEvents);
+        }
+      } catch (error) {
+        console.error("Failed to fetch activities", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchActivities();
+  }, []);
 
   const filteredClubs = activeTab === "all" 
     ? discoverClubs 
     : discoverClubs.filter(club => club.category.toLowerCase() === activeTab);
+
+  if (loading) {
+    return (
+      <PortalLayout
+        title="Extracurricular Activities"
+        subtitle="Loading your activities..."
+        avatarLetter="A"
+        avatarColor="#8b5cf6"
+        themeClass="theme-student"
+        accentColor="#8b5cf6"
+      >
+        <div className="flex items-center justify-center h-64">
+           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        </div>
+      </PortalLayout>
+    );
+  }
+
 
   return (
     <PortalLayout
