@@ -17,7 +17,8 @@ import headmasterRoutes from './routes/headmaster.routes';
 import pageRoutes       from './routes/page.routes';
 import userRoutes       from './routes/user.routes';
 import teacherRoutes    from './routes/teacher.routes';
-
+import notificationRoutes from './routes/notification.routes';
+import classRoutes       from './routes/class.routes';
 import parentRoutes     from './routes/parent.routes';
 
 // Trigger nodemon restart after prisma client generation
@@ -68,7 +69,8 @@ app.use('/api/pages',      pageRoutes);
 app.use('/api/users',      userRoutes);
 app.use('/api/teacher',    teacherRoutes);
 app.use('/api/parent',     parentRoutes);
-
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/classes',    classRoutes);
 
 
 // ─── 404 Handler ─────────────────────────────────────────────
