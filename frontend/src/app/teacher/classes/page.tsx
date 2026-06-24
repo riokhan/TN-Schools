@@ -28,26 +28,26 @@ const SUBJECTS = [
   "Computer Science", "Commerce", "Economics", "Accountancy",
 ];
 
-const CLASS_NUMS = ["1","2","3","4","5","6","7","8","9","10","11","12"];
-const SECTIONS  = ["A","B","C","D","E"];
-const YEARS     = ["2023-24","2024-25","2025-26"];
+const CLASS_NUMS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+const SECTIONS = ["A", "B", "C", "D", "E"];
+const YEARS = ["2023-24", "2024-25", "2025-26"];
 
 // ─── Helpers ───────────────────────────────────────────────────
 const subjectColors: Record<string, string> = {
-  Mathematics:      "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
-  Science:          "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
-  English:          "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300",
-  Tamil:            "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
-  Physics:          "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
-  Chemistry:        "bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300",
-  Biology:          "bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300",
+  Mathematics: "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
+  Science: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300",
+  English: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-300",
+  Tamil: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300",
+  Physics: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
+  Chemistry: "bg-pink-100 text-pink-700 dark:bg-pink-950 dark:text-pink-300",
+  Biology: "bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300",
   "Social Science": "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
-  "Computer Science":"bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300",
-  History:          "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
-  Geography:        "bg-lime-100 text-lime-700 dark:bg-lime-950 dark:text-lime-300",
-  Commerce:         "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
-  Economics:        "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
-  Accountancy:      "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-950 dark:text-fuchsia-300",
+  "Computer Science": "bg-cyan-100 text-cyan-700 dark:bg-cyan-950 dark:text-cyan-300",
+  History: "bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300",
+  Geography: "bg-lime-100 text-lime-700 dark:bg-lime-950 dark:text-lime-300",
+  Commerce: "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-300",
+  Economics: "bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300",
+  Accountancy: "bg-fuchsia-100 text-fuchsia-700 dark:bg-fuchsia-950 dark:text-fuchsia-300",
 };
 
 function badgeClass(subject: string) {
@@ -68,19 +68,19 @@ const EMPTY_FORM = {
 // ─── Component ─────────────────────────────────────────────────
 export default function ClassesPage() {
   const { data: session } = useSession();
-  const user       = session?.user as any;
-  const schoolId   = user?.schoolId  || "";
-  const teacherId  = user?.id        || "";
-  const API_URL    = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  const user = session?.user as any;
+  const schoolId = user?.schoolId || "";
+  const teacherId = user?.id || "";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-  const [classes,   setClasses]   = useState<ClassRoom[]>([]);
-  const [loading,   setLoading]   = useState(true);
-  const [isModal,   setIsModal]   = useState(false);
+  const [classes, setClasses] = useState<ClassRoom[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModal, setIsModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [submitting,setSubmitting]= useState(false);
-  const [search,    setSearch]    = useState("");
-  const [filterSubj,setFilterSubj]= useState("All");
-  const [form,      setForm]      = useState({ ...EMPTY_FORM });
+  const [submitting, setSubmitting] = useState(false);
+  const [search, setSearch] = useState("");
+  const [filterSubj, setFilterSubj] = useState("All");
+  const [form, setForm] = useState({ ...EMPTY_FORM });
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
 
   // ── Fetch ────────────────────────────────────────────────────
@@ -88,7 +88,7 @@ export default function ClassesPage() {
     if (!schoolId) return;
     setLoading(true);
     try {
-      const res  = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+      const res = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
       const data = await res.json();
       if (data.success) setClasses(data.data);
     } catch (e) {
@@ -115,14 +115,14 @@ export default function ClassesPage() {
   const openEdit = (c: ClassRoom) => {
     setEditingId(c.id);
     setForm({
-      className:    c.className,
-      section:      c.section,
-      subject:      c.subject,
+      className: c.className,
+      section: c.section,
+      subject: c.subject,
       academicYear: c.academicYear,
-      roomNumber:   c.roomNumber   ?? "",
-      schedule:     c.schedule     ?? "",
-      totalStudents:String(c.totalStudents),
-      description:  c.description  ?? "",
+      roomNumber: c.roomNumber ?? "",
+      schedule: c.schedule ?? "",
+      totalStudents: String(c.totalStudents),
+      description: c.description ?? "",
     });
     setIsModal(true);
   };
@@ -138,21 +138,21 @@ export default function ClassesPage() {
     const payload = {
       schoolId,
       teacherId,
-      className:    form.className,
-      section:      form.section,
-      subject:      form.subject,
+      className: form.className,
+      section: form.section,
+      subject: form.subject,
       academicYear: form.academicYear,
-      roomNumber:   form.roomNumber  || null,
-      schedule:     form.schedule    || null,
-      totalStudents:parseInt(form.totalStudents) || 0,
-      description:  form.description || null,
+      roomNumber: form.roomNumber || null,
+      schedule: form.schedule || null,
+      totalStudents: parseInt(form.totalStudents) || 0,
+      description: form.description || null,
     };
 
-    const url    = editingId ? `${API_URL}/api/classes/${editingId}` : `${API_URL}/api/classes`;
+    const url = editingId ? `${API_URL}/api/classes/${editingId}` : `${API_URL}/api/classes`;
     const method = editingId ? "PUT" : "POST";
 
     try {
-      const res  = await fetch(url, {
+      const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -193,7 +193,7 @@ export default function ClassesPage() {
     if (!result.isConfirmed) return;
 
     try {
-      const res  = await fetch(`${API_URL}/api/classes/${c.id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/api/classes/${c.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
         Swal.fire({ icon: "success", title: "Deleted!", text: data.message, timer: 2000, showConfirmButton: false });
@@ -218,7 +218,7 @@ export default function ClassesPage() {
     return matchSearch && matchSubj;
   });
 
-  const activeCount   = classes.filter((c) => c.isActive).length;
+  const activeCount = classes.filter((c) => c.isActive).length;
   const totalStudents = classes.reduce((a, c) => a + c.totalStudents, 0);
   const uniqueSubjects = Array.from(new Set(classes.map((c) => c.subject)));
 
@@ -227,11 +227,10 @@ export default function ClassesPage() {
     <PortalLayout title="My Classes" subtitle="Manage your sections, student rosters, and schedules">
       {/* Toast */}
       {toast && (
-        <div className={`mb-5 px-4 py-3 rounded-xl text-xs font-semibold border shadow-sm fade-in ${
-          toast.type === "success"
-            ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300"
-            : "bg-red-50 border-red-200 text-red-800 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-300"
-        }`}>
+        <div className={`mb-5 px-4 py-3 rounded-xl text-xs font-semibold border shadow-sm fade-in ${toast.type === "success"
+          ? "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-500/10 dark:border-emerald-500/20 dark:text-emerald-300"
+          : "bg-red-50 border-red-200 text-red-800 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-300"
+          }`}>
           {toast.msg}
         </div>
       )}
@@ -239,10 +238,10 @@ export default function ClassesPage() {
       {/* KPI Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
         {[
-          { label: "Total Classes",   value: classes.length,         icon: "🏫", color: "text-amber-500" },
-          { label: "Active Classes",  value: activeCount,            icon: "✅", color: "text-emerald-500" },
-          { label: "Total Students",  value: totalStudents,          icon: "🎓", color: "text-violet-500" },
-          { label: "Subjects Taught", value: uniqueSubjects.length,  icon: "📚", color: "text-sky-500" },
+          { label: "Total Classes", value: classes.length, icon: "🏫", color: "text-amber-500" },
+          { label: "Active Classes", value: activeCount, icon: "✅", color: "text-emerald-500" },
+          { label: "Total Students", value: totalStudents, icon: "🎓", color: "text-violet-500" },
+          { label: "Subjects Taught", value: uniqueSubjects.length, icon: "📚", color: "text-sky-500" },
         ].map((kpi) => (
           <div key={kpi.label} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-sm">
             <div className="flex items-center justify-between mb-1">
@@ -383,11 +382,10 @@ export default function ClassesPage() {
 
                     {/* Status */}
                     <td className="px-5 py-3.5">
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${
-                        c.isActive
-                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-                          : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
-                      }`}>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold ${c.isActive
+                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+                        : "bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400"
+                        }`}>
                         {c.isActive ? "● Active" : "Inactive"}
                       </span>
                     </td>
@@ -557,8 +555,8 @@ export default function ClassesPage() {
                 {submitting
                   ? "Saving to PostgreSQL..."
                   : editingId
-                  ? "💾 Save Changes"
-                  : "🏫 Create Class"}
+                    ? "💾 Save Changes"
+                    : "🏫 Create Class"}
               </button>
             </form>
           </div>
