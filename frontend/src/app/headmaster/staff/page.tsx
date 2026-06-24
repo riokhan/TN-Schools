@@ -64,6 +64,7 @@ export default function StaffManagementPage() {
   const [previewTeachers, setPreviewTeachers] = useState<ParsedPreviewTeacher[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
@@ -239,13 +240,16 @@ export default function StaffManagementPage() {
   };
 
   // ── Delete staff member ─────────────────────────────────────────
-  const handleDelete = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!staffToDelete?.id) return;
     try {
-      await fetch(`${API_BASE}/api/headmaster/staff/${id}`, { method: "DELETE" });
-      setStaff((prev) => prev.filter((s) => s.id !== id));
+      await fetch(`${API_BASE}/api/headmaster/staff/${staffToDelete.id}`, { method: "DELETE" });
+      setStaff((prev) => prev.filter((s) => s.id !== staffToDelete.id));
       showToast("🗑️ Staff member removed.");
     } catch {
       showToast("🔴 Could not delete — server error.", "error");
+    } finally {
+      setStaffToDelete(null);
     }
   };
 
@@ -348,7 +352,7 @@ export default function StaffManagementPage() {
                     <td>
                       {s.id && (
                         <button
-                          onClick={() => handleDelete(s.id!)}
+                          onClick={() => setStaffToDelete(s)}
                           className="text-[10px] text-red-400 hover:text-red-300 font-semibold border border-red-500/20 px-2 py-1 rounded-lg transition-colors"
                         >
                           ✕ Remove
@@ -362,6 +366,32 @@ export default function StaffManagementPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {staffToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-3xl p-6 relative bg-white border border-slate-200 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Remove Staff Member?</h3>
+            <p className="text-sm text-slate-600 mb-6">
+              Are you sure you want to remove <strong>{staffToDelete.name}</strong> from the registry? This action cannot be undone.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setStaffToDelete(null)}
+                className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-colors shadow-md"
+              >
+                Yes, Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add teacher modal */}
       {isAddModalOpen && (
