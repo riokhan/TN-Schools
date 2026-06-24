@@ -72,6 +72,7 @@ export default function ParentsPage() {
 
   const [isUploading, setIsUploading] = useState(false);
   const [toast, setToast] = useState<{ msg: string; type: "success" | "error" } | null>(null);
+  const [parentToDelete, setParentToDelete] = useState<CommitteeMember | null>(null);
   const [previewMembers, setPreviewMembers] = useState<ParsedPreviewPTAMember[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -104,19 +105,21 @@ export default function ParentsPage() {
   }, [fetchCommittee]);
 
   // ── Delete a committee member ────────────────────────────────────
-  const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to remove this PTA officer?")) return;
+  const confirmDelete = async () => {
+    if (!parentToDelete) return;
     try {
-      const res = await fetch(`${API_BASE}/api/headmaster/parents/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_BASE}/api/headmaster/parents/${parentToDelete.id}`, { method: "DELETE" });
       const json = await res.json();
       if (json.success) {
         showToast("🎉 PTA officer removed successfully.");
-        setCommittee(prev => prev.filter(p => p.id !== id));
+        setCommittee(prev => prev.filter(p => p.id !== parentToDelete.id));
       } else {
         showToast("❌ Failed to remove PTA officer.", "error");
       }
     } catch {
       showToast("🔴 Network error — could not remove PTA officer.", "error");
+    } finally {
+      setParentToDelete(null);
     }
   };
 
@@ -399,14 +402,15 @@ export default function ParentsPage() {
                     <span>Pwd: <span className="text-blue-650 font-bold">{p.password || "123456"}</span></span>
                     <span>Term: {p.term}</span>
                   </div>
-                  {p.id && (
                     <button
-                      onClick={() => handleDelete(p.id!)}
-                      className="absolute top-4 right-4 text-[9px] sm:text-[10px] text-red-600 hover:text-red-800 font-bold border border-red-200 hover:border-red-300 px-2 py-0.5 rounded-lg bg-red-50 hover:bg-red-100/50 transition-colors shadow-sm"
+                      onClick={() => setParentToDelete(p)}
+                      className="absolute top-4 right-4 text-[9px] sm:text-[10px] text-red-600 hover:text-red-800 font-bold border border-red-200 hover:border-red-300 px-2 py-1 rounded-lg bg-red-50 hover:bg-red-100/50 transition-colors shadow-sm flex items-center gap-1"
                     >
-                      ✕ Remove
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Remove
                     </button>
-                  )}
                 </div>
               ))
             )}
@@ -702,6 +706,40 @@ export default function ParentsPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {parentToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl relative">
+            <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center text-red-600 mb-4 mx-auto">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-slate-800 text-center mb-2">Remove PTA Officer?</h3>
+            <p className="text-sm text-slate-500 text-center mb-6 leading-relaxed">
+              Are you sure you want to remove <span className="font-bold text-slate-700">{parentToDelete.name}</span> from the committee? This action cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setParentToDelete(null)}
+                className="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition-colors text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-colors shadow-md shadow-red-600/20 text-xs flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Yes, Remove
+              </button>
+            </div>
           </div>
         </div>
       )}
