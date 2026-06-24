@@ -535,6 +535,10 @@ export default function StaffManagementPage() {
                   <input type="number" min="0" value={editForm.leaveUsed || 0} onChange={(e) => setEditForm({...editForm, leaveUsed: parseInt(e.target.value, 10) || 0})} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500" />
                 </div>
               </div>
+              <div>
+                <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Update Password</label>
+                <input type="text" value={editForm.password || ""} onChange={(e) => setEditForm({...editForm, password: e.target.value})} placeholder="Leave blank to keep current password" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:outline-none focus:border-blue-500" />
+              </div>
               <button type="submit" disabled={isSaving} className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2 flex items-center justify-center gap-2">
                 {isSaving ? <><div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Saving...</> : "💾 Save Changes"}
               </button>
