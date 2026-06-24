@@ -17,7 +17,7 @@ router.get('/', async (req: Request, res: Response) => {
 
     // For demo purposes, fetch the first student's joined clubs
     const demoStudent = await prisma.student.findFirst();
-    let formattedMyClubs = [];
+    let formattedMyClubs: any[] = [];
     if (demoStudent) {
       const myClubs = await prisma.clubMember.findMany({
         where: { studentId: demoStudent.id },
