@@ -20,12 +20,12 @@ interface RawMark {
 
 const COLORS = ["#6366f1","#10b981","#f59e0b","#3b82f6","#ec4899","#14b8a6","#f97316","#8b5cf6"];
 
-function ChildSwitcher({ children, active, onChange }: { children: Child[]; active: Child | null; onChange: (c: Child) => void }) {
-  if (children.length <= 1) return null;
+function ChildSwitcher({ childList, active, onChange }: { childList: Child[]; active: Child | null; onChange: (c: Child) => void }) {
+  if (childList.length <= 1) return null;
   return (
     <div className="flex items-center gap-3 mb-5 p-3 glass rounded-2xl flex-wrap">
       <span className="text-xs text-slate-400 font-semibold">👶 Viewing:</span>
-      {children.map(c => (
+      {childList.map(c => (
         <button key={c.studentId} onClick={() => onChange(c)}
           className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
             active?.studentId === c.studentId ? "bg-emerald-600 text-white shadow-md" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
@@ -99,7 +99,7 @@ export default function PerformancePage() {
 
   return (
     <PortalLayout>
-      <ChildSwitcher children={children} active={activeChild} onChange={setActiveChild} />
+      <ChildSwitcher childList={children} active={activeChild} onChange={setActiveChild} />
 
       {/* KPI Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
