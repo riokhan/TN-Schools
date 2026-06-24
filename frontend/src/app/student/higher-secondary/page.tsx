@@ -76,8 +76,8 @@ export default function HigherSecondaryDashboard() {
       .then((json) => {
         if (json.success && json.data.length > 0) {
           // Match the logged in user if they are a student, otherwise default to first for preview
-          const myStudent = session?.user?.id 
-            ? json.data.find((s: any) => s.userId === session.user.id)
+          const myStudent = (session?.user as any)?.id 
+            ? json.data.find((s: any) => s.userId === (session?.user as any)?.id)
             : null;
           setStudent(myStudent || json.data[0]);
         }
