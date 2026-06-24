@@ -65,6 +65,9 @@ export default function TemporaryStaffPage() {
   const [previewStaff, setPreviewStaff] = useState<ParsedPreviewTempStaff[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [tempStaffToDelete, setTempStaffToDelete] = useState<TempStaffMember | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [staffToEdit, setStaffToEdit] = useState<TempStaffMember | null>(null);
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
@@ -209,13 +212,16 @@ export default function TemporaryStaffPage() {
   };
 
   // ── Delete temp staff member ─────────────────────────────────────
-  const handleDelete = async (id: string) => {
+  const confirmDelete = async () => {
+    if (!tempStaffToDelete?.id) return;
     try {
-      await fetch(`${API_BASE}/api/headmaster/temp-staff/${id}`, { method: "DELETE" });
-      setTemps((prev) => prev.filter((t) => t.id !== id));
+      await fetch(`${API_BASE}/api/headmaster/temp-staff/${tempStaffToDelete.id}`, { method: "DELETE" });
+      setTemps((prev) => prev.filter((t) => t.id !== tempStaffToDelete.id));
       showToast("🗑️ Contract staff record removed.");
     } catch {
       showToast("🔴 Could not delete — server error.", "error");
+    } finally {
+      setTempStaffToDelete(null);
     }
   };
 
@@ -292,7 +298,7 @@ export default function TemporaryStaffPage() {
             <tbody>
               {temps.map((t) => (
                 <tr key={t.id || t.name}>
-                  <td className="font-bold text-white text-xs py-3">
+                  <td className="font-bold text-xs py-3">
                     <div>{t.name}</div>
                     <div className="text-[10px] text-slate-400 font-semibold mt-1 space-x-2 flex flex-wrap">
                       <span>Ph: {t.phone || "N/A"}</span>
@@ -312,15 +318,40 @@ export default function TemporaryStaffPage() {
                     {t.createdAt ? new Date(t.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                   </td>
                   <td>
-                    {t.id && (
-                      <button
-                        onClick={() => handleDelete(t.id!)}
-                        className="text-[10px] text-red-400 hover:text-red-300 font-semibold border border-red-500/20 px-2 py-1 rounded-lg transition-colors"
-                      >
-                        ✕ Remove
-                      </button>
-                    )}
-                  </td>
+  {t.id && (
+    <div className="flex flex-row gap-2 justify-center">
+      <button
+        onClick={() => {
+          setStaffToEdit(t);
+          setIsEditModalOpen(true);
+        }}
+        className="text-[10px] text-blue-400 hover:text-blue-300 font-semibold border border-blue-500/20 px-2 py-1 rounded-lg transition-colors flex items-center justify-center"
+      >
+        ✎
+      </button>
+
+      <button
+        onClick={() => setTempStaffToDelete(t)}
+        className="text-[10px] text-red-400 hover:text-red-300 font-semibold border border-red-500/20 px-2 py-1 rounded-lg transition-colors flex items-center justify-center"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-3 w-3"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+          />
+        </svg>
+      </button>
+    </div>
+  )}
+</td>
                 </tr>
               ))}
             </tbody>
@@ -525,6 +556,142 @@ export default function TemporaryStaffPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {tempStaffToDelete && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-sm rounded-3xl p-6 relative bg-white border border-slate-200 shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">Remove Temporary Staff?</h3>
+            <p className="text-sm text-slate-600 mb-6 leading-relaxed">
+              Are you sure you want to remove <strong className="text-slate-800">{tempStaffToDelete.name}</strong> from the registry? This action cannot be undone.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setTempStaffToDelete(null)}
+                className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="flex-1 py-2.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-colors shadow-md flex items-center justify-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Yes, Remove
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {isEditModalOpen && staffToEdit && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div
+            className="w-full max-w-2xl rounded-3xl p-6 space-y-6 relative transition-all duration-300 bg-white"
+            style={{ border: "1px solid rgba(0, 0, 0, 0.08)", boxShadow: "0 20px 50px rgba(0, 0, 0, 0.15)" }}
+          >
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-800">✎ Edit Temporary Staff</h3>
+              <button
+                onClick={() => { setIsEditModalOpen(false); setStaffToEdit(null); }}
+                className="text-slate-500 hover:text-slate-800 text-xs font-semibold"
+              >
+                ✕ Close
+              </button>
+            </div>
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setIsSaving(true);
+              try {
+                const res = await fetch(`${API_BASE}/api/headmaster/temp-staff/${staffToEdit.id}`, {
+                  method: "PUT",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(staffToEdit),
+                });
+                const json = await res.json();
+                if (json.success) {
+                  showToast(`🎉 Contract staff ${staffToEdit.name} updated successfully!`);
+                  setIsEditModalOpen(false);
+                  fetchTemps();
+                } else {
+                  showToast(`❌ Could not update: ${json.error}`, "error");
+                }
+              } catch {
+                showToast("🔴 Server offline — could not update record.", "error");
+              } finally {
+                setIsSaving(false);
+              }
+            }} className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Full Name</label>
+                  <input type="text" required value={staffToEdit.name} onChange={(e) => setStaffToEdit({ ...staffToEdit, name: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-blue-500 transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Designated Role</label>
+                  <input type="text" required value={staffToEdit.role} onChange={(e) => setStaffToEdit({ ...staffToEdit, role: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-blue-500 transition-colors" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Agency / Source</label>
+                  <select value={staffToEdit.agency} onChange={(e) => setStaffToEdit({ ...staffToEdit, agency: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-blue-500 transition-colors">
+                    <option value="Direct Contract">Direct Contract</option>
+                    <option value="TN Outsourcing Ltd">TN Outsourcing Ltd</option>
+                    <option value="Govt Scheme Contract">Govt Scheme Contract</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Joined Date</label>
+                  <input type="text" required value={staffToEdit.joined} onChange={(e) => setStaffToEdit({ ...staffToEdit, joined: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-blue-500 transition-colors" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Phone Number</label>
+                  <input type="text" required value={staffToEdit.phone} onChange={(e) => setStaffToEdit({ ...staffToEdit, phone: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-blue-500 transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Email Address</label>
+                  <input type="email" required value={staffToEdit.email} onChange={(e) => setStaffToEdit({ ...staffToEdit, email: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-blue-500 transition-colors" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Contract Duration</label>
+                  <input type="text" required value={staffToEdit.duration} onChange={(e) => setStaffToEdit({ ...staffToEdit, duration: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-blue-500 transition-colors" />
+                </div>
+                <div>
+                  <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Monthly Stipend</label>
+                  <input type="text" required value={staffToEdit.salary} onChange={(e) => setStaffToEdit({ ...staffToEdit, salary: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-blue-500 transition-colors" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Update Password</label>
+                <input type="text" value={staffToEdit.password} onChange={(e) => setStaffToEdit({ ...staffToEdit, password: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 focus:bg-white focus:border-blue-500 transition-colors" />
+              </div>
+              <button type="submit" disabled={isSaving}
+                className="w-full py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition-colors shadow-md mt-2 flex items-center justify-center gap-2">
+                {isSaving ? (
+                  <><div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin" /> Saving...</>
+                ) : "💾 Save Changes"}
+              </button>
+            </form>
           </div>
         </div>
       )}
