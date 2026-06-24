@@ -157,8 +157,19 @@
 
 "use client";
 
+import React, { useState, useEffect } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import { useSession } from "next-auth/react";
 
+const getApiBase = () => {
+  let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  return url;
+};
+
+const API_BASE = getApiBase();
 
 const projects = [
   { title: "Solar System Model", subject: "Science", date: "Last Week", type: "Craft", grade: "Super Star! ⭐", icon: "🪐", color: "#10b981" },
@@ -182,10 +193,31 @@ const skills = [
 ];
 
 export default function MiddleSchoolPortfolio() {
+  const { data: session } = useSession();
+  const [student, setStudent] = useState<any>(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/students`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data.length > 0) {
+          const myStudent = (session?.user as any)?.id 
+            ? json.data.find((s: any) => s.userId === (session?.user as any)?.id)
+            : null;
+          setStudent(myStudent || json.data[0]);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, [session]);
+
+  const userName = session?.user?.name || student?.user?.name || "Student";
+  const firstName = userName.split(" ")[0] || "Student";
+  const userInitial = userName.charAt(0).toUpperCase();
+
   return (
     <PortalLayout
       title="My Fun Portfolio 🎨"
-      subtitle="Look at all the awesome things you have done, Arjun!"
+      subtitle={`Look at all the awesome things you have done, ${firstName}!`}
     >
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         {/* Profile Summary */}
@@ -193,14 +225,16 @@ export default function MiddleSchoolPortfolio() {
           <div className="relative">
              <div className="w-28 h-28 rounded-full flex items-center justify-center text-5xl font-bold mb-4 shadow-[0_0_30px_rgba(16,185,129,0.3)] border-4 border-emerald-400"
                   style={{ background: "linear-gradient(135deg, #10b981, #059669)", color: "white" }}>
-               A
+               {userInitial}
              </div>
              <div className="absolute -bottom-2 -right-2 text-4xl animate-bounce" style={{ animationDuration: '3s' }}>
                 🌟
              </div>
           </div>
-          <h2 className="text-2xl font-black text-black dark:text-white mb-1 tracking-wide">Arjun Kumar</h2>
-          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mb-5">Class 7B • Roll No. 12</p>
+          <h2 className="text-2xl font-black text-black dark:text-white mb-1 tracking-wide">{userName}</h2>
+          <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mb-5">
+            Class {student?.class || "7B"} • Roll No. {student?.rollNumber || "12"}
+          </p>
           <div className="flex flex-wrap justify-center gap-2 mb-6">
             <span className="px-4 py-1.5 bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-full text-xs font-bold border-2 border-amber-500/30 shadow-sm">🚀 Space Lover</span>
             <span className="px-4 py-1.5 bg-purple-500/20 text-purple-700 dark:text-purple-300 rounded-full text-xs font-bold border-2 border-purple-500/30 shadow-sm">🎨 Artist</span>
@@ -302,7 +336,7 @@ export default function MiddleSchoolPortfolio() {
           <div className="mt-8 bg-emerald-50 dark:bg-emerald-500/10 border-2 border-emerald-500/20 rounded-2xl p-5 text-center shadow-lg relative overflow-hidden">
              <div className="absolute -right-4 -bottom-4 text-6xl opacity-10">👩‍🏫</div>
              <p className="text-sm text-emerald-800 dark:text-emerald-200 font-medium relative z-10 leading-relaxed">
-                "Arjun is a fantastic learner! The solar system model was out of this world! Keep up the great reading!"
+                "{firstName} is a fantastic learner! The solar system model was out of this world! Keep up the great reading!"
              </p>
              <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-3 font-black tracking-wide relative z-10 uppercase">— Mrs. Anjali (Class Teacher)</p>
           </div>
