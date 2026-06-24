@@ -321,7 +321,7 @@ export default function StaffManagementPage() {
               <tbody>
                 {staff.map((s) => (
                   <tr key={s.id || s.emisId}>
-                    <td className="font-bold text-white text-xs py-3">
+                    <td className="font-bold text-green text-xs py-3">
                       <div>{s.name}</div>
                       <div className="text-[10px] text-slate-400 font-semibold mt-1 space-x-2 flex flex-wrap">
                         <span>ID: {s.emisId || "N/A"}</span>
@@ -423,7 +423,7 @@ export default function StaffManagementPage() {
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-100 sticky top-0">
                         <th className="p-3 text-slate-700 font-semibold">Teacher Name</th>
-                        <th className="p-3 text-slate-700 font-semibold">EMIS ID</th>
+                        <th className="p-3 text-slate-700 font-semibold">ID</th>
                         <th className="p-3 text-slate-700 font-semibold">Subject</th>
                         <th className="p-3 text-slate-700 font-semibold">Phone</th>
                         <th className="p-3 text-slate-700 font-semibold">Email</th>
