@@ -9,7 +9,7 @@ interface LeaveRequest {
   type: string;
   duration: string;
   reason: string;
-  proxy: string;
+  studentName: string;
   status: "Approved" | "Pending" | "Rejected";
 }
 
@@ -39,7 +39,7 @@ export default function LeaveRequestsPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reason, setReason] = useState("");
-  const [proxy, setProxy] = useState("");
+  const [studentName, setStudentName] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
@@ -74,15 +74,20 @@ export default function LeaveRequestsPage() {
           ]);
         }
 
-        // Fetch Staff for Proxy Selection
-        const staffRes = await fetch(`${API_URL}/api/headmaster/staff${schoolId ? `?schoolId=${schoolId}` : ""}`);
-        const staffData = await staffRes.json();
-        if (staffData.success && staffData.data) {
-          setStaffList(staffData.data);
-          if (staffData.data.length > 0) {
-            setProxy(`${staffData.data[0].name} (${staffData.data[0].subject})`);
+        // Fetch Students for Leave Selection
+        const studentRes = await fetch(`${API_URL}/api/students${schoolId ? `?schoolId=${schoolId}` : ""}`);
+        const studentData = await studentRes.json();
+        if (studentData.success && studentData.data) {
+          const mappedStudents = studentData.data.map((s: any) => ({
+            id: s.id,
+            name: s.user?.name || "Unknown Student",
+            subject: `Class ${s.class}${s.section}`
+          }));
+          setStaffList(mappedStudents);
+          if (mappedStudents.length > 0) {
+            setStudentName(`${mappedStudents[0].name} (${mappedStudents[0].subject})`);
           } else {
-            setProxy("Headmaster / Principal");
+            setStudentName("Select Student");
           }
         }
       } catch (err) {
@@ -111,7 +116,7 @@ export default function LeaveRequestsPage() {
           type: leaveType,
           duration: durationStr,
           reason,
-          proxy,
+          studentName,
           schoolId,
         }),
       });
@@ -121,7 +126,7 @@ export default function LeaveRequestsPage() {
         setReason("");
         setStartDate("");
         setEndDate("");
-        setToast("✓ Leave request submitted successfully! Proxy teacher and Headmaster notified.");
+        setToast("✓ Leave request submitted successfully! Parent and Headmaster notified.");
         setTimeout(() => {
           setToast(null);
         }, 4500);
@@ -132,7 +137,7 @@ export default function LeaveRequestsPage() {
   };
 
   return (
-    <PortalLayout title="Teacher Leave Management" subtitle="Track leave allowances, request absences, and assign proxy teachers.">
+    <PortalLayout title="Student Leave Management" subtitle="Track and request absences for students in your school.">
       {/* Leave Quota Allowances */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 fade-in">
         {quotas.map((q) => {
@@ -202,10 +207,10 @@ export default function LeaveRequestsPage() {
             </div>
 
             <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Proxy Teacher Assignment</label>
+              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Student Name</label>
               <select
-                value={proxy}
-                onChange={(e) => setProxy(e.target.value)}
+                value={studentName}
+                onChange={(e) => setStudentName(e.target.value)}
                 className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               >
                 {staffList.length > 0 ? (
@@ -216,10 +221,7 @@ export default function LeaveRequestsPage() {
                   ))
                 ) : (
                   <>
-                    <option value="Mrs. Kavitha S. (Tamil)">Mrs. Kavitha S. (Tamil)</option>
-                    <option value="Mr. Rajan K. (Science)">Mr. Rajan K. (Science)</option>
-                    <option value="Mr. Prakash R. (Social Science)">Mr. Prakash R. (Social Science)</option>
-                    <option value="Ms. Deepa N. (English)">Ms. Deepa N. (English)</option>
+                    <option value="Select Student">No students found</option>
                   </>
                 )}
               </select>
@@ -268,7 +270,7 @@ export default function LeaveRequestsPage() {
                     <th>Leave Type</th>
                     <th>Period Details</th>
                     <th>Reason</th>
-                    <th>Proxy Teacher</th>
+                    <th>Student Name</th>
                     <th>Status</th>
                   </tr>
                 </thead>
@@ -278,7 +280,7 @@ export default function LeaveRequestsPage() {
                       <td className="font-bold text-[var(--text-heading)] text-xs">{req.type}</td>
                       <td>{req.duration}</td>
                       <td className="text-[var(--text-muted)] text-xs max-w-[150px] truncate">{req.reason}</td>
-                      <td>{req.proxy}</td>
+                      <td>{req.studentName}</td>
                       <td>
                         <span
                           className={`badge ${

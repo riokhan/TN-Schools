@@ -95,7 +95,7 @@ export default function ParentsPage() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPtaModalOpen, setIsPtaModalOpen] = useState(false);
-  
+
   // Parent Form
   const [newName, setNewName] = useState("");
   const [newRole, setNewRole] = useState("Committee Member (Parent)");
@@ -138,7 +138,7 @@ export default function ParentsPage() {
         stuRes.json(),
         ptaRes.json()
       ]);
-      
+
       if (parJson.success) setCommittee(parJson.data);
       if (stuJson.success) setStudents(stuJson.data);
       if (ptaJson.success) setPtaMeetings(ptaJson.data);
@@ -193,12 +193,12 @@ export default function ParentsPage() {
 
   const downloadExcelTemplate = () => {
     const headers = [
-      "Parent Name", 
-      "Committee Role", 
-      "Phone Number", 
-      "Email Address", 
-      "Ward Name", 
-      "Ward Class & Section", 
+      "Parent Name",
+      "Committee Role",
+      "Phone Number",
+      "Email Address",
+      "Ward Name",
+      "Ward Class & Section",
       "Committee Term",
       "Password"
     ];
@@ -456,9 +456,8 @@ export default function ParentsPage() {
       </div>
 
       {toast && (
-        <div className={`mb-6 p-4 border text-xs rounded-xl shadow-lg ${
-          toast.type === "error" ? "bg-red-500/10 border-red-500/20 text-red-300" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
-        }`}>
+        <div className={`mb-6 p-4 border text-xs rounded-xl shadow-lg ${toast.type === "error" ? "bg-red-500/10 border-red-500/20 text-red-300" : "bg-emerald-500/10 border-emerald-500/20 text-emerald-300"
+          }`}>
           {toast.msg}
         </div>
       )}
@@ -511,54 +510,13 @@ export default function ParentsPage() {
                       onClick={() => setParentToDelete(p)}
                       className="absolute top-4 right-4 text-[9px] text-red-600 hover:text-red-800 font-bold border border-red-200 hover:border-red-300 px-2 py-1 rounded-lg bg-red-50 transition-colors shadow-sm flex items-center gap-1"
                     >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
                       Remove
                     </button>
                   </div>
-                );
-              })
-            )}
-          </div>
-        </div>
-
-        {/* PTA Meetings */}
-        <div className="glass rounded-2xl p-6 border border-slate-800 flex flex-col">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-sm font-bold text-white">PTA Meetings</h3>
-            <button
-              onClick={() => setIsPtaModalOpen(true)}
-              className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold rounded-xl transition-all shadow-md"
-            >
-              + Schedule Meeting
-            </button>
-          </div>
-          <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1">
-            {ptaMeetings.length === 0 && !isLoading ? (
-              <div className="text-center py-12 text-slate-500 text-xs bg-slate-900/40 rounded-xl border border-slate-850">
-                No PTA meetings scheduled.
-              </div>
-            ) : (
-              ptaMeetings.map((m) => (
-                <div key={m.id} className="p-3.5 bg-slate-900/60 border border-slate-700/50 rounded-xl relative group">
-                  <div className="flex justify-between items-start pr-12">
-                    <div>
-                      <h4 className="text-xs font-bold text-white leading-relaxed">{m.title}</h4>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{fmtDate(m.meetingDate)}</div>
-                    </div>
-                    <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full ${
-                      m.status === 'Upcoming' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                    }`}>
-                      {m.status}
-                    </span>
-                  </div>
-                  {m.description && <div className="text-[10px] text-slate-500 mt-2">{m.description}</div>}
-                  <button
-                    onClick={() => setMeetingToDelete(m)}
-                    className="absolute top-3 right-3 text-[9px] text-red-500 hover:text-red-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))
+                ))
             )}
           </div>
         </div>
@@ -619,8 +577,8 @@ export default function ParentsPage() {
 
                 <div>
                   <label className="block text-[10px] text-slate-600 mb-1 font-semibold">Link Student (Optional but recommended)</label>
-                  <select 
-                    value={selectedStudentId} 
+                  <select
+                    value={selectedStudentId}
                     onChange={e => setSelectedStudentId(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800"
                   >
