@@ -39,8 +39,8 @@ enum ScholarshipStatus {
 
 model User {
   id           String   @id @default(uuid())
-  emisId       String?  @unique       // EMIS Student ID
-  aadhaarHash  String?  @unique       // Hashed Aadhaar (never store raw)
+  emisId       String?  @unique // EMIS Student ID
+  aadhaarHash  String?  @unique // Hashed Aadhaar (never store raw)
   mobile       String?  @unique
   name         String
   email        String?  @unique
@@ -56,75 +56,76 @@ model User {
 }
 
 model School {
-  id             String    @id @default(uuid())
-  dise           String    @unique      // DISE code
-  name           String
-  address        String?
-  headmasterName String?   @default("N/A")
-  district       String
-  block          String
-  pincode        String?
-  schoolType     String    @default("Government")  // Government, Aided, etc.
-  mediumOfInstruction String @default("Tamil")
-  classes        String[]  // e.g. ["6","7","8","9","10","11","12"]
-  users          User[]
-  students       Student[]
-  teachers       Teacher[]
-  attendance     Attendance[]
-  timetables     Timetable[]
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  id                  String       @id @default(uuid())
+  dise                String       @unique // DISE code
+  name                String
+  address             String?
+  headmasterName      String?      @default("N/A")
+  district            String
+  block               String
+  pincode             String?
+  schoolType          String       @default("Government") // Government, Aided, etc.
+  mediumOfInstruction String       @default("Tamil")
+  classes             String[] // e.g. ["6","7","8","9","10","11","12"]
+  users               User[]
+  students            Student[]
+  teachers            Teacher[]
+  attendance          Attendance[]
+  timetables          Timetable[]
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 }
 
 model Student {
-  id           String    @id @default(uuid())
-  userId       String    @unique
-  user         User      @relation(fields: [userId], references: [id])
+  id           String        @id @default(uuid())
+  userId       String        @unique
+  user         User          @relation(fields: [userId], references: [id])
   schoolId     String
-  school       School    @relation(fields: [schoolId], references: [id])
-  class        String    // "6" to "12"
-  section      String    // "A", "B", "C" etc.
+  school       School        @relation(fields: [schoolId], references: [id])
+  class        String // "6" to "12"
+  section      String // "A", "B", "C" etc.
   rollNumber   String?
   dob          DateTime?
   gender       String?
   religion     String?
-  caste        String?   // For scholarship eligibility
+  caste        String? // For scholarship eligibility
   parentName   String?
   parentMobile String?
   attendance   Attendance[]
   marks        Mark[]
   scholarships Scholarship[]
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  clubMembers  ClubMember[]
 }
 
 model Teacher {
-  id           String    @id @default(uuid())
-  userId       String    @unique
-  user         User      @relation(fields: [userId], references: [id])
-  schoolId     String
-  school       School    @relation(fields: [schoolId], references: [id])
-  employeeId   String?   @unique
-  subjects     String[]  // ["Mathematics", "Science"]
+  id            String    @id @default(uuid())
+  userId        String    @unique
+  user          User      @relation(fields: [userId], references: [id])
+  schoolId      String
+  school        School    @relation(fields: [schoolId], references: [id])
+  employeeId    String?   @unique
+  subjects      String[] // ["Mathematics", "Science"]
   qualification String?
-  joiningDate  DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  joiningDate   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 // ─── Academic Entities ─────────────────────────────────────────
 
 model Mark {
-  id         String   @id @default(uuid())
-  studentId  String
-  student    Student  @relation(fields: [studentId], references: [id])
-  subject    String
-  examType   String   // "Unit1", "Midterm", "Annual", "Mock"
-  maxMarks   Int      @default(100)
-  scored     Int
-  grade      String?
-  academicYear String @default("2024-25")
-  createdAt  DateTime @default(now())
+  id           String   @id @default(uuid())
+  studentId    String
+  student      Student  @relation(fields: [studentId], references: [id])
+  subject      String
+  examType     String // "Unit1", "Midterm", "Annual", "Mock"
+  maxMarks     Int      @default(100)
+  scored       Int
+  grade        String?
+  academicYear String   @default("2024-25")
+  createdAt    DateTime @default(now())
 
   @@index([studentId, subject, examType])
 }
@@ -137,7 +138,7 @@ model Attendance {
   school    School           @relation(fields: [schoolId], references: [id])
   date      DateTime
   status    AttendanceStatus @default(PRESENT)
-  method    String?          // "QR", "RFID", "Biometric", "Manual"
+  method    String? // "QR", "RFID", "Biometric", "Manual"
   createdAt DateTime         @default(now())
 
   @@unique([studentId, date])
@@ -151,12 +152,12 @@ model Timetable {
   school    School   @relation(fields: [schoolId], references: [id])
   class     String
   section   String
-  dayOfWeek Int      // 0=Mon ... 4=Fri
-  period    Int      // 1-8
+  dayOfWeek Int // 0=Mon ... 4=Fri
+  period    Int // 1-8
   subject   String
   teacherId String?
-  startTime String   // "09:00"
-  endTime   String   // "09:45"
+  startTime String // "09:00"
+  endTime   String // "09:45"
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -166,46 +167,46 @@ model Timetable {
 // ─── Welfare & Governance ─────────────────────────────────────
 
 model Scholarship {
-  id          String            @id @default(uuid())
-  studentId   String
-  student     Student           @relation(fields: [studentId], references: [id])
-  scheme      String            // "BC/MBC", "SC/ST", "Minority"
-  amount      Float
-  status      ScholarshipStatus @default(PENDING)
-  appliedDate DateTime          @default(now())
-  approvedDate DateTime?
+  id            String            @id @default(uuid())
+  studentId     String
+  student       Student           @relation(fields: [studentId], references: [id])
+  scheme        String // "BC/MBC", "SC/ST", "Minority"
+  amount        Float
+  status        ScholarshipStatus @default(PENDING)
+  appliedDate   DateTime          @default(now())
+  approvedDate  DateTime?
   disbursedDate DateTime?
-  remarks     String?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
+  remarks       String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
 }
 
 model MidDayMeal {
-  id           String   @id @default(uuid())
-  schoolId     String
-  date         DateTime
+  id             String   @id @default(uuid())
+  schoolId       String
+  date           DateTime
   studentsServed Int
-  menuItems    String[]
-  stockUsedKg  Float?
-  wastePercent Float?
-  supplierId   String?
-  createdAt    DateTime @default(now())
+  menuItems      String[]
+  stockUsedKg    Float?
+  wastePercent   Float?
+  supplierId     String?
+  createdAt      DateTime @default(now())
 
   @@unique([schoolId, date])
   @@index([schoolId, date])
 }
 
 model SchoolAsset {
-  id          String   @id @default(uuid())
-  schoolId    String
-  category    String   // "SmartClassroom", "Computer", "Furniture", "Sports"
-  name        String
-  quantity    Int
-  condition   String   @default("Good") // "Good", "Needs Repair", "Condemned"
+  id           String    @id @default(uuid())
+  schoolId     String
+  category     String // "SmartClassroom", "Computer", "Furniture", "Sports"
+  name         String
+  quantity     Int
+  condition    String    @default("Good") // "Good", "Needs Repair", "Condemned"
   purchaseDate DateTime?
-  value       Float?
-  updatedAt   DateTime @updatedAt
-  createdAt   DateTime @default(now())
+  value        Float?
+  updatedAt    DateTime  @updatedAt
+  createdAt    DateTime  @default(now())
 }
 
 // ─── Headmaster Portal ─────────────────────────────────────────
@@ -221,7 +222,7 @@ model WatchlistStudent {
   state      String   @default("N/A")
   city       String   @default("N/A")
   pincode    String   @default("N/A")
-  risk       String   @default("Medium")  // "High" | "Medium"
+  risk       String   @default("Medium") // "High" | "Medium"
   schoolId   String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -238,7 +239,7 @@ model HeadmasterStaff {
   phone       String   @default("N/A")
   email       String?
   attendance  Float    @default(100)
-  performance String   @default("Good")   // "Excellent" | "Good" | "Average"
+  performance String   @default("Good") // "Excellent" | "Good" | "Average"
   leaveUsed   Int      @default(0)
   password    String   @default("123456")
   schoolId    String?
@@ -333,31 +334,31 @@ model Announcement {
 }
 
 model Homework {
-  id             String               @id @default(uuid())
-  title          String
-  className      String
-  dueDate        String
-  status         String               @default("active") // "active", "draft", "completed"
-  description    String
-  schoolId       String?
-  submissions    HomeworkSubmission[]
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
+  id          String               @id @default(uuid())
+  title       String
+  className   String
+  dueDate     String
+  status      String               @default("active") // "active", "draft", "completed"
+  description String
+  schoolId    String?
+  submissions HomeworkSubmission[]
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
 
   @@index([schoolId])
 }
 
 model HomeworkSubmission {
-  id          String   @id @default(uuid())
-  homeworkId  String
-  homework    Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
-  rollNo      String
-  name        String
-  status      String // "submitted", "pending"
-  score       String?  @default("—")
-  date        String?  @default("—")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(uuid())
+  homeworkId String
+  homework   Homework @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  rollNo     String
+  name       String
+  status     String // "submitted", "pending"
+  score      String?  @default("—")
+  date       String?  @default("—")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([homeworkId])
 }
@@ -379,15 +380,15 @@ model EvaluationSubmission {
 }
 
 model LabEquipment {
-  id          String   @id @default(uuid())
-  name        String
+  id           String   @id @default(uuid())
+  name         String
   classSection String
-  status      String // "active", "scheduled", "completed"
-  date        String
-  safetyCheck Boolean  @default(true)
-  schoolId    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  status       String // "active", "scheduled", "completed"
+  date         String
+  safetyCheck  Boolean  @default(true)
+  schoolId     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([schoolId])
 }
@@ -407,34 +408,34 @@ model LeaveRequest {
 }
 
 model LessonPlan {
-  id           String   @id @default(uuid())
-  syllabus     String
-  grade        String
-  subject      String
-  topic        String
-  duration     String
-  planData     Json // Stores outline, bilingual terms, assessments, exit tickets
-  schoolId     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        String   @id @default(uuid())
+  syllabus  String
+  grade     String
+  subject   String
+  topic     String
+  duration  String
+  planData  Json // Stores outline, bilingual terms, assessments, exit tickets
+  schoolId  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([schoolId])
 }
 
 model Question {
-  id           String   @id @default(uuid())
-  grade        String
-  subject      String
-  topic        String
-  difficulty   String // "easy", "medium", "hard"
-  type         String // "mcq", "short", "long"
-  text         String
-  options      String[] // For MCQs
-  answer       String
-  marks        Int
-  schoolId     String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id         String   @id @default(uuid())
+  grade      String
+  subject    String
+  topic      String
+  difficulty String // "easy", "medium", "hard"
+  type       String // "mcq", "short", "long"
+  text       String
+  options    String[] // For MCQs
+  answer     String
+  marks      Int
+  schoolId   String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([schoolId])
 }
@@ -452,6 +453,53 @@ model StudentBadge {
   @@index([studentId])
 }
 
+// ─── Extracurricular Activities (Student Portal) ───────────────
 
+model Club {
+  id         String   @id @default(uuid())
+  schoolId   String?
+  name       String
+  category   String // "Environment", "Arts", "Science", "Academics", "Literature"
+  icon       String // e.g. "🌱", "🎭"
+  themeColor String // e.g. "text-emerald-600 dark:text-emerald-400"
+  themeBg    String // e.g. "bg-emerald-500/10 border-emerald-500/20"
+  themeTagBg String // e.g. "bg-emerald-500/20"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
+  members ClubMember[]
+  events  ClubEvent[]
 
+  @@index([schoolId])
+}
+
+model ClubMember {
+  id        String   @id @default(uuid())
+  clubId    String
+  club      Club     @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  role      String   @default("Member") // "Member", "President", etc.
+  joinedAt  DateTime @default(now())
+
+  @@unique([clubId, studentId])
+  @@index([clubId])
+  @@index([studentId])
+}
+
+model ClubEvent {
+  id         String   @id @default(uuid())
+  clubId     String?
+  club       Club?    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  schoolId   String?
+  title      String
+  eventDate  DateTime
+  type       String // "School-wide", "Competition", "Showcase", etc.
+  icon       String
+  themeColor String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([clubId])
+  @@index([schoolId])
+}
