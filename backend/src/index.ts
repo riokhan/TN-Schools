@@ -18,7 +18,7 @@ import pageRoutes       from './routes/page.routes';
 import userRoutes       from './routes/user.routes';
 import teacherRoutes    from './routes/teacher.routes';
 
-
+// Trigger nodemon restart after prisma client generation
 dotenv.config();
 
 const app: Express = express();
