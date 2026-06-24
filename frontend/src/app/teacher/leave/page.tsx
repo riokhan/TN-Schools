@@ -29,12 +29,6 @@ export default function LeaveRequestsPage() {
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [quotas, setQuotas] = useState([
-    { label: "Casual Leave", remaining: 4, total: 12, color: "text-amber-400" },
-    { label: "Medical Leave", remaining: 8, total: 15, color: "text-blue-400" },
-    { label: "Earned Leave", remaining: 18, total: 20, color: "text-emerald-400" },
-  ]);
-
   // Form State
   const [leaveType, setLeaveType] = useState("Casual Leave");
   const [startDate, setStartDate] = useState("");
@@ -43,46 +37,32 @@ export default function LeaveRequestsPage() {
   const [studentName, setStudentName] = useState("");
   const [toast, setToast] = useState<string | null>(null);
 
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
+  const indexOfLast = currentPage * itemsPerPage;
+  const indexOfFirst = indexOfLast - itemsPerPage;
+  const currentRequests = requests.slice(indexOfFirst, indexOfLast);
+  const totalPages = Math.ceil(requests.length / itemsPerPage);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        // Fetch Leave Requests
         const leaveRes = await fetch(`${API_URL}/api/teacher/leave${schoolId ? `?schoolId=${schoolId}` : ""}`);
         const leaveData = await leaveRes.json();
         if (leaveData.success && leaveData.data) {
           setRequests(leaveData.data);
-          
-          // Calculate remaining quotas based on approved requests
-          let casualCount = 0;
-          let medicalCount = 0;
-          let earnedCount = 0;
-
-          leaveData.data.forEach((r: LeaveRequest) => {
-            if (r.status === "Approved") {
-              const daysMatch = r.duration.match(/(\d+)\s*Day/i);
-              const days = daysMatch ? parseInt(daysMatch[1]) : 1;
-              if (r.type === "Casual Leave") casualCount += days;
-              if (r.type === "Medical Leave") medicalCount += days;
-              if (r.type === "Earned Leave") earnedCount += days;
-            }
-          });
-
-          setQuotas([
-            { label: "Casual Leave", remaining: Math.max(0, 12 - casualCount), total: 12, color: "text-amber-400" },
-            { label: "Medical Leave", remaining: Math.max(0, 15 - medicalCount), total: 15, color: "text-blue-400" },
-            { label: "Earned Leave", remaining: Math.max(0, 20 - earnedCount), total: 20, color: "text-emerald-400" },
-          ]);
         }
 
-        // Fetch Students for Leave Selection
         const studentRes = await fetch(`${API_URL}/api/students${schoolId ? `?schoolId=${schoolId}` : ""}`);
         const studentData = await studentRes.json();
         if (studentData.success && studentData.data) {
           const mappedStudents = studentData.data.map((s: any) => ({
             id: s.id,
             name: s.user?.name || "Unknown Student",
-            subject: `Class ${s.class}${s.section}`
+            subject: `Class ${s.class}${s.section}`,
           }));
           setStaffList(mappedStudents);
           if (mappedStudents.length > 0) {
@@ -105,9 +85,10 @@ export default function LeaveRequestsPage() {
     e.preventDefault();
     if (!startDate || !reason) return;
 
-    const durationStr = startDate === endDate || !endDate
-      ? `${startDate} (1 Day)`
-      : `${startDate} to ${endDate}`;
+    const durationStr =
+      startDate === endDate || !endDate
+        ? `${startDate} (1 Day)`
+        : `${startDate} to ${endDate}`;
 
     try {
       const res = await fetch(`${API_URL}/api/teacher/leave`, {
@@ -152,173 +133,306 @@ export default function LeaveRequestsPage() {
     }
   };
 
+  const statCards = [
+    {
+      icon: "📄",
+      accent: "bg-sky-400/70",
+      iconBg: "bg-sky-400/10",
+      label: "Total Leave Records",
+      value: requests.length,
+    },
+    {
+      icon: "🏫",
+      accent: "bg-violet-400/70",
+      iconBg: "bg-violet-400/10",
+      label: "Classes Covered",
+      value: "6 – 12",
+    },
+    {
+      icon: "👥",
+      accent: "bg-emerald-400/70",
+      iconBg: "bg-emerald-400/10",
+      label: "Total Students",
+      value: staffList.length,
+    },
+    {
+      icon: "🏛️",
+      accent: "bg-amber-400/70",
+      iconBg: "bg-amber-400/10",
+      label: "School",
+      value: "TN Govt School",
+      small: true,
+    },
+  ];
+
   return (
-    <PortalLayout title="Student Leave Management" subtitle="Track and request absences for students in your school.">
-      {/* Leave Quota Allowances */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 fade-in">
-        {quotas.map((q) => {
-          const pct = Math.round((q.remaining / q.total) * 100);
-          return (
-            <div key={q.label} className="bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] rounded-2xl p-5 border border-[var(--border)] flex flex-col justify-between gap-4">
-              <div>
-                <span className="text-[10px] uppercase font-extrabold text-[var(--text-muted)] tracking-wider">{q.label}</span>
-                <div className="flex items-baseline gap-1 mt-2">
-                  <span className={`text-3xl font-black ${q.color}`}>{q.remaining}</span>
-                  <span className="text-[var(--text-muted)] text-xs font-semibold">/ {q.total} Days Left</span>
-                </div>
-              </div>
-              <div className="space-y-1">
-                <div className="progress-bar">
-                  <div className="progress-fill bg-gradient-to-r from-amber-500 to-orange-500" style={{ width: `${pct}%` }} />
-                </div>
-                <div className="flex justify-between text-[10px] text-[var(--text-muted)]">
-                  <span>Used: {q.total - q.remaining} days</span>
-                  <span>{pct}% Remaining</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Leave application form */}
-        <div className="theme-card p-6 border border-[var(--border)] h-fit">
-          <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">📄 Request Leave</h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Leave Category</label>
-              <select
-                value={leaveType}
-                onChange={(e) => setLeaveType(e.target.value)}
-                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
-              >
-                <option value="Casual Leave">Casual Leave</option>
-                <option value="Medical Leave">Medical Leave</option>
-                <option value="Earned Leave">Earned Leave</option>
-                <option value="Duty Leave (OD)">Duty Leave (OD)</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Start Date</label>
-                <input
-                  type="date"
-                  required
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-1.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">End Date</label>
-                <input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-1.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Student Name</label>
-              <select
-                value={studentName}
-                onChange={(e) => setStudentName(e.target.value)}
-                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
-              >
-                {staffList.length > 0 ? (
-                  staffList.map((st) => (
-                    <option key={st.id} value={`${st.name} (${st.subject})`}>
-                      {st.name} ({st.subject})
-                    </option>
-                  ))
-                ) : (
-                  <>
-                    <option value="Select Student">No students found</option>
-                  </>
-                )}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">Reason for Absence</label>
-              <textarea
-                required
-                rows={3}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Explain the reason briefly..."
-                className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors resize-none"
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-2.5 bg-[var(--primary)] hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs transition-colors flex items-center justify-center gap-2"
+    <PortalLayout
+      title="Student Leave Management"
+      subtitle="Track and request absences for students in your school."
+    >
+      {/* Outer wrapper: clamps width, kills any horizontal overflow at every breakpoint */}
+      <div className="w-full max-w-full overflow-x-hidden">
+        {/* Leave Quota Allowances */}
+        <div className="grid grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 mb-6">
+          {statCards.map((card) => (
+            <div
+              key={card.label}
+              className="theme-card relative overflow-hidden p-4 sm:p-5 rounded-2xl border border-[var(--border)] bg-[var(--bg-card)] min-w-0"
             >
-              Submit Leave Request
-            </button>
-          </form>
+              <div className={`absolute top-0 left-0 right-0 h-1 ${card.accent}`} />
+              <div className="flex items-center gap-3 min-w-0">
+                <div
+                  className={`flex-shrink-0 w-9 h-9 rounded-xl ${card.iconBg} flex items-center justify-center text-base`}
+                >
+                  {card.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] uppercase tracking-wide font-semibold text-[var(--text-muted)] truncate">
+                    {card.label}
+                  </p>
+                  <h2
+                    className={`font-extrabold text-[var(--text-heading)] leading-tight truncate ${
+                      card.small ? "text-base sm:text-lg" : "text-2xl"
+                    }`}
+                  >
+                    {card.value}
+                  </h2>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
 
-        {/* History Panel */}
-        <div className="lg:col-span-2 theme-card p-6 border border-[var(--border)] space-y-5">
-          <h2 className="text-base font-semibold text-[var(--text-heading)]">📋 Previous Request History</h2>
+        {/* Main Containers */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 mb-6">
+          {/* Leave Application Form */}
+          <div className="theme-card p-4 sm:p-5 lg:p-6 border border-[var(--border)] h-fit rounded-2xl bg-[var(--bg-card)] min-w-0">
+            <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">
+              📄 Request Leave
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">
+                  Leave Category
+                </label>
+                <select
+                  value={leaveType}
+                  onChange={(e) => setLeaveType(e.target.value)}
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                >
+                  <option value="Casual Leave">Casual Leave</option>
+                  <option value="Medical Leave">Medical Leave</option>
+                  <option value="Earned Leave">Earned Leave</option>
+                  <option value="Duty Leave (OD)">Duty Leave (OD)</option>
+                </select>
+              </div>
 
-          {toast && (
-            <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-xl">
-              {toast}
+              {/* Stacks to 1 column below 380px-ish screens, otherwise 2 columns */}
+              <div className="grid grid-cols-1 min-[380px]:grid-cols-2 gap-4">
+                <div className="min-w-0">
+                  <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">
+                    Start Date
+                  </label>
+                  <input
+                    type="date"
+                    required
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-1.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">
+                    End Date
+                  </label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-1.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">
+                  Student Name
+                </label>
+                <select
+                  value={studentName}
+                  onChange={(e) => setStudentName(e.target.value)}
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                >
+                  {staffList.length > 0 ? (
+                    staffList.map((st) => (
+                      <option key={st.id} value={`${st.name} (${st.subject})`}>
+                        {st.name} ({st.subject})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="Select Student">No students found</option>
+                  )}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs text-[var(--text-muted)] mb-1.5 font-medium">
+                  Reason for Absence
+                </label>
+                <textarea
+                  required
+                  rows={3}
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Explain the reason briefly..."
+                  className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors resize-none"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full py-2.5 bg-[var(--primary)] hover:brightness-110 text-slate-950 font-bold rounded-xl text-xs transition-all flex items-center justify-center gap-2"
+              >
+                Submit Leave Request
+              </button>
+            </form>
+          </div>
+
+          {/* History Panel */}
+          <div className="lg:col-span-2 theme-card p-4 sm:p-5 lg:p-6 border border-[var(--border)] space-y-5 rounded-2xl bg-[var(--bg-card)] flex flex-col justify-between min-w-0">
+            <div className="min-w-0">
+              <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">
+                📋 Previous Request History
+              </h2>
+
+              {toast && (
+                <div className="p-3.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-xs rounded-xl mb-4">
+                  {toast}
+                </div>
+              )}
+
+              {loading ? (
+                <div className="text-center py-8 text-xs text-[var(--text-muted)]">
+                  Loading leave history...
+                </div>
+              ) : requests.length === 0 ? (
+                <div className="text-center py-8 text-xs text-[var(--text-muted)]">
+                  No leave requests found.
+                </div>
+              ) : (
+                <>
+                  {/* Desktop / tablet: table view, scrolls horizontally ONLY inside this box */}
+                  <div className="hidden sm:block overflow-x-auto rounded-xl border border-[var(--border)]">
+                    <table className="w-full text-left border-collapse min-w-[560px]">
+                      <thead>
+                        <tr className="bg-[var(--bg-main)] border-b border-[var(--border)] text-[var(--text-muted)] text-[11px] uppercase tracking-wider font-extrabold">
+                          <th className="p-3.5">Leave Type</th>
+                          <th className="p-3.5">Period Details</th>
+                          <th className="p-3.5">Reason</th>
+                          <th className="p-3.5">Student Name</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--border)]">
+                        {currentRequests.map((req) => (
+                          <tr
+                            key={req.id}
+                            className="hover:bg-[var(--bg-main)] transition-colors"
+                          >
+                            <td className="p-3.5 font-bold text-[var(--text-heading)] text-xs">
+                              {req.type}
+                            </td>
+                            <td className="p-3.5 text-xs text-[var(--text-heading)]">
+                              {req.duration}
+                            </td>
+                            <td className="p-3.5 text-[var(--text-muted)] text-xs max-w-[150px] truncate">
+                              {req.reason}
+                            </td>
+                            <td className="p-3.5 text-xs text-[var(--text-heading)]">
+                              {req.studentName}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Mobile: card list instead of a table, so nothing forces page-wide horizontal scroll */}
+                  <div className="sm:hidden space-y-3">
+                    {currentRequests.map((req) => (
+                      <div
+                        key={req.id}
+                        className="rounded-xl border border-[var(--border)] p-3.5 bg-[var(--bg-main)] min-w-0"
+                      >
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="font-bold text-[var(--text-heading)] text-xs truncate">
+                            {req.type}
+                          </span>
+                          <span className="text-[11px] text-[var(--text-muted)] flex-shrink-0">
+                            {req.duration}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-[var(--text-muted)] mb-1.5 break-words">
+                          {req.reason}
+                        </p>
+                        <p className="text-xs text-[var(--text-heading)] font-medium truncate">
+                          👤 {req.studentName}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
-          )}
 
-          {loading ? (
-            <div className="text-center py-8 text-xs text-[var(--text-muted)]">Loading leave history...</div>
-          ) : requests.length === 0 ? (
-            <div className="text-center py-8 text-xs text-[var(--text-muted)]">No leave requests found.</div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Leave Type</th>
-                    <th>Period Details</th>
-                    <th>Reason</th>
-                    <th>Student Name</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests.map((req) => (
-                    <tr key={req.id}>
-                      <td className="font-bold text-[var(--text-heading)] text-xs">{req.type}</td>
-                      <td>{req.duration}</td>
-                      <td className="text-[var(--text-muted)] text-xs max-w-[150px] truncate">{req.reason}</td>
-                      <td>{req.studentName}</td>
-                      <td>
-                        <span
-                          className={`badge ${
-                            req.status === "Approved"
-                              ? "badge-green"
-                              : req.status === "Pending"
-                              ? "badge-yellow"
-                              : "badge-red"
-                          }`}
-                        >
-                          {req.status}
-                        </span>
-                      </td>
-                    </tr>
+            {/* Pagination Controls Footer */}
+            {!loading && requests.length > 0 && (
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-[var(--border)] mt-auto">
+                <span className="text-xs text-[var(--text-muted)] text-center sm:text-left">
+                  Showing{" "}
+                  <strong className="text-[var(--text-heading)]">{indexOfFirst + 1}</strong> to{" "}
+                  <strong className="text-[var(--text-heading)]">
+                    {Math.min(indexOfLast, requests.length)}
+                  </strong>{" "}
+                  of <strong className="text-[var(--text-heading)]">{requests.length}</strong>{" "}
+                  inquiries
+                </span>
+
+                <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                    className="p-2 text-xs rounded-xl border border-[var(--border)] text-[var(--text-heading)] bg-[var(--bg-main)] hover:bg-[var(--bg-card-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    ← Prev
+                  </button>
+
+                  {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((pageNum) => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 text-xs font-bold rounded-xl transition-all ${
+                        currentPage === pageNum
+                          ? "bg-[var(--primary)] text-slate-950"
+                          : "border border-[var(--border)] text-[var(--text-heading)] hover:bg-[var(--bg-card-hover)]"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+
+                  <button
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    className="p-2 text-xs rounded-xl border border-[var(--border)] text-[var(--text-heading)] bg-[var(--bg-main)] hover:bg-[var(--bg-card-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </PortalLayout>
   );
 }
-
