@@ -99,7 +99,7 @@ export default function HeadmasterDashboard() {
               id="headmaster-add-staff"
               className="text-xs text-blue-400 hover:text-blue-300 font-bold bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg transition-all"
             >
-              + Add Staff
+               View All Staff
             </Link>
           </div>
           <table className="data-table">

@@ -639,7 +639,7 @@ export default function StaffManagementPage() {
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors" />
                     </div>
                     <div>
-                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">EMIS ID</label>
+                      <label className="block text-[10px] text-slate-600 mb-1 font-semibold">ID</label>
                       <input type="text" required value={newEmisId} onChange={(e) => setNewEmisId(e.target.value)}
                         placeholder="e.g. TCH206"
                         className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-blue-500 transition-colors" />
