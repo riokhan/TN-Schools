@@ -65,6 +65,8 @@ export default function StaffManagementPage() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [staffToDelete, setStaffToDelete] = useState<StaffMember | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
 
   const showToast = (msg: string, type: "success" | "error" = "success") => {
     setToast({ msg, type });
@@ -253,6 +255,9 @@ export default function StaffManagementPage() {
     }
   };
 
+  const totalPages = Math.ceil(staff.length / pageSize);
+  const paginatedStaff = staff.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <PortalLayout
       title="Staff Management"
@@ -305,6 +310,7 @@ export default function StaffManagementPage() {
         {staff.length === 0 && !isLoading ? (
           <div className="text-center py-12 text-slate-500 text-xs">No staff records found. Click "+ Add Teacher" to get started.</div>
         ) : (
+          <>
           <div className="overflow-x-auto">
             <table className="data-table">
               <thead>
@@ -319,7 +325,7 @@ export default function StaffManagementPage() {
                 </tr>
               </thead>
               <tbody>
-                {staff.map((s) => (
+                {paginatedStaff.map((s) => (
                   <tr key={s.id || s.emisId}>
                     <td className="font-bold text-green text-xs py-3">
                       <div>{s.name}</div>
@@ -364,6 +370,35 @@ export default function StaffManagementPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-between items-center mt-4">
+              <span className="text-xs text-slate-400">
+                Showing {((currentPage - 1) * pageSize) + 1} to {Math.min(currentPage * pageSize, staff.length)} of {staff.length} entries
+              </span>
+              <div className="flex space-x-2">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 bg-slate-800/50 hover:bg-slate-700 disabled:opacity-50 text-slate-300 text-xs rounded-lg transition-colors border border-slate-700"
+                >
+                  Previous
+                </button>
+                <div className="px-3 py-1 bg-slate-900/50 text-slate-400 text-xs rounded-lg border border-slate-800">
+                  Page {currentPage} of {totalPages}
+                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 bg-slate-800/50 hover:bg-slate-700 disabled:opacity-50 text-slate-300 text-xs rounded-lg transition-colors border border-slate-700"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
+          </>
         )}
       </div>
 
