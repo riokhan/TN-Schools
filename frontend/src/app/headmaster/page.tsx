@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import Link from "next/link";
 
 interface StaffMember {
   name: string;
@@ -93,13 +94,13 @@ export default function HeadmasterDashboard() {
         <div className="lg:col-span-2 glass rounded-2xl p-6 fade-in-2 border border-slate-800">
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-base font-semibold text-white">👩‍🏫 Staff Performance</h2>
-            <button
-              onClick={() => setIsModalOpen(true)}
+            <Link
+              href="/headmaster/staff"
               id="headmaster-add-staff"
               className="text-xs text-blue-400 hover:text-blue-300 font-bold bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-lg transition-all"
             >
               + Add Staff
-            </button>
+            </Link>
           </div>
           <table className="data-table">
             <thead>
