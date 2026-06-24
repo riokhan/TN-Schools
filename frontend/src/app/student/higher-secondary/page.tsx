@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from "react";
 import PortalLayout from "@/components/PortalLayout";
 
+import { useSession } from "next-auth/react";
+
 const getApiBase = () => {
   let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
   if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
@@ -65,6 +67,7 @@ const streamKnowledge = [
 ];
 
 export default function HigherSecondaryDashboard() {
+  const { data: session } = useSession();
   const [student, setStudent] = useState<any>(null);
 
   useEffect(() => {
@@ -72,14 +75,19 @@ export default function HigherSecondaryDashboard() {
       .then((res) => res.json())
       .then((json) => {
         if (json.success && json.data.length > 0) {
-          setStudent(json.data[0]);
+          // Match the logged in user if they are a student, otherwise default to first for preview
+          const myStudent = session?.user?.id 
+            ? json.data.find((s: any) => s.userId === session.user.id)
+            : null;
+          setStudent(myStudent || json.data[0]);
         }
       })
       .catch((err) => console.error(err));
-  }, []);
+  }, [session]);
 
+  const userName = session?.user?.name || student?.user?.name || "Student";
   const subtitle = student 
-    ? `Welcome, ${student.user.name} · Class ${student.class} ${student.section} Stream · Target: Medical Colleges`
+    ? `Welcome, ${userName} · Class ${student.class} ${student.section} Stream · Target: Medical Colleges`
     : "Loading student data...";
 
   return (
