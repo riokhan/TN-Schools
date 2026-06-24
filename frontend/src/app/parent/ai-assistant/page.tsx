@@ -9,12 +9,12 @@ interface ChatMessage {
   time: string;
 }
 
-function ChildSwitcher({ children, active, onChange }: { children: Child[]; active: Child | null; onChange: (c: Child) => void }) {
-  if (children.length <= 1) return null;
+function ChildSwitcher({ childList, active, onChange }: { childList: Child[]; active: Child | null; onChange: (c: Child) => void }) {
+  if (childList.length <= 1) return null;
   return (
     <div className="flex items-center gap-3 mb-5 p-3 glass rounded-2xl flex-wrap">
       <span className="text-xs text-slate-400 font-semibold">👶 Chatting about:</span>
-      {children.map(c => (
+      {childList.map(c => (
         <button key={c.studentId} onClick={() => onChange(c)}
           className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
             active?.studentId === c.studentId ? "bg-emerald-600 text-white shadow-md" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
@@ -152,7 +152,7 @@ export default function AIAssistantPage() {
       title="AI Parent Assistant"
       subtitle={`Bilingual AI advisor to help you stay updated and guide ${childName}'s studies`}
     >
-      <ChildSwitcher children={children} active={activeChild} onChange={setActiveChild} />
+      <ChildSwitcher childList={children} active={activeChild} onChange={setActiveChild} />
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 h-[calc(100vh-180px)]">
         {/* Left Control Column */}
