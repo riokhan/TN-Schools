@@ -1,297 +1,182 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import { useParentChildren, getApiBase, Child } from "@/lib/useParentChildren";
 
-interface Assignment {
+interface HomeworkItem {
   id: string;
-  subject: string;
-  topic: string;
-  desc: string;
-  assignedOn: string;
-  dueOn: string;
-  status: "pending" | "submitted" | "evaluated";
-  grade?: string;
-  score?: string;
-  teacherFeedback?: string;
-  parentSigned?: boolean;
-  signedOn?: string;
+  title: string;
+  className: string;
+  dueDate: string;
+  status: string;
+  description: string;
+  submissionStatus: "submitted" | "pending";
+  score: string;
+  submittedDate: string;
 }
 
-const initialAssignments: Assignment[] = [
-  {
-    id: "hw-01",
-    subject: "Mathematics",
-    topic: "Quadratic Equations Ex 4.2",
-    desc: "Solve questions 1 through 10 on finding roots using the quadratic formula. Write out all intermediate steps clearly.",
-    assignedOn: "2025-06-18",
-    dueOn: "2025-06-20",
-    status: "pending",
-    parentSigned: false,
-  },
-  {
-    id: "hw-02",
-    subject: "Science",
-    topic: "Human Digestive System Diagram",
-    desc: "Draw and label a neat diagram of the digestive system in the science practical notebook. List functions of salivary glands.",
-    assignedOn: "2025-06-17",
-    dueOn: "2025-06-19",
-    status: "pending",
-    parentSigned: false,
-  },
-  {
-    id: "hw-03",
-    subject: "English",
-    topic: "Formal Letter Writing Exercise",
-    desc: "Write a letter to the local municipal commissioner highlighting garbage accumulation issues in the neighborhood (150 words).",
-    assignedOn: "2025-06-15",
-    dueOn: "2025-06-17",
-    status: "submitted",
-    parentSigned: true,
-    signedOn: "2025-06-16",
-  },
-  {
-    id: "hw-04",
-    subject: "Tamil",
-    topic: "Thirukkural Explanation",
-    desc: "Memorize and write the meanings of Thirukkural verses 121 to 130 on self-control (Adhigaaram 13: Adakkam Udaimai).",
-    assignedOn: "2025-06-14",
-    dueOn: "2025-06-16",
-    status: "evaluated",
-    grade: "O",
-    score: "10/10",
-    teacherFeedback: "Flawless writing. Handwriting is very neat and readable. Excellent spelling!",
-    parentSigned: true,
-    signedOn: "2025-06-15",
-  },
-  {
-    id: "hw-05",
-    subject: "Social Science",
-    topic: "Indian National Movement Mapwork",
-    desc: "On an outline map of India, mark key locations: Champaran, Dandi, Jallianwala Bagh, and Chauri Chaura.",
-    assignedOn: "2025-06-12",
-    dueOn: "2025-06-15",
-    status: "evaluated",
-    grade: "B+",
-    score: "7.5/10",
-    teacherFeedback: "Map points are correct, but labels should be more legible. Map border needs alignment.",
-    parentSigned: true,
-    signedOn: "2025-06-13",
-  },
-];
+interface HomeworkStats {
+  submitted: number;
+  pending: number;
+  total: number;
+  rate: number;
+}
+
+function ChildSwitcher({ children, active, onChange }: { children: Child[]; active: Child | null; onChange: (c: Child) => void }) {
+  if (children.length <= 1) return null;
+  return (
+    <div className="flex items-center gap-3 mb-5 p-3 glass rounded-2xl flex-wrap">
+      <span className="text-xs text-slate-400 font-semibold">👶 Viewing:</span>
+      {children.map(c => (
+        <button key={c.studentId} onClick={() => onChange(c)}
+          className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            active?.studentId === c.studentId ? "bg-emerald-600 text-white shadow-md" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+          }`}>
+          {c.name.split(" ")[0]} · Class {c.class}{c.section}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export default function HomeworkPage() {
-  const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments);
-  const [activeTab, setActiveTab] = useState<"all" | "pending" | "submitted" | "evaluated">("all");
-  const [selectedSubject, setSelectedSubject] = useState<string>("All");
+  const { parentId, children, activeChild, setActiveChild, childrenLoading } = useParentChildren();
 
-  const subjectsList = ["All", "Mathematics", "Science", "Tamil", "English", "Social Science"];
+  const [homework, setHomework] = useState<HomeworkItem[]>([]);
+  const [stats, setStats]       = useState<HomeworkStats | null>(null);
+  const [filter, setFilter]     = useState<"all" | "submitted" | "pending">("all");
+  const [loading, setLoading]   = useState(false);
 
-  const handleSignAssignment = (id: string) => {
-    setAssignments((prev) =>
-      prev.map((hw) => {
-        if (hw.id === id) {
-          const currentSignState = hw.parentSigned;
-          return {
-            ...hw,
-            parentSigned: !currentSignState,
-            signedOn: !currentSignState ? new Date().toISOString().split("T")[0] : undefined,
-          };
-        }
-        return hw;
-      })
-    );
-  };
+  const fetchHomework = useCallback(async (child: Child) => {
+    if (!parentId) return;
+    setLoading(true);
+    try {
+      const res  = await fetch(`${getApiBase()}/api/parent/${parentId}/child/${child.studentId}/homework`);
+      const json = await res.json();
+      if (json.success) {
+        setHomework(json.data.homework);
+        setStats(json.data.stats);
+      }
+    } catch {/* offline */}
+    finally { setLoading(false); }
+  }, [parentId]);
 
-  // Filter assignments
-  const filteredAssignments = assignments.filter((hw) => {
-    const matchesTab = activeTab === "all" || hw.status === activeTab;
-    const matchesSubject = selectedSubject === "All" || hw.subject === selectedSubject;
-    return matchesTab && matchesSubject;
-  });
+  useEffect(() => { if (activeChild) fetchHomework(activeChild); }, [activeChild, fetchHomework]);
 
-  // Calculate statistics
-  const total = assignments.length;
-  const pendingCount = assignments.filter((hw) => hw.status === "pending").length;
-  const submittedCount = assignments.filter((hw) => hw.status === "submitted").length;
-  const evaluatedCount = assignments.filter((hw) => hw.status === "evaluated").length;
-  const completionRate = total > 0 ? Math.round(((submittedCount + evaluatedCount) / total) * 100) : 0;
+  const filtered = homework.filter(h =>
+    filter === "all" ? true : h.submissionStatus === filter
+  );
 
   return (
-    <PortalLayout
-      title="Homework Status Portal"
-      subtitle="Monitor Priya&apos;s daily homework tasks, review grading remarks, and co-sign completed assignments"
-    >
-      {/* TODO: Connect backend APIs to sync student submissions and evaluate feedback triggers */}
-      
-      {/* Summary KPI Cards */}
+    <PortalLayout>
+      <ChildSwitcher children={children} active={activeChild} onChange={setActiveChild} />
+
+      {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
-          { label: "Completion Rate", value: `${completionRate}%`, icon: "📈", color: "text-emerald-400", sub: "Goal: 95%+" },
-          { label: "Pending Tasks", value: pendingCount, icon: "⏳", color: "text-amber-400", sub: "Needs supervision" },
-          { label: "Submitted Today", value: submittedCount, icon: "📤", color: "text-blue-400", sub: "Awaiting teacher review" },
-          { label: "Evaluated Tasks", value: evaluatedCount, icon: "🏆", color: "text-purple-400", sub: "Contains grades & remarks" },
-        ].map((kpi, i) => (
-          <div key={i} className="kpi-card">
+          { label: "Total Assigned", value: stats?.total ?? "—",     icon: "📋", color: "text-slate-300" },
+          { label: "Submitted",      value: stats?.submitted ?? "—", icon: "✅", color: "text-emerald-400" },
+          { label: "Pending",        value: stats?.pending ?? "—",   icon: "⏳", color: "text-amber-400" },
+          { label: "Submission Rate",value: stats ? `${stats.rate}%` : "—", icon: "📈", color: "text-blue-400" },
+        ].map(k => (
+          <div key={k.label} className="kpi-card">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xl">{kpi.icon}</span>
-              <span className="text-[9px] text-slate-500 font-bold uppercase">{kpi.sub}</span>
+              <span className="text-2xl">{k.icon}</span>
             </div>
-            <div className={`text-3xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
-            <div className="text-xs text-slate-400 font-semibold">{kpi.label}</div>
+            {loading || childrenLoading
+              ? <div className="h-8 w-16 bg-slate-700 rounded animate-pulse mb-1" />
+              : <div className={`text-3xl font-bold ${k.color} mb-1`}>{k.value}</div>
+            }
+            <div className="text-xs text-slate-500">{k.label}</div>
           </div>
         ))}
       </div>
 
-      {/* Filter and Tab Section */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6 glass rounded-2xl p-4 fade-in-2">
-        {/* Status Tabs */}
-        <div className="flex bg-slate-950/60 border border-slate-800 p-1 rounded-xl gap-1 overflow-x-auto w-full sm:w-auto">
-          {(["all", "pending", "submitted", "evaluated"] as const).map((tab) => (
-            <button
-              key={tab}
-              id={`hw-tab-${tab}`}
-              onClick={() => setActiveTab(tab)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all whitespace-nowrap ${
-                activeTab === tab
-                  ? "bg-emerald-600 text-white shadow"
-                  : "text-slate-400 hover:text-white"
-              }`}
-            >
-              {tab === "all" ? "All Homework" : tab}
-            </button>
-          ))}
+      {/* Submission Rate Bar */}
+      {stats && (
+        <div className="glass rounded-2xl p-5 mb-6 fade-in-2">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-semibold text-white">Overall Submission Rate</span>
+            <span className={`text-sm font-bold ${stats.rate >= 80 ? "text-emerald-400" : stats.rate >= 60 ? "text-amber-400" : "text-red-400"}`}>
+              {stats.rate}%
+            </span>
+          </div>
+          <div className="h-3 bg-slate-800 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${stats.rate}%`,
+                background: stats.rate >= 80 ? "linear-gradient(90deg,#10b981,#059669)" : stats.rate >= 60 ? "linear-gradient(90deg,#f59e0b,#d97706)" : "linear-gradient(90deg,#ef4444,#dc2626)",
+              }}
+            />
+          </div>
         </div>
+      )}
 
-        {/* Subject Filter */}
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <label htmlFor="hw-subject-filter" className="text-xs font-semibold text-slate-400">Subject:</label>
-          <select
-            id="hw-subject-filter"
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
-          >
-            {subjectsList.map((sub) => (
-              <option key={sub} value={sub}>
-                {sub}
-              </option>
+      {/* Filter Tabs + Homework List */}
+      <div className="glass rounded-2xl p-6 fade-in-3">
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-base font-semibold text-white">📝 Homework Assignments</h2>
+          <div className="flex gap-2">
+            {(["all","submitted","pending"] as const).map(f => (
+              <button key={f} onClick={() => setFilter(f)}
+                className={`px-3 py-1 rounded-lg text-xs font-bold capitalize transition-all ${
+                  filter === f ? "bg-emerald-600 text-white" : "bg-slate-800 text-slate-400 hover:bg-slate-700"
+                }`}>
+                {f}
+              </button>
             ))}
-          </select>
+          </div>
         </div>
-      </div>
 
-      {/* Homework Cards List */}
-      <div className="space-y-4 fade-in-3">
-        {filteredAssignments.length > 0 ? (
-          filteredAssignments.map((hw) => {
-            const isPending = hw.status === "pending";
-            const isEvaluated = hw.status === "evaluated";
-            const isSubmitted = hw.status === "submitted";
-
-            return (
-              <div
-                key={hw.id}
-                className={`glass rounded-2xl p-6 border transition-all duration-200 hover:scale-[1.005] ${
-                  isPending
-                    ? "border-l-4 border-l-amber-500"
-                    : isSubmitted
-                    ? "border-l-4 border-l-blue-500"
-                    : "border-l-4 border-l-emerald-500"
-                }`}
-              >
-                <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/10">
-                        {hw.subject}
+        {loading ? (
+          <div className="space-y-3">{[1,2,3,4,5].map(i => <div key={i} className="h-24 bg-slate-800 rounded-xl animate-pulse" />)}</div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-10 text-slate-500 text-sm">
+            {filter === "all" ? "No homework assigned yet." : `No ${filter} homework found.`}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map(h => (
+              <div key={h.id} className={`p-4 rounded-xl border transition-all ${
+                h.submissionStatus === "submitted"
+                  ? "border-emerald-500/20 bg-emerald-500/5"
+                  : h.status === "active"
+                  ? "border-amber-500/20 bg-amber-500/5"
+                  : "border-slate-700/50 bg-slate-900/40"
+              }`}>
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-sm font-bold text-white">{h.title}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-bold border ${
+                        h.submissionStatus === "submitted"
+                          ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+                          : "text-amber-400 bg-amber-500/10 border-amber-500/20"
+                      }`}>
+                        {h.submissionStatus === "submitted" ? "✓ Submitted" : "⏳ Pending"}
                       </span>
-                      <span className="text-xs text-slate-500 font-medium">ID: {hw.id}</span>
                     </div>
-                    <h3 className="text-base font-semibold text-white">{hw.topic}</h3>
-                  </div>
-
-                  {/* Status Badge & Grades */}
-                  <div className="flex items-center gap-3">
-                    {isEvaluated && (
-                      <div className="flex items-center gap-1.5 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-xl">
-                        <span className="text-[10px] text-purple-400 font-bold uppercase">Grade</span>
-                        <span className="text-xs text-white font-extrabold">{hw.grade} ({hw.score})</span>
-                      </div>
-                    )}
-                    <span
-                      className={`badge ${
-                        isPending
-                          ? "badge-yellow"
-                          : isSubmitted
-                          ? "badge-blue"
-                          : "badge-green"
-                      }`}
-                    >
-                      {hw.status}
-                    </span>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-300 mb-5 leading-relaxed">{hw.desc}</p>
-
-                {/* Teacher Feedback section */}
-                {isEvaluated && hw.teacherFeedback && (
-                  <div className="bg-slate-900/60 rounded-xl p-4 border border-slate-800 mb-5">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className="text-xs">💬</span>
-                      <span className="text-xs font-bold text-slate-400">Teacher Evaluation Feedback:</span>
-                    </div>
-                    <p className="text-xs text-emerald-300 italic font-medium leading-normal">&quot;{hw.teacherFeedback}&quot;</p>
-                  </div>
-                )}
-
-                {/* Actions and dates footer */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-slate-800/80">
-                  <div className="flex gap-4 text-[10px] text-slate-500">
-                    <div>
-                      Assigned On: <strong className="text-slate-400">{hw.assignedOn}</strong>
-                    </div>
-                    <div>
-                      Due Date: <strong className={isPending ? "text-amber-400 font-bold" : "text-slate-400"}>{hw.dueOn}</strong>
+                    <p className="text-xs text-slate-400 mb-2 line-clamp-2">{h.description}</p>
+                    <div className="flex flex-wrap gap-3 text-xs text-slate-500">
+                      <span>📅 Due: {h.dueDate}</span>
+                      <span>🏫 {h.className}</span>
+                      {h.submissionStatus === "submitted" && h.score !== "—" && (
+                        <span className="text-emerald-400 font-semibold">⭐ Score: {h.score}</span>
+                      )}
+                      {h.submissionStatus === "submitted" && h.submittedDate !== "—" && (
+                        <span>📤 Submitted: {h.submittedDate}</span>
+                      )}
                     </div>
                   </div>
-
-                  {/* Co-Signature Feature */}
-                  <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-                    {hw.parentSigned ? (
-                      <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-semibold bg-emerald-500/5 px-3 py-1.5 rounded-xl border border-emerald-500/10">
-                        <span>✍️</span>
-                        <span>Co-signed by Parent ({hw.signedOn})</span>
-                        <button
-                          onClick={() => handleSignAssignment(hw.id)}
-                          className="text-[10px] text-slate-500 hover:text-red-400 ml-1 bg-none border-none outline-none cursor-pointer"
-                          title="Revoke Signature"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        id={`hw-sign-btn-${hw.id}`}
-                        onClick={() => handleSignAssignment(hw.id)}
-                        className={`text-[11px] font-semibold px-4.5 py-1.5 rounded-lg border transition-all cursor-pointer ${
-                          isPending 
-                            ? "bg-slate-850 border-slate-700 text-slate-400 hover:bg-slate-800 hover:text-white"
-                            : "bg-emerald-500 hover:bg-emerald-600 text-slate-950 border-transparent"
-                        }`}
-                      >
-                        ✍️ Add Parent Digital Signature
-                      </button>
-                    )}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 ${
+                    h.submissionStatus === "submitted" ? "bg-emerald-500/20" : "bg-amber-500/20"
+                  }`}>
+                    {h.submissionStatus === "submitted" ? "✅" : "📝"}
                   </div>
                 </div>
               </div>
-            );
-          })
-        ) : (
-          <div className="glass rounded-2xl p-12 text-center text-slate-500">
-            <span className="text-2xl mb-2 block">📝</span>
-            <p className="text-xs">No assignments match your active filters.</p>
+            ))}
           </div>
         )}
       </div>

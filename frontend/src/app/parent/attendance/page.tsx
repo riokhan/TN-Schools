@@ -1,444 +1,206 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import { useParentChildren, getApiBase, Child } from "@/lib/useParentChildren";
 
-// Attendance records by month
-interface MonthAttendance {
-  name: string;
-  year: number;
-  totalDays: number;
+interface MonthData {
+  month: string;
+  total: number;
   present: number;
-  absent: number;
   late: number;
-  daysData: { day: number; status: "present" | "absent" | "late" | "weekend" | "holiday"; remark?: string }[];
+  absent: number;
+  leave: number;
+  percentage: number;
 }
 
-const attendanceMonths: MonthAttendance[] = [
-  {
-    name: "June",
-    year: 2025,
-    totalDays: 20,
-    present: 17,
-    absent: 2,
-    late: 1,
-    daysData: [
-      { day: 1, status: "weekend" },
-      { day: 2, status: "present" },
-      { day: 3, status: "present" },
-      { day: 4, status: "present" },
-      { day: 5, status: "present" },
-      { day: 6, status: "present" },
-      { day: 7, status: "weekend" },
-      { day: 8, status: "weekend" },
-      { day: 9, status: "present" },
-      { day: 10, status: "absent", remark: "Fever" },
-      { day: 11, status: "absent", remark: "Doctor Consultation" },
-      { day: 12, status: "present" },
-      { day: 13, status: "present" },
-      { day: 14, status: "weekend" },
-      { day: 15, status: "weekend" },
-      { day: 16, status: "present" },
-      { day: 17, status: "late", remark: "Heavy school bus traffic delay" },
-      { day: 18, status: "present" },
-      { day: 19, status: "present" },
-      { day: 20, status: "present" },
-      { day: 21, status: "weekend" },
-      { day: 22, status: "weekend" },
-      { day: 23, status: "present" },
-      { day: 24, status: "present" },
-      { day: 25, status: "present" },
-      { day: 26, status: "present" },
-      { day: 27, status: "present" },
-      { day: 28, status: "weekend" },
-      { day: 29, status: "weekend" },
-      { day: 30, status: "present" },
-    ]
-  },
-  {
-    name: "May",
-    year: 2025,
-    totalDays: 12,
-    present: 11,
-    absent: 1,
-    late: 0,
-    daysData: [
-      { day: 1, status: "holiday", remark: "May Day" },
-      { day: 2, status: "present" },
-      { day: 3, status: "weekend" },
-      { day: 4, status: "weekend" },
-      { day: 5, status: "present" },
-      { day: 6, status: "present" },
-      { day: 7, status: "present" },
-      { day: 8, status: "present" },
-      { day: 9, status: "present" },
-      { day: 10, status: "weekend" },
-      { day: 11, status: "weekend" },
-      { day: 12, status: "present" },
-      { day: 13, status: "present" },
-      { day: 14, status: "present" },
-      { day: 15, status: "present" },
-      { day: 16, status: "absent", remark: "Family Wedding" },
-      { day: 17, status: "weekend" },
-      { day: 18, status: "weekend" },
-      { day: 19, status: "holiday", remark: "Summer Vacation Starts" },
-      { day: 20, status: "holiday" },
-      { day: 21, status: "holiday" },
-      { day: 22, status: "holiday" },
-      { day: 23, status: "holiday" },
-      { day: 24, status: "weekend" },
-      { day: 25, status: "weekend" },
-      { day: 26, status: "holiday" },
-      { day: 27, status: "holiday" },
-      { day: 28, status: "holiday" },
-      { day: 29, status: "holiday" },
-      { day: 30, status: "holiday" },
-      { day: 31, status: "weekend" },
-    ]
-  }
-];
+interface DayRecord {
+  date: string;
+  status: "PRESENT" | "ABSENT" | "LATE" | "LEAVE";
+  method: string | null;
+}
 
-interface LeaveRequest {
-  id: number;
-  leaveType: string;
-  startDate: string;
-  endDate: string;
-  reason: string;
-  status: "Approved" | "Pending" | "Rejected";
-  submittedOn: string;
+const STATUS_STYLE: Record<string, { label: string; cls: string; dot: string }> = {
+  PRESENT: { label: "Present",  cls: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20", dot: "bg-emerald-400" },
+  LATE:    { label: "Late",     cls: "text-amber-400   bg-amber-500/10   border-amber-500/20",   dot: "bg-amber-400"   },
+  ABSENT:  { label: "Absent",   cls: "text-red-400     bg-red-500/10     border-red-500/20",     dot: "bg-red-400"     },
+  LEAVE:   { label: "Leave",    cls: "text-blue-400    bg-blue-500/10    border-blue-500/20",    dot: "bg-blue-400"    },
+};
+
+function ChildSwitcher({ children, active, onChange }: { children: Child[]; active: Child | null; onChange: (c: Child) => void }) {
+  if (children.length <= 1) return null;
+  return (
+    <div className="flex items-center gap-3 mb-5 p-3 glass rounded-2xl flex-wrap">
+      <span className="text-xs text-slate-400 font-semibold">👶 Viewing:</span>
+      {children.map(c => (
+        <button key={c.studentId} onClick={() => onChange(c)}
+          className={`px-4 py-1.5 rounded-xl text-xs font-bold transition-all ${
+            active?.studentId === c.studentId ? "bg-emerald-600 text-white shadow-md" : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+          }`}>
+          {c.name.split(" ")[0]} · Class {c.class}{c.section}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 export default function AttendancePage() {
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
-  const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([
-    {
-      id: 101,
-      leaveType: "Sick Leave",
-      startDate: "2025-06-10",
-      endDate: "2025-06-11",
-      reason: "High fever and viral cold. Under medication.",
-      status: "Approved",
-      submittedOn: "2025-06-09"
-    },
-    {
-      id: 102,
-      leaveType: "Casual Leave",
-      startDate: "2025-05-16",
-      endDate: "2025-05-16",
-      reason: "Attending maternal uncle's wedding ceremony in Madurai.",
-      status: "Approved",
-      submittedOn: "2025-05-14"
-    }
-  ]);
+  const { parentId, children, activeChild, setActiveChild, childrenLoading } = useParentChildren();
 
-  // Form State
-  const [leaveType, setLeaveType] = useState("Sick Leave");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [reason, setReason] = useState("");
-  const [formFeedback, setFormFeedback] = useState("");
+  const [monthly, setMonthly]   = useState<MonthData[]>([]);
+  const [recent, setRecent]     = useState<DayRecord[]>([]);
+  const [loading, setLoading]   = useState(false);
 
-  const activeMonth = attendanceMonths[selectedMonthIndex];
+  const fetchAttendance = useCallback(async (child: Child) => {
+    if (!parentId) return;
+    setLoading(true);
+    try {
+      const res  = await fetch(`${getApiBase()}/api/parent/${parentId}/child/${child.studentId}/attendance`);
+      const json = await res.json();
+      if (json.success) {
+        setMonthly(json.data.monthly);
+        setRecent(json.data.recentRecords);
+      }
+    } catch {/* offline */}
+    finally { setLoading(false); }
+  }, [parentId]);
 
-  const handleApplyLeave = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!startDate || !endDate || !reason.trim()) {
-      setFormFeedback("❌ Please fill out all standard fields.");
-      return;
-    }
+  useEffect(() => { if (activeChild) fetchAttendance(activeChild); }, [activeChild, fetchAttendance]);
 
-    const newLeave: LeaveRequest = {
-      id: Date.now(),
-      leaveType,
-      startDate,
-      endDate,
-      reason,
-      status: "Pending",
-      submittedOn: new Date().toISOString().split("T")[0]
-    };
-
-    setLeaveRequests([newLeave, ...leaveRequests]);
-    setLeaveType("Sick Leave");
-    setStartDate("");
-    setEndDate("");
-    setReason("");
-    setFormFeedback("✅ Leave request submitted successfully to Class Teacher!");
-    
-    // Clear success message after 4 seconds
-    setTimeout(() => setFormFeedback(""), 4000);
-  };
-
-  const nextMonth = () => {
-    if (selectedMonthIndex > 0) {
-      setSelectedMonthIndex(selectedMonthIndex - 1);
-    }
-  };
-
-  const prevMonth = () => {
-    if (selectedMonthIndex < attendanceMonths.length - 1) {
-      setSelectedMonthIndex(selectedMonthIndex + 1);
-    }
-  };
-
-  // Color mappings for calendar days
-  const getDayClass = (status: string) => {
-    switch (status) {
-      case "present":
-        return "bg-emerald-500/10 border-emerald-500/30 text-emerald-400";
-      case "absent":
-        return "bg-red-500/10 border-red-500/30 text-red-400 font-bold";
-      case "late":
-        return "bg-amber-500/10 border-amber-500/30 text-amber-400";
-      case "weekend":
-        return "bg-slate-800/20 border-slate-700/20 text-slate-600";
-      case "holiday":
-        return "bg-blue-500/10 border-blue-500/25 text-blue-400";
-      default:
-        return "bg-slate-800/40 border-slate-800 text-slate-400";
-    }
-  };
-
-  const getDayIcon = (status: string) => {
-    switch (status) {
-      case "present":
-        return "✓";
-      case "absent":
-        return "✗";
-      case "late":
-        return "⚠";
-      case "holiday":
-        return "H";
-      default:
-        return "";
-    }
-  };
-
-  // Calculate stats
-  const totalWorkingDays = activeMonth.totalDays;
-  const attendanceRate = totalWorkingDays > 0 
-    ? Math.round((activeMonth.present / totalWorkingDays) * 100) 
-    : 0;
+  const currentMonth = monthly[monthly.length - 1];
+  const totalPresent = monthly.reduce((s, m) => s + m.present + m.late, 0);
+  const totalDays    = monthly.reduce((s, m) => s + m.total, 0);
+  const overallPct   = totalDays > 0 ? Math.round((totalPresent / totalDays) * 100) : 0;
 
   return (
-    <PortalLayout
-      title="Attendance & Leave Manager"
-      subtitle="Track daily attendance details and submit digital leave applications for Priya"
-    >
-      {/* TODO: Connect with EMIS Attendance API for real-time syncing of student swipe logs */}
-      
-      {/* KPIs Row */}
+    <PortalLayout>
+      <ChildSwitcher children={children} active={activeChild} onChange={setActiveChild} />
+
+      {/* Header KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
-          { label: "Attendance Rate", value: `${attendanceRate}%`, icon: "📅", color: "text-emerald-400", sub: `Target: 85%+` },
-          { label: "Days Present", value: `${activeMonth.present} / ${totalWorkingDays}`, icon: "✅", color: "text-blue-400", sub: "Actual working days" },
-          { label: "Days Absent", value: activeMonth.absent, icon: "❌", color: "text-red-400", sub: "Requires approval" },
-          { label: "Late Attendance", value: activeMonth.late, icon: "⏰", color: "text-amber-400", sub: "Arrived after 8:45 AM" }
-        ].map((kpi, i) => (
-          <div key={i} className="kpi-card">
+          { label: "This Month",    value: currentMonth ? `${currentMonth.percentage}%` : "—", icon: "📅", color: "text-emerald-400", sub: currentMonth?.month ?? "" },
+          { label: "Present Days",  value: currentMonth ? String(currentMonth.present) : "—",  icon: "✅", color: "text-green-400",   sub: "This month" },
+          { label: "Absent Days",   value: currentMonth ? String(currentMonth.absent)  : "—",  icon: "❌", color: "text-red-400",     sub: "This month" },
+          { label: "Overall (6M)",  value: `${overallPct}%`,                                    icon: "📊", color: "text-blue-400",   sub: "Last 6 months" },
+        ].map(k => (
+          <div key={k.label} className="kpi-card">
             <div className="flex items-center justify-between mb-3">
-              <span className="text-xl">{kpi.icon}</span>
-              <span className="text-[10px] text-slate-500 font-bold uppercase">{kpi.sub}</span>
+              <span className="text-2xl">{k.icon}</span>
+              <span className={`text-xs font-medium ${k.color}`}>{k.sub}</span>
             </div>
-            <div className={`text-3xl font-bold ${kpi.color} mb-1`}>{kpi.value}</div>
-            <div className="text-xs text-slate-400 font-semibold">{kpi.label}</div>
+            {loading || childrenLoading
+              ? <div className="h-8 w-16 bg-slate-700 rounded animate-pulse mb-1" />
+              : <div className={`text-3xl font-bold ${k.color} mb-1`}>{k.value}</div>
+            }
+            <div className="text-xs text-slate-500">{k.label}</div>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Monthly Attendance Calendar */}
-        <div className="lg:col-span-2 glass rounded-2xl p-6 fade-in-2 flex flex-col justify-between">
-          <div>
-            <div className="flex justify-between items-center mb-5">
-              <div>
-                <h2 className="text-base font-semibold text-white">🗓️ Attendance Sheet</h2>
-                <p className="text-xs text-slate-500">Day-by-day attendance tracking grid</p>
-              </div>
-              
-              {/* Calendar Month Navigation */}
-              <div className="flex items-center gap-3">
-                <button 
-                  onClick={prevMonth} 
-                  disabled={selectedMonthIndex === attendanceMonths.length - 1}
-                  className="p-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
-                >
-                  ←
-                </button>
-                <span className="text-xs font-bold text-white w-20 text-center select-none">
-                  {activeMonth.name} {activeMonth.year}
-                </span>
-                <button 
-                  onClick={nextMonth} 
-                  disabled={selectedMonthIndex === 0}
-                  className="p-1.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-400 hover:text-white disabled:opacity-30 disabled:hover:text-slate-400 transition-colors"
-                >
-                  →
-                </button>
-              </div>
-            </div>
-
-            {/* Calendar Grid */}
-            <div className="grid grid-cols-5 sm:grid-cols-7 gap-2.5 mb-6">
-              {activeMonth.daysData.map((d) => (
-                <div
-                  key={d.day}
-                  className={`border rounded-xl p-2.5 flex flex-col items-center justify-between min-h-[60px] relative transition-all duration-200 group cursor-default hover:scale-[1.03] ${getDayClass(d.status)}`}
-                >
-                  <span className="text-[10px] text-slate-400 absolute top-1.5 left-2 font-medium">{d.day}</span>
-                  <span className="text-sm font-extrabold mt-3.5">{getDayIcon(d.status)}</span>
-                  <span className="text-[8px] opacity-75 font-semibold uppercase">{d.status}</span>
-                  
-                  {/* Tooltip on hover */}
-                  {d.remark && (
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-40 bg-slate-950 border border-slate-700 text-slate-200 text-[10px] p-2 rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 leading-normal">
-                      <strong>Remark:</strong> {d.remark}
-                    </div>
-                  )}
+        {/* 6-Month Bar Chart */}
+        <div className="lg:col-span-2 glass rounded-2xl p-6 fade-in-2">
+          <h2 className="text-base font-semibold text-white mb-5">📊 Monthly Attendance (Last 6 Months)</h2>
+          {loading ? (
+            <div className="space-y-3">{[1,2,3,4,5,6].map(i => <div key={i} className="h-12 bg-slate-800 rounded-xl animate-pulse" />)}</div>
+          ) : monthly.length === 0 ? (
+            <div className="text-center py-10 text-slate-500 text-sm">No attendance records found.</div>
+          ) : (
+            <div className="space-y-3">
+              {monthly.map(m => (
+                <div key={m.month} className="flex items-center gap-4">
+                  <div className="w-24 text-xs text-slate-400 font-medium shrink-0">{m.month}</div>
+                  <div className="flex-1 relative h-8 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-700"
+                      style={{
+                        width: `${m.percentage}%`,
+                        background: m.percentage >= 90
+                          ? "linear-gradient(90deg, #10b981, #059669)"
+                          : m.percentage >= 75
+                          ? "linear-gradient(90deg, #f59e0b, #d97706)"
+                          : "linear-gradient(90deg, #ef4444, #dc2626)",
+                      }}
+                    />
+                  </div>
+                  <div className={`w-12 text-right text-sm font-bold ${
+                    m.percentage >= 90 ? "text-emerald-400" : m.percentage >= 75 ? "text-amber-400" : "text-red-400"
+                  }`}>{m.percentage}%</div>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Calendar Color Legend */}
-          <div className="flex flex-wrap gap-4 border-t border-slate-800/80 pt-4 text-[10px] justify-center">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 bg-emerald-500/20 border border-emerald-500/40 rounded"></span>
-              <span className="text-slate-400">Present</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 bg-red-500/20 border border-red-500/40 rounded"></span>
-              <span className="text-slate-400">Absent</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 bg-amber-500/20 border border-amber-500/40 rounded"></span>
-              <span className="text-slate-400">Late Arrival</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 bg-blue-500/20 border border-blue-500/40 rounded"></span>
-              <span className="text-slate-400">Holiday</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 bg-slate-800/20 border border-slate-700/20 rounded"></span>
-              <span className="text-slate-400">Weekend</span>
-            </div>
-          </div>
+          )}
         </div>
 
-        {/* Leave Request Form */}
+        {/* Summary Breakdown */}
         <div className="glass rounded-2xl p-6 fade-in-3">
-          <h2 className="text-base font-semibold text-white mb-1">✍️ Apply for Leave</h2>
-          <p className="text-xs text-slate-500 mb-4">Direct digital submission to class teacher</p>
-
-          <form onSubmit={handleApplyLeave} className="space-y-4">
-            <div>
-              <label htmlFor="leave-type" className="block text-xs font-semibold text-slate-400 mb-1.5">Leave Type</label>
-              <select
-                id="leave-type"
-                value={leaveType}
-                onChange={(e) => setLeaveType(e.target.value)}
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 cursor-pointer"
-              >
-                <option value="Sick Leave">Sick Leave</option>
-                <option value="Casual Leave">Casual Leave</option>
-                <option value="Family Event">Family Event</option>
-                <option value="Medical Emergency">Medical Emergency</option>
-              </select>
+          <h2 className="text-base font-semibold text-white mb-4">📋 This Month Breakdown</h2>
+          {loading ? (
+            <div className="space-y-3">{[1,2,3,4].map(i => <div key={i} className="h-14 bg-slate-800 rounded-xl animate-pulse" />)}</div>
+          ) : currentMonth ? (
+            <div className="space-y-3">
+              {(["PRESENT","LATE","ABSENT","LEAVE"] as const).map(s => {
+                const style = STATUS_STYLE[s];
+                const count = s === "PRESENT" ? currentMonth.present
+                            : s === "LATE" ? currentMonth.late
+                            : s === "ABSENT" ? currentMonth.absent
+                            : currentMonth.leave;
+                const pct = currentMonth.total > 0 ? Math.round((count / currentMonth.total) * 100) : 0;
+                return (
+                  <div key={s} className={`p-3 rounded-xl border flex items-center justify-between ${style.cls}`}>
+                    <div className="flex items-center gap-2">
+                      <div className={`w-2 h-2 rounded-full ${style.dot}`} />
+                      <span className="text-sm font-semibold">{style.label}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-lg font-bold">{count}</div>
+                      <div className="text-xs opacity-70">{pct}%</div>
+                    </div>
+                  </div>
+                );
+              })}
+              <div className="text-center text-xs text-slate-500 pt-2">Total school days: {currentMonth.total}</div>
             </div>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="start-date" className="block text-xs font-semibold text-slate-400 mb-1.5">Start Date</label>
-                <input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-              <div>
-                <label htmlFor="end-date" className="block text-xs font-semibold text-slate-400 mb-1.5">End Date</label>
-                <input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="leave-reason" className="block text-xs font-semibold text-slate-400 mb-1.5">Reason for Absence</label>
-              <textarea
-                id="leave-reason"
-                rows={3}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-                placeholder="Explain the reason clearly..."
-                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-emerald-500"
-              />
-            </div>
-
-            <button
-              id="leave-submit-btn"
-              type="submit"
-              className="w-full py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-xs font-semibold text-slate-950 transition-all"
-            >
-              Submit Application
-            </button>
-
-            {formFeedback && (
-              <p className="text-xs font-medium mt-2 text-center" id="leave-form-feedback">
-                {formFeedback}
-              </p>
-            )}
-          </form>
+          ) : (
+            <div className="text-center py-6 text-slate-500 text-sm">No data available.</div>
+          )}
         </div>
       </div>
 
-      {/* Recent Leave Requests */}
+      {/* Recent Daily Log */}
       <div className="glass rounded-2xl p-6 fade-in-4">
-        <h2 className="text-base font-semibold text-white mb-4">📝 Recent Leave Applications</h2>
-        <div className="overflow-x-auto">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th>Reference ID</th>
-                <th>Type</th>
-                <th>Duration</th>
-                <th>Reason</th>
-                <th>Submitted On</th>
-                <th>Approval Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {leaveRequests.map((req) => (
-                <tr key={req.id}>
-                  <td className="font-semibold text-xs text-slate-400">#{req.id}</td>
-                  <td className="text-xs text-white font-medium">{req.leaveType}</td>
-                  <td className="text-xs text-slate-300 font-medium">
-                    {req.startDate} to {req.endDate}
-                  </td>
-                  <td className="text-xs text-slate-400 max-w-sm leading-relaxed">{req.reason}</td>
-                  <td className="text-xs text-slate-500">{req.submittedOn}</td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        req.status === "Approved"
-                          ? "badge-green"
-                          : req.status === "Pending"
-                          ? "badge-yellow"
-                          : "badge-red"
-                      }`}
-                    >
-                      {req.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <h2 className="text-base font-semibold text-white mb-4">📝 Recent Attendance Log (This Month)</h2>
+        {loading ? (
+          <div className="space-y-2">{[1,2,3,4,5].map(i => <div key={i} className="h-10 bg-slate-800 rounded-xl animate-pulse" />)}</div>
+        ) : recent.length === 0 ? (
+          <div className="text-center py-6 text-slate-500 text-sm">No records for this month yet.</div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="data-table">
+              <thead>
+                <tr><th>Date</th><th>Status</th><th>Method</th></tr>
+              </thead>
+              <tbody>
+                {recent.map((r, i) => {
+                  const style = STATUS_STYLE[r.status] ?? STATUS_STYLE["PRESENT"];
+                  return (
+                    <tr key={i}>
+                      <td className="font-medium text-white">
+                        {new Date(r.date).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
+                      </td>
+                      <td>
+                        <span className={`badge px-2.5 py-0.5 rounded-full text-xs font-bold border ${style.cls}`}>
+                          {style.label}
+                        </span>
+                      </td>
+                      <td className="text-slate-400">{r.method ?? "Manual"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </PortalLayout>
   );

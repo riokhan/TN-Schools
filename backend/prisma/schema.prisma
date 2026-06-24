@@ -99,6 +99,7 @@ model Student {
   clubMembers  ClubMember[]
   portfolio    Portfolio?
   sportsProfile SportsProfile?
+  parentLinks  ParentStudentLink[]
 }
 
 model Teacher {
@@ -284,7 +285,61 @@ model HeadmasterParent {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
+  // Parent Portal relations
+  linkedStudents    ParentStudentLink[]
+  notifications     ParentNotification[]
+
   @@index([schoolId])
+}
+
+// ─── Parent Portal Models ──────────────────────────────────────
+
+// Join table: one parent ↔ many students (supports multiple children per parent)
+model ParentStudentLink {
+  id        String          @id @default(uuid())
+  parentId  String
+  parent    HeadmasterParent @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Student         @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  isPrimary Boolean         @default(false)
+  createdAt DateTime        @default(now())
+
+  @@unique([parentId, studentId])
+  @@index([parentId])
+  @@index([studentId])
+}
+
+// Per-parent notifications (attendance alerts, marks updates, PTA, scholarship)
+model ParentNotification {
+  id        String           @id @default(uuid())
+  parentId  String
+  parent    HeadmasterParent @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  studentId String?          // Which child this notification is about (optional)
+  type      String           // "attendance" | "marks" | "homework" | "pta" | "scholarship" | "general"
+  title     String
+  message   String
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([parentId])
+  @@index([parentId, isRead])
+}
+
+// PTA meetings created by Headmaster, visible to parents of the school
+model PTAMeeting {
+  id          String   @id @default(uuid())
+  schoolId    String?
+  title       String
+  description String?
+  meetingDate DateTime
+  venue       String   @default("School Auditorium")
+  status      String   @default("Upcoming") // "Upcoming" | "Completed" | "Cancelled"
+  agenda      String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([schoolId])
+  @@index([schoolId, meetingDate])
 }
 
 model HeadmasterAlumni {
