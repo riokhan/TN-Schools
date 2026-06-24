@@ -98,6 +98,7 @@ model Student {
   updatedAt    DateTime      @updatedAt
   clubMembers  ClubMember[]
   portfolio    Portfolio?
+  sportsProfile SportsProfile?
 }
 
 model Teacher {
@@ -560,4 +561,75 @@ model PortfolioAchievement {
   createdAt   DateTime @default(now())
 
   @@index([portfolioId])
+}
+
+// ─── Student Sports ────────────────────────────────────────────
+
+model SportsProfile {
+  id           String   @id @default(uuid())
+  studentId    String   @unique
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  teams        SportsTeam[]
+  stats        SportsFitnessStat[]
+  events       SportsEvent[]
+  logs         SportsHealthLog[]
+}
+
+model SportsTeam {
+  id              String   @id @default(uuid())
+  sportsProfileId String
+  sportsProfile   SportsProfile @relation(fields: [sportsProfileId], references: [id], onDelete: Cascade)
+  name            String
+  role            String
+  icon            String
+  color           String
+  match           String
+  date            String
+  createdAt       DateTime @default(now())
+
+  @@index([sportsProfileId])
+}
+
+model SportsFitnessStat {
+  id              String   @id @default(uuid())
+  sportsProfileId String
+  sportsProfile   SportsProfile @relation(fields: [sportsProfileId], references: [id], onDelete: Cascade)
+  label           String
+  value           String
+  score           Int
+  icon            String
+  color           String
+  createdAt       DateTime @default(now())
+
+  @@index([sportsProfileId])
+}
+
+model SportsEvent {
+  id              String   @id @default(uuid())
+  sportsProfileId String
+  sportsProfile   SportsProfile @relation(fields: [sportsProfileId], references: [id], onDelete: Cascade)
+  title           String
+  date            String
+  type            String
+  icon            String
+  createdAt       DateTime @default(now())
+
+  @@index([sportsProfileId])
+}
+
+model SportsHealthLog {
+  id              String   @id @default(uuid())
+  sportsProfileId String
+  sportsProfile   SportsProfile @relation(fields: [sportsProfileId], references: [id], onDelete: Cascade)
+  date            String
+  activity        String
+  duration        String
+  calories        Int
+  intensity       String   // "High", "Low", "Maximum"
+  createdAt       DateTime @default(now())
+
+  @@index([sportsProfileId])
 }
