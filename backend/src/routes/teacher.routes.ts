@@ -385,16 +385,17 @@ router.get('/leave', async (req: Request, res: Response) => {
 router.post('/leave', async (req: Request, res: Response) => {
   try {
 
-    const { type, duration, reason, proxy, schoolId, userId } = req.body;
+    const { type, duration, reason, studentName, schoolId, userId } = req.body;
 
     const leave = await prisma.leaveRequest.create({
       data: {
         type,
         duration,
         reason,
+        studentName: studentName || 'Unknown',
         status: 'Pending',
         schoolId: schoolId || null,
-      },
+      } as any,
     });
     if (userId) {
       await prisma.notification.create({
