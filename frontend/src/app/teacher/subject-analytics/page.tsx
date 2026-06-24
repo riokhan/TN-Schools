@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface Chapter {
   id: string;
@@ -243,19 +244,50 @@ export default function SubjectAnalyticsPage() {
   };
 
   const handleDeleteChapter = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this chapter?")) return;
+    const result = await Swal.fire({
+      title: "Delete Chapter?",
+      text: "Are you sure you want to permanently delete this syllabus chapter?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`${API_URL}/api/teacher/lessons/${id}`, {
         method: "DELETE",
       });
       const data = await res.json();
       if (data.success) {
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Chapter has been successfully deleted.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
         fetchChapters();
       } else {
-        alert("Failed to delete chapter: " + data.error);
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: "Failed to delete chapter: " + data.error,
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error deleting chapter", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 
@@ -296,13 +328,30 @@ export default function SubjectAnalyticsPage() {
       const data = await res.json();
       if (data.success) {
         setShowModal(false);
+        Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: `Chapter successfully ${modalMode === "add" ? "added" : "updated"}!`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
         fetchChapters();
       } else {
-        alert("Operation failed: " + data.error);
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: "Operation failed: " + data.error,
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error saving chapter", err);
-      alert("An error occurred while saving the chapter.");
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An error occurred while saving the chapter.",
+        confirmButtonColor: "#ef4444",
+      });
     } finally {
       setIsSubmitting(false);
     }

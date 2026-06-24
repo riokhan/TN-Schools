@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface LeaveRequest {
   id: string;
@@ -126,13 +127,28 @@ export default function LeaveRequestsPage() {
         setReason("");
         setStartDate("");
         setEndDate("");
-        setToast("✓ Leave request submitted successfully! Parent and Headmaster notified.");
-        setTimeout(() => {
-          setToast(null);
-        }, 4500);
+        Swal.fire({
+          icon: "success",
+          title: "Submitted!",
+          text: "Leave request submitted successfully! Parent and Headmaster notified.",
+          confirmButtonColor: "#10b981",
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Submission Failed",
+          text: data.error || "Failed to submit leave request.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error submitting leave request", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected network error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

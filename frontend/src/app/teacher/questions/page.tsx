@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface Question {
   id: string;
@@ -141,11 +142,32 @@ export default function QuestionGeneratorPage() {
       const data = await res.json();
       if (data.success) {
         setActionStatus("✓ Saved successfully!");
+        Swal.fire({
+          icon: "success",
+          title: "Saved!",
+          text: "Questions successfully saved to Question Bank.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
         fetchQuestionBank();
         setTimeout(() => setActionStatus(null), 3000);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Save Failed",
+          text: data.error || "Failed to save questions.",
+          confirmButtonColor: "#ef4444",
+        });
+        setActionStatus("Error saving.");
       }
     } catch (err) {
       console.error("Error saving questions to DB", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
       setActionStatus("Error saving.");
     }
   };
@@ -168,17 +190,58 @@ export default function QuestionGeneratorPage() {
         const data = await res.json();
         if (data.success) {
           setDbQuestions(dbQuestions.map(q => q.id === id ? { ...q, text: editingText } : q));
+          Swal.fire({
+            icon: "success",
+            title: "Updated!",
+            text: "Question updated successfully.",
+            timer: 1500,
+            showConfirmButton: false,
+          });
+        } else {
+          Swal.fire({
+            icon: "error",
+            title: "Error",
+            text: data.error || "Failed to update question.",
+            confirmButtonColor: "#ef4444",
+          });
         }
       } catch (err) {
         console.error("Error editing question", err);
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "An unexpected error occurred.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } else {
       setQuestions(questions.map((q) => (q.id === id ? { ...q, text: editingText } : q)));
+      Swal.fire({
+        icon: "success",
+        title: "Updated!",
+        text: "Draft question updated.",
+        timer: 1500,
+        showConfirmButton: false,
+      });
     }
     setEditingId(null);
   };
 
   const handleDelete = async (id: string) => {
+    const result = await Swal.fire({
+      title: "Delete Question?",
+      text: "Are you sure you want to delete this question from the bank?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`${API_URL}/api/teacher/questions/${id}`, {
         method: "DELETE",
@@ -186,9 +249,29 @@ export default function QuestionGeneratorPage() {
       const data = await res.json();
       if (data.success) {
         setDbQuestions(dbQuestions.filter(q => q.id !== id));
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Question has been deleted.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.error || "Failed to delete question.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error deleting question", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

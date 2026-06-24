@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface Announcement {
   id: string;
@@ -72,26 +73,77 @@ export default function AnnouncementsPage() {
         setTitle("");
         setBody("");
         setPinToTop(false);
-        setToast("🎉 Announcement broadcasted! Parent notification feeds updated.");
-        setTimeout(() => setToast(null), 4500);
+        Swal.fire({
+          icon: "success",
+          title: "Broadcasted!",
+          text: "Announcement broadcasted! Parent notification feeds updated.",
+          timer: 2500,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to Broadcast",
+          text: result.error || "Failed to post announcement.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error broadcasting announcement:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected network error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this announcement?")) return;
+    const result = await Swal.fire({
+      title: "Delete Announcement?",
+      text: "Are you sure you want to permanently delete this announcement?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`${API_URL}/api/teacher/announcements/${id}`, {
         method: "DELETE",
       });
-      const result = await res.json();
-      if (result.success) {
+      const resultData = await res.json();
+      if (resultData.success) {
         setAnnouncements(announcements.filter((ann) => ann.id !== id));
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Announcement has been successfully deleted.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: resultData.error || "Failed to delete announcement.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error deleting announcement:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface AtRiskStudent {
   id: string;
@@ -111,6 +112,22 @@ export default function RiskAlertsPage() {
   };
 
   const handleResolveAlert = async (id: string) => {
+    const student = students.find((s) => s.id === id);
+    const sName = student ? student.name : "this student";
+    const result = await Swal.fire({
+      title: "Resolve Risk Alert?",
+      text: `Are you sure you want to resolve the watchlist/risk alert for ${sName}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Resolve",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#10b981",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`${API_URL}/api/headmaster/students/${id}`, {
         method: "DELETE",
@@ -118,8 +135,13 @@ export default function RiskAlertsPage() {
       const data = await res.json();
       if (data.success) {
         setStudents(students.filter((s) => s.id !== id));
-        setToastMessage("Risk alert marked as resolved!");
-        setTimeout(() => setToastMessage(null), 3000);
+        Swal.fire({
+          icon: "success",
+          title: "Resolved",
+          text: "Risk alert marked as resolved successfully!",
+          timer: 2000,
+          showConfirmButton: false,
+        });
         // Switch selection to another student
         const remaining = students.filter((s) => s.id !== id);
         if (remaining.length > 0) {
@@ -127,9 +149,22 @@ export default function RiskAlertsPage() {
         } else {
           setSelectedStudentId("");
         }
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.error || "Failed to resolve alert.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error resolving watchlist alert", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

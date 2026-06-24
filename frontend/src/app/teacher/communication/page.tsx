@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 
+import Swal from "sweetalert2";
+
 interface Parent {
   id: string;
   name: string;
@@ -100,9 +102,29 @@ export default function CommunicationPage() {
           [selectedParentId]: [...currentMsgs, newMsg],
         });
         setChatInput("");
+        Swal.fire({
+          icon: "success",
+          title: "Message Sent",
+          text: "Your message has been sent to the parent successfully.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to Send Message",
+          text: result.error || "Failed to send message to parent.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error sending message:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected network error occurred while sending the message.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

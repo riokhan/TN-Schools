@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface RosterStudent {
   id: string;
@@ -103,7 +104,12 @@ export default function StudentStatusPage() {
 
     // Check if student already has this badge in UI
     if (studentObj.badges.includes(selectedBadge)) {
-      setAwardNotification(`⚠️ ${studentObj.name} already has the "${selectedBadge}" badge.`);
+      Swal.fire({
+        icon: "warning",
+        title: "Already Awarded",
+        text: `${studentObj.name} already has the "${selectedBadge}" badge.`,
+        confirmButtonColor: "#f59e0b",
+      });
       return;
     }
 
@@ -121,21 +127,33 @@ export default function StudentStatusPage() {
       });
       const data = await res.json();
       if (data.success) {
-        setAwardNotification(
-          `🎉 Successfully awarded "${selectedBadge}" to ${studentObj.name}! Custom remark: "${customComment || "Great work!"}"`
-        );
+        Swal.fire({
+          icon: "success",
+          title: "Badge Awarded!",
+          text: `Successfully awarded "${selectedBadge}" to ${studentObj.name}!`,
+          timer: 2500,
+          showConfirmButton: false,
+        });
         
         // Refresh local data to reflect badge changes
         fetchData();
-
-        setTimeout(() => {
-          setAwardNotification(null);
-        }, 4000);
-
         setCustomComment("");
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.error || "Failed to award badge.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error awarding badge", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

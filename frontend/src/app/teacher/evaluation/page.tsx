@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface Submission {
   id: string;
@@ -118,11 +119,28 @@ export default function EvaluationPage() {
         setSubmissions(
           submissions.map((sub) => (sub.id === selectedSub.id ? result.data : sub))
         );
-        setToastMessage(`Grading submitted successfully for ${selectedSub.studentName}! Final Score: ${finalScore}/${selectedSub.totalMarks}`);
-        setTimeout(() => setToastMessage(null), 4000);
+        Swal.fire({
+          icon: "success",
+          title: "Evaluation Submitted!",
+          text: `Grading submitted successfully for ${selectedSub.studentName}! Final Score: ${finalScore}/${selectedSub.totalMarks}`,
+          confirmButtonColor: "#10b981",
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Submission Failed",
+          text: result.error || "Failed to submit evaluation.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error submitting evaluation:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 
