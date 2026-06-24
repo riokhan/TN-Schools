@@ -2,35 +2,96 @@
 
 import PortalLayout from "@/components/PortalLayout";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-const projects = [
-  { title: "Smart City Traffic Model", category: "Science Fair", date: "Oct 2026", image: "🏙️", tags: ["IoT", "Physics", "Arduino"], description: "Built a working model of automated traffic lights using Arduino to reduce congestion." },
-  { title: "Tamil Poetry Anthology", category: "Literature", date: "Aug 2026", image: "📜", tags: ["Creative Writing", "Tamil"], description: "A collection of 15 original poems exploring the themes of nature and modern society." },
-  { title: "Local Biodiversity Survey", category: "Ecology Project", date: "May 2026", image: "🌿", tags: ["Biology", "Field Work"], description: "Cataloged over 50 native plant species in the school's surrounding district." },
-];
+const API_BASE = "http://localhost:5000";
 
-const achievements = [
-  { title: "1st Place - State Science Exhibition", year: "2026", icon: "🏆", color: "text-amber-400", bg: "bg-amber-500/10 border-amber-500/20" },
-  { title: "Distinction in Mathematics Olympiad", year: "2025", icon: "🥇", color: "text-blue-400", bg: "bg-blue-500/10 border-blue-500/20" },
-  { title: "Best Debater - Inter-School Fest", year: "2025", icon: "🎙️", color: "text-rose-400", bg: "bg-rose-500/10 border-rose-500/20" },
-];
+interface Skill {
+  name: string;
+  level: number;
+  color: string;
+}
 
-const skills = [
-  { name: "Public Speaking", level: 90, color: "from-rose-500 to-pink-500" },
-  { name: "Python Programming", level: 75, color: "from-blue-500 to-cyan-500" },
-  { name: "Creative Writing", level: 85, color: "from-amber-500 to-orange-500" },
-  { name: "Data Analysis", level: 60, color: "from-emerald-500 to-teal-500" },
-];
+interface Project {
+  title: string;
+  category: string;
+  date: string;
+  image: string;
+  tags: string[];
+  description: string;
+}
+
+interface Achievement {
+  title: string;
+  year: string;
+  icon: string;
+  color: string;
+  bg: string;
+}
+
+interface Profile {
+  name: string;
+  class: string;
+  section: string;
+  stream: string;
+  bio: string;
+  projectsCount: number;
+  awardsCount: number;
+}
+
+interface PortfolioData {
+  profile: Profile;
+  skills: Skill[];
+  projects: Project[];
+  achievements: Achievement[];
+}
 
 export default function DigitalPortfolioPage() {
   const [activeTab, setActiveTab] = useState("projects");
+  const [data, setData] = useState<PortfolioData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPortfolio() {
+      try {
+        // We fetch for "demo-student", the backend logic will fallback to the first student
+        const res = await fetch(`${API_BASE}/api/portfolio/demo-student`);
+        const json = await res.json();
+        if (json.success) {
+          setData(json.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch portfolio:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchPortfolio();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <PortalLayout title="Digital Portfolio" subtitle="Loading your portfolio..." themeClass="theme-student">
+        <div className="flex items-center justify-center h-64">
+          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </PortalLayout>
+    );
+  }
+
+  if (!data) {
+    return (
+      <PortalLayout title="Digital Portfolio" subtitle="Portfolio not found." themeClass="theme-student">
+        <div className="text-center text-slate-400 mt-20">Could not load portfolio data.</div>
+      </PortalLayout>
+    );
+  }
 
   return (
     <PortalLayout
       title="Digital Portfolio"
       subtitle="A curated collection of your best work, projects, and achievements."
-      avatarLetter="A"
+      avatarLetter={data.profile.name.charAt(0)}
       avatarColor="#6366f1"
       themeClass="theme-student"
       accentColor="#6366f1"
@@ -75,20 +136,20 @@ export default function DigitalPortfolioPage() {
                  <div className="w-full h-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-4xl">👦🏽</div>
               </div>
               
-              <h2 className="text-2xl font-black text-white mb-1 relative z-10">Arjun Kumar</h2>
-              <p className="text-sm text-indigo-400 font-bold mb-4 relative z-10">Class 10A • Science Stream Explorer</p>
+              <h2 className="text-2xl font-black text-white mb-1 relative z-10">{data.profile.name}</h2>
+              <p className="text-sm text-indigo-400 font-bold mb-4 relative z-10">Class {data.profile.class}{data.profile.section} • {data.profile.stream}</p>
               
               <p className="text-xs text-slate-300 leading-relaxed mb-6 relative z-10 text-justify">
-                "I am a passionate learner with a strong interest in applied sciences and literature. My goal is to use technology to solve local environmental challenges while maintaining a deep connection to my cultural roots."
+                "{data.profile.bio}"
               </p>
 
               <div className="flex justify-center gap-4 relative z-10">
                  <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-700 w-full">
-                    <span className="block text-xl font-black text-white">14</span>
+                    <span className="block text-xl font-black text-white">{data.profile.projectsCount}</span>
                     <span className="text-[10px] uppercase font-bold text-slate-500">Projects</span>
                  </div>
                  <div className="bg-slate-900/60 p-3 rounded-xl border border-slate-700 w-full">
-                    <span className="block text-xl font-black text-white">8</span>
+                    <span className="block text-xl font-black text-white">{data.profile.awardsCount}</span>
                     <span className="text-[10px] uppercase font-bold text-slate-500">Awards</span>
                  </div>
               </div>
@@ -104,7 +165,7 @@ export default function DigitalPortfolioPage() {
              </div>
              
              <div className="space-y-4">
-                {skills.map((skill, idx) => (
+                {data.skills.map((skill, idx) => (
                   <div key={idx}>
                      <div className="flex justify-between items-end mb-1">
                         <span className="text-sm font-bold text-white">{skill.name}</span>
@@ -135,7 +196,7 @@ export default function DigitalPortfolioPage() {
               </div>
 
               <div className="space-y-4">
-                 {projects.map((project, idx) => (
+                 {data.projects.map((project, idx) => (
                    <div key={idx} className="bg-slate-900/40 p-5 rounded-2xl border border-slate-700/50 hover:border-indigo-500/50 transition-colors group cursor-pointer flex flex-col sm:flex-row gap-5">
                       <div className="w-full sm:w-32 h-32 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-5xl shrink-0 group-hover:scale-105 transition-transform">
                          {project.image}
@@ -168,7 +229,7 @@ export default function DigitalPortfolioPage() {
               </h2>
               
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                 {achievements.map((ach, idx) => (
+                 {data.achievements.map((ach, idx) => (
                    <div key={idx} className={`p-4 rounded-xl border ${ach.bg} flex flex-col items-center text-center hover:-translate-y-1 transition-transform`}>
                       <div className="text-4xl mb-3">{ach.icon}</div>
                       <h4 className="font-bold text-white text-sm mb-1">{ach.title}</h4>

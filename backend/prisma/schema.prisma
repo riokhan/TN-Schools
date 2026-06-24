@@ -97,6 +97,7 @@ model Student {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   clubMembers  ClubMember[]
+  portfolio    Portfolio?
 }
 
 model Teacher {
@@ -502,4 +503,61 @@ model ClubEvent {
 
   @@index([clubId])
   @@index([schoolId])
+}
+
+// ─── Student Portfolio ─────────────────────────────────────────
+
+model Portfolio {
+  id           String   @id @default(uuid())
+  studentId    String   @unique
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  bio          String?
+  stream       String?  @default("General")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  skills       PortfolioSkill[]
+  projects     PortfolioProject[]
+  achievements PortfolioAchievement[]
+}
+
+model PortfolioSkill {
+  id          String   @id @default(uuid())
+  portfolioId String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  name        String
+  level       Int      // e.g., 90
+  color       String   // e.g., "from-rose-500 to-pink-500"
+  createdAt   DateTime @default(now())
+
+  @@index([portfolioId])
+}
+
+model PortfolioProject {
+  id          String   @id @default(uuid())
+  portfolioId String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  title       String
+  category    String
+  date        String
+  image       String   // emoji like "🏙️"
+  tags        String[] // ["IoT", "Physics"]
+  description String
+  createdAt   DateTime @default(now())
+
+  @@index([portfolioId])
+}
+
+model PortfolioAchievement {
+  id          String   @id @default(uuid())
+  portfolioId String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  title       String
+  year        String
+  icon        String   // emoji like "🏆"
+  color       String
+  bg          String
+  createdAt   DateTime @default(now())
+
+  @@index([portfolioId])
 }
