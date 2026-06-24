@@ -215,16 +215,21 @@
 import PortalLayout from "@/components/PortalLayout";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 export default function ExtracurricularsPage() {
   const [activeTab, setActiveTab] = useState("all");
+  const [searchQuery, setSearchQuery] = useState("");
   
   const [discoverClubs, setDiscoverClubs] = useState<any[]>([]);
   const [myClubs, setMyClubs] = useState<any[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const { data: session, status } = useSession();
+
   useEffect(() => {
+    if (status === "loading") return;
     async function fetchActivities() {
       try {
         const res = await fetch("http://localhost:5000/api/activities");
@@ -232,7 +237,6 @@ export default function ExtracurricularsPage() {
         
         if (json.success) {
           setDiscoverClubs(json.data.discoverClubs);
-          setMyClubs(json.data.myClubs);
           
           // Format the dates
           const formattedEvents = json.data.upcomingEvents.map((e: any) => {
@@ -243,6 +247,28 @@ export default function ExtracurricularsPage() {
             };
           });
           setUpcomingEvents(formattedEvents);
+
+          let fetchedRealClubs = false;
+          // Fetch real student's clubs if session exists
+          if (session?.user) {
+            const studentRes = await fetch("http://localhost:5000/api/students");
+            const studentJson = await studentRes.json();
+            if (studentJson.success) {
+              const myStudent = studentJson.data.find((s: any) => s.userId === (session.user as any).id);
+              if (myStudent) {
+                const myClubsRes = await fetch(`http://localhost:5000/api/activities/student/${myStudent.id}`);
+                const myClubsJson = await myClubsRes.json();
+                if (myClubsJson.success) {
+                  setMyClubs(myClubsJson.data.myClubs);
+                  fetchedRealClubs = true;
+                }
+              }
+            }
+          }
+
+          if (!fetchedRealClubs) {
+            setMyClubs(json.data.myClubs); // Fallback to demo clubs
+          }
         }
       } catch (error) {
         console.error("Failed to fetch activities", error);
@@ -251,26 +277,34 @@ export default function ExtracurricularsPage() {
       }
     }
     fetchActivities();
-  }, []);
+  }, [session, status]);
 
-  const filteredClubs = activeTab === "all" 
-    ? discoverClubs 
-    : discoverClubs.filter(club => club.category.toLowerCase() === activeTab);
+  const filteredClubs = discoverClubs.filter(club => {
+    const matchesTab = activeTab === "all" || club.category.toLowerCase() === activeTab;
+    const matchesSearch = club.name.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesTab && matchesSearch;
+  });
 
   if (loading) {
     return (
-      <PortalLayout
-        title="Extracurricular Activities"
-        subtitle="Loading your activities..."
-        avatarLetter="A"
-        avatarColor="#8b5cf6"
-        themeClass="theme-student"
-        accentColor="#8b5cf6"
-      >
-        <div className="flex items-center justify-center h-64">
-           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+      <div className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-900">
+        {/* Animated Rings */}
+        <div className="relative w-32 h-32 mb-8 flex items-center justify-center">
+          <div className="absolute inset-0 rounded-full border-4 border-purple-200/50 dark:border-purple-900/50"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-purple-500 border-t-transparent animate-spin" style={{ animationDuration: '1.5s' }}></div>
+          <div className="absolute inset-2 rounded-full border-4 border-emerald-500 border-b-transparent animate-spin" style={{ animationDuration: '2s', animationDirection: 'reverse' }}></div>
+          <div className="text-5xl animate-bounce" style={{ animationDuration: '2s' }}>🎭</div>
         </div>
-      </PortalLayout>
+        
+        {/* Loading Text */}
+        <h2 className="text-2xl font-black text-slate-800 dark:text-white tracking-widest uppercase mb-2">
+          Loading<span className="animate-pulse">...</span>
+        </h2>
+        <p className="text-slate-500 dark:text-slate-400 font-medium text-sm flex items-center gap-2">
+          <span className="inline-block w-2 h-2 rounded-full bg-purple-500 animate-ping"></span>
+          Discovering clubs and events for you
+        </p>
+      </div>
     );
   }
 
@@ -377,6 +411,8 @@ export default function ExtracurricularsPage() {
               <div className="relative">
                 <input 
                   type="text" 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search clubs..." 
                   className="w-full sm:w-64 bg-white dark:bg-slate-900/60 border border-slate-300 dark:border-slate-700 rounded-xl px-4 py-2 pl-10 text-sm text-black dark:text-white placeholder:text-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
                 />
