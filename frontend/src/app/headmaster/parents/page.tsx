@@ -516,7 +516,8 @@ export default function ParentsPage() {
                       Remove
                     </button>
                   </div>
-                ))
+                )
+              })
             )}
           </div>
         </div>
