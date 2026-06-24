@@ -1,7 +1,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-const authOptions: NextAuthOptions = {
+export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
       name: "EMIS Login",
@@ -53,6 +53,7 @@ const authOptions: NextAuthOptions = {
         token.role = (user as any).role;
         token.id = (user as any).id;
         token.schoolId = (user as any).schoolId;
+        token.class = (user as any).class;
       }
       return token;
     },
@@ -61,6 +62,7 @@ const authOptions: NextAuthOptions = {
         (session.user as any).role = token.role;
         (session.user as any).id = token.id;
         (session.user as any).schoolId = token.schoolId;
+        (session.user as any).class = token.class;
       }
       return session;
     },

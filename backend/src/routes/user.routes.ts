@@ -186,7 +186,8 @@ router.post('/auth', async (req: Request, res: Response) => {
           id: student.user.id,
           name: student.user.name,
           email: student.user.email || `${student.rollNumber}@tn.gov.in`,
-          role: 'STUDENT'
+          role: 'STUDENT',
+          class: student.class
         }
       });
     } else {
