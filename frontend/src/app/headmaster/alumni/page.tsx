@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 import * as XLSX from "xlsx";
 
@@ -42,9 +43,30 @@ interface ParsedPreviewAlumni {
 }
 
 export default function AlumniPage() {
+  const { data: session } = useSession();
+  // Headmaster's own school — derived directly from session, never changes
+  const mySchoolId: string = (session?.user as any)?.schoolId || "";
+  const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
   const [alumni, setAlumni] = useState<AlumniRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch schools list (to display the school name)
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/schools`);
+        const json = await res.json();
+        if (json.success) {
+          setSchools(json.data);
+        }
+      } catch (err) {
+        console.error("Error fetching schools:", err);
+      }
+    };
+    fetchSchools();
+  }, []);
+
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -67,11 +89,12 @@ export default function AlumniPage() {
     setTimeout(() => setToast(null), 4500);
   };
 
-  // ── Fetch alumni from PostgreSQL on mount ────────────────────────
+  // ── Fetch alumni — always scoped to this headmaster's school ────────
   const fetchAlumni = useCallback(async () => {
+    if (!mySchoolId) return; // wait until session has loaded
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/headmaster/alumni`);
+      const res = await fetch(`${API_BASE}/api/headmaster/alumni?schoolId=${mySchoolId}`);
       const json = await res.json();
       if (json.success) {
         setAlumni(json.data);
@@ -83,7 +106,7 @@ export default function AlumniPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [mySchoolId]);
 
   useEffect(() => {
     fetchAlumni();
@@ -272,7 +295,8 @@ export default function AlumniPage() {
             phone: a.phone,
             email: a.email,
             location: a.location,
-            value: a.value
+            value: a.value,
+            schoolId: mySchoolId || null,
           }))
         })
       });
@@ -309,12 +333,20 @@ export default function AlumniPage() {
           phone: newPhone || "N/A",
           email: newEmail || "N/A",
           location: newLocation || "N/A",
-          value: newValue || "N/A"
+          value: newValue || "N/A",
+          schoolId: mySchoolId || null,
         })
       });
       const json = await res.json();
       if (json.success) {
         showToast(`🎉 Alumni record for ${newName} successfully registered.`);
+        // Immediately add to local state so user sees it without logout/login
+        if (json.data) {
+          setAlumni((prev) => {
+            const exists = prev.find((a) => a.id === json.data.id);
+            return exists ? prev : [json.data, ...prev];
+          });
+        }
         fetchAlumni();
         setNewName("");
         setNewContribution("");
@@ -344,6 +376,21 @@ export default function AlumniPage() {
       themeClass="theme-headmaster"
       accentColor="#3b82f6"
     >
+      {/* School Badge — locked to this headmaster's school */}
+      <div className="glass rounded-2xl p-4 border border-slate-800 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 fade-in">
+        <div>
+          <h3 className="text-xs font-bold text-white uppercase tracking-wider">Managed Institution</h3>
+          <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Alumni data is scoped to your assigned school only.</p>
+        </div>
+        <div className="flex items-center gap-2 bg-blue-600/10 border border-blue-500/30 rounded-xl px-4 py-2 w-full sm:w-auto">
+          <span className="text-blue-400 text-base">🏫</span>
+          <span className="text-xs font-bold text-blue-300">
+            {schools.find((s) => s.id === mySchoolId)?.name || (mySchoolId ? "Your School" : "No school linked")}
+          </span>
+          <span className="ml-2 px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-full text-[9px] font-bold text-blue-400 uppercase tracking-wider">Assigned</span>
+        </div>
+      </div>
+
       {/* Metric totals */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 fade-in">
         <div className="glass rounded-2xl p-6 text-center border border-slate-800">

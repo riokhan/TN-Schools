@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 import * as XLSX from "xlsx";
 
@@ -45,9 +46,30 @@ interface ParsedPreviewTempStaff {
 }
 
 export default function TemporaryStaffPage() {
+  const { data: session } = useSession();
+  // Headmaster's own school — derived directly from session, never changes
+  const mySchoolId: string = (session?.user as any)?.schoolId || "";
+  const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
   const [temps, setTemps] = useState<TempStaffMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Fetch schools list (to display the school name)
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/schools`);
+        const json = await res.json();
+        if (json.success) {
+          setSchools(json.data);
+        }
+      } catch (err) {
+        console.error("Error fetching schools:", err);
+      }
+    };
+    fetchSchools();
+  }, []);
+
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -74,11 +96,12 @@ export default function TemporaryStaffPage() {
     setTimeout(() => setToast(null), 4500);
   };
 
-  // ── Fetch from PostgreSQL on mount ──────────────────────────────
+  // ── Fetch from PostgreSQL — always scoped to this headmaster's school ───
   const fetchTemps = useCallback(async () => {
+    if (!mySchoolId) return; // wait until session has loaded
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/headmaster/temp-staff`);
+      const res = await fetch(`${API_BASE}/api/headmaster/temp-staff?schoolId=${mySchoolId}`);
       const json = await res.json();
       if (json.success) {
         setTemps(json.data);
@@ -90,7 +113,7 @@ export default function TemporaryStaffPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [mySchoolId]);
 
   useEffect(() => { fetchTemps(); }, [fetchTemps]);
 
@@ -157,7 +180,10 @@ export default function TemporaryStaffPage() {
 
   // ── Save bulk to PostgreSQL ─────────────────────────────────────
   const handleConfirmImport = async () => {
-    const validStaff = previewStaff.filter((s) => s.isValid);
+    const validStaff = previewStaff.filter((s) => s.isValid).map((s) => ({
+      ...s,
+      schoolId: mySchoolId || null,
+    }));
     if (validStaff.length === 0) { showToast("⚠️ No valid staff to import.", "error"); return; }
     setIsSaving(true);
     try {
@@ -191,11 +217,23 @@ export default function TemporaryStaffPage() {
       const res = await fetch(`${API_BASE}/api/headmaster/temp-staff`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName, role: newRole, agency: newAgency, joined: newJoined, phone: newPhone || "N/A", email: newEmail || "N/A", duration: newDuration, salary: newSalary, password: newPassword || "123456" }),
+        body: JSON.stringify({
+          name: newName, role: newRole, agency: newAgency, joined: newJoined,
+          phone: newPhone || "N/A", email: newEmail || "N/A", duration: newDuration,
+          salary: newSalary, password: newPassword || "123456",
+          schoolId: mySchoolId || null,
+        }),
       });
       const json = await res.json();
       if (json.success) {
         showToast(`🎉 Contract staff ${newName} registered and saved!`);
+        // Immediately add to local state so user sees it without logout/login
+        if (json.data) {
+          setTemps((prev) => {
+            const exists = prev.find((t) => t.id === json.data.id);
+            return exists ? prev : [json.data, ...prev];
+          });
+        }
         setNewName(""); setNewRole("Guest Teacher (Science)"); setNewAgency("Direct Contract");
         setNewJoined("June 2026"); setNewPhone(""); setNewEmail(""); setNewDuration("12 Months");
         setNewSalary("₹15,000"); setNewPassword("123456");
@@ -234,6 +272,21 @@ export default function TemporaryStaffPage() {
       themeClass="theme-headmaster"
       accentColor="#3b82f6"
     >
+      {/* School Badge — locked to this headmaster's school */}
+      <div className="glass rounded-2xl p-4 border border-slate-800 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 fade-in">
+        <div>
+          <h3 className="text-xs font-bold text-white uppercase tracking-wider">Managed Institution</h3>
+          <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Temporary staff data is scoped to your assigned school only.</p>
+        </div>
+        <div className="flex items-center gap-2 bg-blue-600/10 border border-blue-500/30 rounded-xl px-4 py-2 w-full sm:w-auto">
+          <span className="text-blue-400 text-base">🏫</span>
+          <span className="text-xs font-bold text-blue-300">
+            {schools.find((s) => s.id === mySchoolId)?.name || (mySchoolId ? "Your School" : "No school linked")}
+          </span>
+          <span className="ml-2 px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-full text-[9px] font-bold text-blue-400 uppercase tracking-wider">Assigned</span>
+        </div>
+      </div>
+
       {/* Metric summaries */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 fade-in">
         <div className="glass rounded-2xl p-6 border border-slate-700/50">

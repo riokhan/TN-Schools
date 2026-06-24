@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 import * as XLSX from "xlsx";
 
@@ -44,8 +45,29 @@ interface ParsedPreviewTeacher {
 }
 
 export default function StaffManagementPage() {
+  const { data: session } = useSession();
+  // Headmaster's own school — derived directly from session, never changes
+  const mySchoolId: string = (session?.user as any)?.schoolId || "";
+  const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch schools list (to display the school name)
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/schools`);
+        const json = await res.json();
+        if (json.success) {
+          setSchools(json.data);
+        }
+      } catch (err) {
+        console.error("Error fetching schools:", err);
+      }
+    };
+    fetchSchools();
+  }, []);
+
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -77,11 +99,12 @@ export default function StaffManagementPage() {
     setTimeout(() => setToast(null), 4500);
   };
 
-  // ── Fetch staff from PostgreSQL on mount ────────────────────────
+  // ── Fetch staff — always scoped to this headmaster's school ──────
   const fetchStaff = useCallback(async () => {
+    if (!mySchoolId) return; // wait until session has loaded
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/headmaster/staff`);
+      const res = await fetch(`${API_BASE}/api/headmaster/staff?schoolId=${mySchoolId}`);
       const json = await res.json();
       if (json.success) {
         setStaff(json.data);
@@ -93,7 +116,7 @@ export default function StaffManagementPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [mySchoolId]);
 
   useEffect(() => { fetchStaff(); }, [fetchStaff]);
 
@@ -187,7 +210,10 @@ export default function StaffManagementPage() {
 
   // ── Save bulk import to PostgreSQL ──────────────────────────────
   const handleConfirmImport = async () => {
-    const validTeachers = previewTeachers.filter((s) => s.isValid);
+    const validTeachers = previewTeachers.filter((s) => s.isValid).map((t) => ({
+      ...t,
+      schoolId: mySchoolId || null,
+    }));
     if (validTeachers.length === 0) { showToast("⚠️ No valid teachers to import.", "error"); return; }
     setIsSaving(true);
     try {
@@ -201,6 +227,7 @@ export default function StaffManagementPage() {
         showToast(`🎉 Successfully saved ${json.created} teachers to database!`);
         setPreviewTeachers([]);
         setIsAddModalOpen(false);
+        // Refetch to show all newly imported staff immediately
         fetchStaff();
       } else {
         showToast(`❌ Import failed: ${json.error}`, "error");
@@ -226,14 +253,23 @@ export default function StaffManagementPage() {
           phone: newPhone || "N/A", email: newEmail || null,
           attendance: newAttendance, performance: newPerformance,
           leaveUsed: newLeave, password: newPassword || "123456",
+          schoolId: mySchoolId || null,
         }),
       });
       const json = await res.json();
       if (json.success) {
         showToast(`🎉 ${newName} registered to teaching staff registry!`);
+        // Immediately add new record to local state so it shows without needing logout/login
+        if (json.data) {
+          setStaff((prev) => {
+            const exists = prev.find((s) => s.id === json.data.id);
+            return exists ? prev : [json.data, ...prev];
+          });
+        }
         setNewName(""); setNewEmisId(""); setNewSubject("Science"); setNewPhone("");
         setNewEmail(""); setNewAttendance(100); setNewPerformance("Good"); setNewLeave(0); setNewPassword("123456");
         setIsAddModalOpen(false);
+        // Also refetch to ensure full sync
         fetchStaff();
       } else {
         showToast(`❌ Could not save: ${json.error}`, "error");
@@ -313,13 +349,28 @@ export default function StaffManagementPage() {
       themeClass="theme-headmaster"
       accentColor="#3b82f6"
     >
+      {/* School Badge — locked to this headmaster's school */}
+      <div className="glass rounded-2xl p-4 border border-slate-800 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 fade-in">
+        <div>
+          <h3 className="text-xs font-bold text-white uppercase tracking-wider">Managed Institution</h3>
+          <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Staff data is scoped to your assigned school only.</p>
+        </div>
+        <div className="flex items-center gap-2 bg-blue-600/10 border border-blue-500/30 rounded-xl px-4 py-2 w-full sm:w-auto">
+          <span className="text-blue-400 text-base">🏫</span>
+          <span className="text-xs font-bold text-blue-300">
+            {schools.find((s) => s.id === mySchoolId)?.name || (mySchoolId ? "Your School" : "No school linked")}
+          </span>
+          <span className="ml-2 px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-full text-[9px] font-bold text-blue-400 uppercase tracking-wider">Assigned</span>
+        </div>
+      </div>
+
       {/* Staff Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
           { label: "Total Teaching Staff", value: staff.length, icon: "👩‍🏫", color: "text-blue-400", sub: "Permanent" },
           { label: "Staff Present Today", value: staff.filter((s) => s.attendance >= 90).length, icon: "🟢", color: "text-emerald-400", sub: "Healthy attendance" },
           { label: "Total Leave Days", value: staff.reduce((acc, curr) => acc + (curr.leaveUsed ?? 0), 0), icon: "📄", color: "text-amber-400", sub: "This term cumulative" },
-          { label: "Vacancy Status", value: "0", icon: "🏫", color: "text-cyan-400", sub: "All positions filled" },
+          { label: "Excellent Performers", value: staff.filter((s) => s.performance === "Excellent").length, icon: "⭐", color: "text-cyan-400", sub: "Top rated staff" },
         ].map((kpi) => (
           <div key={kpi.label} className="kpi-card">
             <div className="flex items-center justify-between mb-3">

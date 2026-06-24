@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 import * as XLSX from "xlsx";
 
@@ -66,11 +67,32 @@ interface WatchlistStudent {
 }
 
 export default function StudentsMonitoringPage() {
+  const { data: session } = useSession();
+  // Headmaster's own school — derived directly from session, never changes
+  const mySchoolId: string = (session?.user as any)?.schoolId || "";
+  const [schools, setSchools] = useState<{ id: string; name: string }[]>([]);
   const [classStats] = useState<ClassStat[]>([]);
 
 
   const [watchlist, setWatchlist] = useState<WatchlistStudent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Fetch schools list (to display the school name)
+  useEffect(() => {
+    const fetchSchools = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/api/schools`);
+        const json = await res.json();
+        if (json.success) {
+          setSchools(json.data);
+        }
+      } catch (err) {
+        console.error("Error fetching schools:", err);
+      }
+    };
+    fetchSchools();
+  }, []);
+
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newName, setNewName] = useState("");
@@ -96,11 +118,12 @@ export default function StudentsMonitoringPage() {
     setTimeout(() => setToast(null), 4500);
   };
 
-  // ── Fetch watchlist from PostgreSQL on mount ────────────────────
+  // ── Fetch watchlist — always scoped to this headmaster's school ────
   const fetchWatchlist = useCallback(async () => {
+    if (!mySchoolId) return; // wait until session has loaded
     setIsLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/headmaster/students`);
+      const res = await fetch(`${API_BASE}/api/headmaster/students?schoolId=${mySchoolId}`);
       const json = await res.json();
       if (json.success) {
         setWatchlist(json.data);
@@ -112,7 +135,7 @@ export default function StudentsMonitoringPage() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [mySchoolId]);
 
   useEffect(() => {
     fetchWatchlist();
@@ -235,7 +258,10 @@ export default function StudentsMonitoringPage() {
 
   // ── Save bulk import to PostgreSQL ──────────────────────────────
   const handleConfirmImport = async () => {
-    const validStudents = previewStudents.filter((s) => s.isValid);
+    const validStudents = previewStudents.filter((s) => s.isValid).map((s) => ({
+      ...s,
+      schoolId: mySchoolId || null,
+    }));
     if (validStudents.length === 0) {
       showToast("⚠️ No valid students to import.", "error");
       return;
@@ -283,11 +309,19 @@ export default function StudentsMonitoringPage() {
           city: newCity || "N/A",
           pincode: newPincode || "N/A",
           risk: newRisk,
+          schoolId: mySchoolId || null,
         }),
       });
       const json = await res.json();
       if (json.success) {
         showToast(`🎉 ${newName} saved to database successfully!`);
+        // Immediately add to local state so user sees it without logout/login
+        if (json.data) {
+          setWatchlist((prev) => {
+            const exists = prev.find((s) => s.id === json.data.id);
+            return exists ? prev : [json.data, ...prev];
+          });
+        }
         setNewName(""); setNewRollNumber(""); setNewClass("Class 10A"); setNewPhone("");
         setNewParentName(""); setNewDistrict("Coimbatore"); setNewState("Tamil Nadu");
         setNewCity("Coimbatore"); setNewPincode("");
@@ -326,13 +360,28 @@ export default function StudentsMonitoringPage() {
       themeClass="theme-headmaster"
       accentColor="#3b82f6"
     >
+      {/* School Badge — locked to this headmaster's school */}
+      <div className="glass rounded-2xl p-4 border border-slate-800 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4 fade-in">
+        <div>
+          <h3 className="text-xs font-bold text-white uppercase tracking-wider">Managed Institution</h3>
+          <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Student data is scoped to your assigned school only.</p>
+        </div>
+        <div className="flex items-center gap-2 bg-blue-600/10 border border-blue-500/30 rounded-xl px-4 py-2 w-full sm:w-auto">
+          <span className="text-blue-400 text-base">🏫</span>
+          <span className="text-xs font-bold text-blue-300">
+            {schools.find((s) => s.id === mySchoolId)?.name || (mySchoolId ? "Your School" : "No school linked")}
+          </span>
+          <span className="ml-2 px-2 py-0.5 bg-blue-600/20 border border-blue-500/30 rounded-full text-[9px] font-bold text-blue-400 uppercase tracking-wider">Assigned</span>
+        </div>
+      </div>
+
       {/* Metrics Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
-          { label: "Total Enrollment", value: "1,247", icon: "👨‍🎓", color: "text-blue-400", sub: "Classes 6–12" },
-          { label: "Average Attendance", value: "96.2%", icon: "📅", color: "text-emerald-400", sub: "1,199 present today" },
-          { label: "High Risk Count", value: highRiskCount.toString(), icon: "⚠️", color: "text-red-400", sub: "Needs urgent action" },
-          { label: "Medium Risk Count", value: mediumRiskCount.toString(), icon: "📊", color: "text-amber-400", sub: "Under observation" },
+          { label: "Total Students", value: isLoading ? "..." : watchlist.length.toString(), icon: "👨‍🎓", color: "text-blue-400", sub: "Watchlist entries" },
+          { label: "High Risk Count", value: isLoading ? "..." : highRiskCount.toString(), icon: "⚠️", color: "text-red-400", sub: "Needs urgent action" },
+          { label: "Medium Risk Count", value: isLoading ? "..." : mediumRiskCount.toString(), icon: "📊", color: "text-amber-400", sub: "Under observation" },
+          { label: "Safe / Cleared", value: isLoading ? "..." : (watchlist.length - highRiskCount - mediumRiskCount).toString(), icon: "✅", color: "text-emerald-400", sub: "Low risk students" },
         ].map((kpi) => (
           <div key={kpi.label} className="kpi-card">
             <div className="flex items-center justify-between mb-3">
