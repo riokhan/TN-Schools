@@ -384,13 +384,14 @@ router.get('/leave', async (req: Request, res: Response) => {
 // POST /api/teacher/leave
 router.post('/leave', async (req: Request, res: Response) => {
   try {
+
     const { type, duration, reason, proxy, schoolId, userId } = req.body;
+
     const leave = await prisma.leaveRequest.create({
       data: {
         type,
         duration,
         reason,
-        proxy,
         status: 'Pending',
         schoolId: schoolId || null,
       },

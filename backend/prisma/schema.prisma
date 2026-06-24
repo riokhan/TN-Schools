@@ -421,10 +421,10 @@ model LabEquipment {
 model LeaveRequest {
   id        String   @id @default(uuid())
   type      String
-  duration  String
-  reason    String
-  proxy     String
-  status    String   @default("Pending") // "Approved", "Pending", "Rejected"
+  duration    String
+  reason      String
+  studentName String   @default("Unknown")
+  status      String   @default("Pending") // "Approved", "Pending", "Rejected"
   schoolId  String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

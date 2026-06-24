@@ -460,6 +460,32 @@ router.post('/temp-staff/bulk', async (req: Request, res: Response) => {
   }
 });
 
+// PUT /api/headmaster/temp-staff/:id
+router.put('/temp-staff/:id', async (req: Request, res: Response) => {
+  try {
+    const { name, role, agency, joined, phone, email, duration, salary, status, password, schoolId } = req.body;
+    const staff = await prisma.headmasterTempStaff.update({
+      where: { id: req.params.id },
+      data: {
+        name: name !== undefined ? name : undefined,
+        role: role !== undefined ? role : undefined,
+        agency: agency !== undefined ? agency : undefined,
+        joined: joined !== undefined ? joined : undefined,
+        phone: phone !== undefined ? phone : undefined,
+        email: email !== undefined ? email : undefined,
+        duration: duration !== undefined ? duration : undefined,
+        salary: salary !== undefined ? salary : undefined,
+        status: status !== undefined ? status : undefined,
+        password: password !== undefined ? password : undefined,
+        schoolId: schoolId !== undefined ? schoolId : undefined,
+      }
+    });
+    res.json({ success: true, data: staff });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 // DELETE /api/headmaster/temp-staff/:id
 router.delete('/temp-staff/:id', async (req: Request, res: Response) => {
   try {
