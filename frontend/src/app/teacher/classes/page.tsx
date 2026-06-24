@@ -159,14 +159,30 @@ export default function ClassesPage() {
       });
       const data = await res.json();
       if (data.success) {
-        showToast(data.message || `Class ${editingId ? "updated" : "created"} successfully!`, "success");
+        Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: data.message || `Class ${editingId ? "updated" : "created"} successfully!`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
         closeModal();
         fetchClasses();
       } else {
-        showToast(data.error || "Operation failed", "error");
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: data.error || "Operation failed",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch {
-      showToast("Network error. Check backend server.", "error");
+      Swal.fire({
+        icon: "error",
+        title: "Network Error",
+        text: "Network error. Check backend server.",
+        confirmButtonColor: "#ef4444",
+      });
     } finally {
       setSubmitting(false);
     }

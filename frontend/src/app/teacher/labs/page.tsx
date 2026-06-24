@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface Experiment {
   id: string;
@@ -87,9 +88,29 @@ export default function ScienceLabsPage() {
       const data = await res.json();
       if (data.success) {
         setExperiments(experiments.map((exp) => (exp.id === id ? { ...exp, safetyCheck: !currentVal } : exp)));
+        Swal.fire({
+          icon: "success",
+          title: "Safety Status Updated",
+          text: `Safety verification is now ${!currentVal ? "Verified ✓" : "Unverified ✕"}.`,
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Update Failed",
+          text: data.error || "Failed to update safety status.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error updating safety check", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 
@@ -122,9 +143,29 @@ export default function ScienceLabsPage() {
         setNewLabName("");
         setNewLabDate("");
         setShowAddForm(false);
+        Swal.fire({
+          icon: "success",
+          title: "Lab Scheduled!",
+          text: `Lab session "${newLabName}" scheduled successfully.`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Creation Failed",
+          text: data.error || "Failed to schedule lab session.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error creating lab session", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

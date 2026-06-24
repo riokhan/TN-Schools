@@ -95,9 +95,29 @@ export default function AddMaterialsPage() {
         setSelectedFileSize("");
         setSelectedFileFormat("PDF");
         if (fileInputRef.current) fileInputRef.current.value = "";
+        Swal.fire({
+          icon: "success",
+          title: "Uploaded!",
+          text: "Resource has been uploaded and distributed to students.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Upload Failed",
+          text: result.error || "Failed to upload resource.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error uploading material:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred while uploading.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

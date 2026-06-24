@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface AttendanceStudent {
   id: string;
@@ -91,15 +92,28 @@ export default function AttendancePage() {
       });
       const result = await res.json();
       if (result.success) {
-        setToast(
-          `✓ Attendance for Class ${selectedClass} on ${selectedDate} has been saved! Present: ${presentCount}, Absent: ${absentCount}, Late: ${lateCount} (${attendancePercentage}%). Parent notifications dispatched.`
-        );
-        setTimeout(() => {
-          setToast(null);
-        }, 5000);
+        Swal.fire({
+          icon: "success",
+          title: "Attendance Saved!",
+          text: `Attendance for Class ${selectedClass} on ${selectedDate} has been saved! Present: ${presentCount}, Absent: ${absentCount}, Late: ${lateCount} (${attendancePercentage}%). Parent notifications dispatched.`,
+          confirmButtonColor: "#10b981",
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error Saving",
+          text: result.error || "Failed to save attendance record.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error saving attendance:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected network error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface ScholarshipRecord {
   id: string;
@@ -94,14 +95,29 @@ export default function ScholarshipsPage() {
       const data = await res.json();
       if (data.success) {
         const studentName = records.find((rec) => rec.id === id)?.name;
-        setToastMessage(`✓ ${studentName}'s EMIS profile and Bank Details successfully verified! Status updated to Approved.`);
+        Swal.fire({
+          icon: "success",
+          title: "Verified!",
+          text: `${studentName}'s EMIS profile and Bank Details successfully verified! Status updated to Approved.`,
+          confirmButtonColor: "#10b981",
+        });
         fetchScholarships(); // Reload list to recalculate everything
-        setTimeout(() => {
-          setToastMessage(null);
-        }, 4000);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Verification Failed",
+          text: data.error || "Failed to verify EMIS profile.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error verifying scholarship", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected network error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     } finally {
       setVerifyingId(null);
     }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 const syllabusOptions = ["TN State Board (Samacheer Kalvi)", "CBSE", "ICSE"];
 const grades = ["Grade 6", "Grade 7", "Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"];
@@ -171,10 +172,31 @@ export default function LessonPlannerPage() {
         setSavedPlans([data.data, ...savedPlans.filter((p) => p.id !== "temp-unsaved")]);
         setCurrentPlan(data.data);
         setSaveStatus("Saved successfully!");
+        Swal.fire({
+          icon: "success",
+          title: "Saved!",
+          text: "Lesson plan saved successfully.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
         setTimeout(() => setSaveStatus(null), 3000);
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Save Failed",
+          text: data.error || "Failed to save lesson plan.",
+          confirmButtonColor: "#ef4444",
+        });
+        setSaveStatus("Error saving.");
       }
     } catch (err) {
       console.error("Error saving lesson plan", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred while saving.",
+        confirmButtonColor: "#ef4444",
+      });
       setSaveStatus("Error saving.");
     }
   };
@@ -184,6 +206,21 @@ export default function LessonPlannerPage() {
       setCurrentPlan(null);
       return;
     }
+
+    const result = await Swal.fire({
+      title: "Delete Lesson Plan?",
+      text: "Are you sure you want to permanently delete this lesson plan?",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
+
     try {
       const res = await fetch(`${API_URL}/api/teacher/lessons/${id}`, {
         method: "DELETE",
@@ -195,9 +232,29 @@ export default function LessonPlannerPage() {
         if (currentPlan?.id === id) {
           setCurrentPlan(filtered.length > 0 ? filtered[0] : null);
         }
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: "Lesson plan has been deleted.",
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.error || "Failed to delete lesson plan.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error deleting lesson plan", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 

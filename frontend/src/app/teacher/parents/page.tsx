@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import PortalLayout from "@/components/PortalLayout";
 import * as XLSX from "xlsx";
+import Swal from "sweetalert2";
 
 interface ParentRecord {
   id: string;
@@ -112,7 +113,12 @@ export default function TeacherParentsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !phone.trim() || !role.trim()) {
-      setToast({ message: "⚠️ Parent name, phone, and role are required", type: "error" });
+      Swal.fire({
+        icon: "warning",
+        title: "Validation Error",
+        text: "Parent name, phone, and role are required.",
+        confirmButtonColor: "#f59e0b",
+      });
       return;
     }
     setSubmitting(true);
@@ -133,8 +139,8 @@ export default function TeacherParentsPage() {
     const endpoint = editingId ? `${API_URL}/api/headmaster/parents/${editingId}` : `${API_URL}/api/headmaster/parents`;
     const method = editingId ? "PUT" : "POST";
     const successMsg = editingId
-      ? `🎉 Parent record for ${name} updated successfully!`
-      : `🎉 Parent record for ${name} added successfully!`;
+      ? `Parent record for ${name} updated successfully!`
+      : `Parent record for ${name} added successfully!`;
 
     try {
       const res = await fetch(endpoint, {
@@ -145,36 +151,77 @@ export default function TeacherParentsPage() {
 
       const data = await res.json();
       if (data.success) {
-        setToast({ message: successMsg, type: "success" });
+        Swal.fire({
+          icon: "success",
+          title: "Success!",
+          text: successMsg,
+          timer: 2000,
+          showConfirmButton: false,
+        });
         handleModalClose();
         fetchParentsAndSchools();
       } else {
-        setToast({ message: `⚠️ ${data.error || "Request failed."}`, type: "error" });
+        Swal.fire({
+          icon: "error",
+          title: "Error!",
+          text: data.error || "Request failed.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
-      setToast({ message: "❌ Network error. Please try again.", type: "error" });
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Network error. Please try again.",
+        confirmButtonColor: "#ef4444",
+      });
     } finally {
       setSubmitting(false);
-      setTimeout(() => setToast(null), 5000);
     }
   };
 
   const handleDelete = async (id: string, pName: string) => {
-    if (!confirm(`Are you sure you want to delete parent record for ${pName}?`)) return;
+    const result = await Swal.fire({
+      title: "Delete Parent Record?",
+      text: `Are you sure you want to delete the parent record for ${pName}?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, Delete",
+      cancelButtonText: "Cancel",
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#64748b",
+      reverseButtons: true,
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`${API_URL}/api/headmaster/parents/${id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.success) {
-        setToast({ message: `🗑️ Parent record for ${pName} deleted!`, type: "success" });
+        Swal.fire({
+          icon: "success",
+          title: "Deleted!",
+          text: `Parent record for ${pName} deleted successfully.`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
         fetchParentsAndSchools();
       } else {
-        setToast({ message: `⚠️ ${data.error || "Failed to delete record."}`, type: "error" });
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: data.error || "Failed to delete record.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
-      setToast({ message: "❌ Error deleting record.", type: "error" });
-    } finally {
-      setTimeout(() => setToast(null), 5000);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Error deleting record.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 
@@ -225,18 +272,31 @@ export default function TeacherParentsPage() {
         });
         const resData = await res.json();
         if (resData.success) {
-          setToast({ message: `📊 Excel import successful! Registered/Updated ${resData.created} parents.`, type: "success" });
+          Swal.fire({
+            icon: "success",
+            title: "Import Successful!",
+            text: `Registered/Updated ${resData.created} parents from Excel.`,
+          });
           fetchParentsAndSchools();
           if (fileInputRef.current) fileInputRef.current.value = "";
         } else {
-          setToast({ message: `⚠️ Excel import failed: ${resData.error}`, type: "error" });
+          Swal.fire({
+            icon: "error",
+            title: "Import Failed",
+            text: resData.error || "Bulk import failed.",
+            confirmButtonColor: "#ef4444",
+          });
         }
       } catch (err) {
         console.error("Excel import error:", err);
-        setToast({ message: "❌ Error parsing spreadsheet file.", type: "error" });
+        Swal.fire({
+          icon: "error",
+          title: "Parser Error",
+          text: "Error parsing spreadsheet file.",
+          confirmButtonColor: "#ef4444",
+        });
       } finally {
         setIsUploading(false);
-        setTimeout(() => setToast(null), 5000);
       }
     };
     reader.readAsBinaryString(file);

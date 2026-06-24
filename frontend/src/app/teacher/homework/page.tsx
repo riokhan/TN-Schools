@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
+import Swal from "sweetalert2";
 
 interface Assignment {
   id: string;
@@ -117,11 +118,29 @@ export default function HomeworkPage() {
         setShowCreateModal(false);
         setNewTitle("");
         setNewDesc("");
-        setToastMessage(`New assignment "${newTitle}" assigned successfully!`);
-        setTimeout(() => setToastMessage(null), 3000);
+        Swal.fire({
+          icon: "success",
+          title: "Created!",
+          text: `New assignment "${newTitle}" assigned successfully!`,
+          timer: 2500,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: result.error || "Failed to create homework.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error creating homework:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 
@@ -145,11 +164,29 @@ export default function HomeworkPage() {
         );
         // Refresh homework list to update counts
         fetchHomework();
-        setToastMessage(`Graded ${name} successfully!`);
-        setTimeout(() => setToastMessage(null), 3000);
+        Swal.fire({
+          icon: "success",
+          title: "Graded!",
+          text: `Graded ${name} successfully with score ${scoreVal}!`,
+          timer: 2000,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Grading Failed",
+          text: result.error || "Failed to submit score.",
+          confirmButtonColor: "#ef4444",
+        });
       }
     } catch (err) {
       console.error("Error grading submission:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "An unexpected error occurred.",
+        confirmButtonColor: "#ef4444",
+      });
     }
   };
 
