@@ -7,8 +7,10 @@ import { prisma } from './config/prisma';
 // Route imports
 import aiRoutes        from './routes/ai.routes';
 import portfolioRoutes from './routes/portfolio.routes';
+import sportsRoutes from './routes/sports.routes';
 import wellnessRoutes  from './routes/wellness.routes';
 import studentRoutes   from './routes/student.routes';
+import activitiesRoutes from './routes/activities.routes';
 import attendanceRoutes from './routes/attendance.routes';
 import schoolRoutes    from './routes/school.routes';
 import headmasterRoutes from './routes/headmaster.routes';
@@ -53,8 +55,10 @@ app.get('/', async (req: Request, res: Response) => {
 // ─── API Routes ──────────────────────────────────────────────
 app.use('/api/ai',         aiRoutes);
 app.use('/api/portfolio',  portfolioRoutes);
+app.use('/api/sports',     sportsRoutes);
 app.use('/api/wellness',   wellnessRoutes);
 app.use('/api/students',   studentRoutes);
+app.use('/api/activities', activitiesRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/schools',    schoolRoutes);
 app.use('/api/headmaster', headmasterRoutes);
