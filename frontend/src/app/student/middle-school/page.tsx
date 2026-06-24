@@ -90,8 +90,20 @@
 //     </PortalLayout>
 //   );
 // }
+"use client";
+import React, { useState, useEffect } from "react";
 import PortalLayout from "@/components/PortalLayout";
+import { useSession } from "next-auth/react";
 
+const getApiBase = () => {
+  let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+  if (url && !url.startsWith("http://") && !url.startsWith("https://")) {
+    url = `https://${url}`;
+  }
+  return url;
+};
+
+const API_BASE = getApiBase();
 
 const subjects = [
   { name: "Mathematics", progress: 85, color: "#6366f1", icon: "🧮" },
@@ -108,8 +120,30 @@ const recentActivity = [
 ];
 
 export default function MiddleSchoolDashboard() {
+  const { data: session } = useSession();
+  const [student, setStudent] = useState<any>(null);
+
+  useEffect(() => {
+    fetch(`${API_BASE}/api/students`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.data.length > 0) {
+          const myStudent = (session?.user as any)?.id 
+            ? json.data.find((s: any) => s.userId === (session?.user as any)?.id)
+            : null;
+          setStudent(myStudent || json.data[0]);
+        }
+      })
+      .catch((err) => console.error(err));
+  }, [session]);
+
+  const userName = session?.user?.name || student?.user?.name || "Student";
+  const subtitle = student 
+    ? `Welcome back, ${userName}! · Class ${student.class} ${student.section} · You have 5 new badges waiting! 🌟`
+    : "Loading student data...";
+
   return (
-    <PortalLayout>
+    <PortalLayout subtitle={subtitle}>
       {/* KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 fade-in">
         {[
