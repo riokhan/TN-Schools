@@ -874,7 +874,7 @@ export default function LessonPlannerPage() {
                   key={currentPlan.topic}
                   topic={currentPlan.topic} 
                   subject={currentPlan.subject} 
-                  data={currentPlan.planData?.infographic} 
+                  data={currentPlan.planData?.infographic || (currentPlan as any).infographic} 
                 />
               )}
               

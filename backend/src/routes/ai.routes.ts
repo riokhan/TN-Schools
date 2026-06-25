@@ -190,7 +190,7 @@ ${truncatedContext ? `Textbook extract context:\n${truncatedContext}` : ''}
 CRITICAL INSTRUCTION: If textbook context is provided, ONLY extract content about "${topic}". Ignore all other chapters.
 If "${topic}" is not found in the context, generate from standard TN Board curriculum.
 
-CONSTRAINTS: objectives=3, timeline=4, bilingual=3, exitTickets=1, slides=15 (exactly 15 items in the slides array, mapping to Slide 1 through Slide 15 below), podcast=4 turns, videoStoryboard=2 scenes.
+CONSTRAINTS: objectives=3, timeline=4, infographic=1, bilingual=3, exitTickets=15, slides=15 (exactly 15 items in the slides array, mapping to Slide 1 through Slide 15 below), podcast=4 turns, videoStoryboard=2 scenes.
 
 SLIDE GENERATION RULES (CRITICAL):
 Generate exactly 15 slides. The "slides" array in JSON MUST contain exactly 15 objects in this precise sequence.
@@ -255,6 +255,41 @@ Output ONLY valid JSON (no markdown, no backticks):
       {"time": "25-40 Mins", "activity": "Guided Practice", "description": "exercises"},
       {"time": "40-45 Mins", "activity": "Exit Ticket", "description": "MCQ check"}
     ],
+    "infographic": {
+      "heroTitle": "REAL BILINGUAL TITLE FOR ${topic}",
+      "heroSubtitle": "Grade ${grade} ${subject}",
+      "heroIcon": "🔬",
+      "conceptColor": "emerald",
+      "modules": [
+        {"id": "m1", "title": "REAL CONCEPT 1 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "📌"},
+        {"id": "m2", "title": "REAL CONCEPT 2 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "🔍"},
+        {"id": "m3", "title": "REAL CONCEPT 3 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "⚡"},
+        {"id": "m4", "title": "REAL CONCEPT 4 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "🌟"}
+      ],
+      "stats": [
+        {"label": "REAL KPI 1 (அளவீடு)", "value": "REAL VALUE", "desc": "what this means for ${topic}"},
+        {"label": "REAL KPI 2 (சூத்திரம்)", "value": "FORMULA", "desc": "formula explanation"},
+        {"label": "REAL KPI 3 (அலகு)", "value": "UNIT", "desc": "unit explanation"}
+      ],
+      "workflow": [
+        {"step": "REAL STEP 1 (படிநிலை)", "desc": "Real step explanation for ${topic}. தமிழ்.", "icon": "1️⃣"},
+        {"step": "REAL STEP 2 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "2️⃣"},
+        {"step": "REAL STEP 3 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "3️⃣"},
+        {"step": "REAL STEP 4 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "4️⃣"}
+      ],
+      "formulaBox": "REAL PRIMARY FORMULA",
+      "formulaExplain": "Bilingual formula explanation. சூத்திர விளக்கம்.",
+      "lawTitle": "REAL LAW NAME (விதி அல்லது தேற்றம்)",
+      "lawDesc": "Real law statement. விதி கூற்று.",
+      "termTable": [
+        {"english": "term1", "tamil": "சொல்1", "definition": "definition1"},
+        {"english": "term2", "tamil": "சொல்2", "definition": "definition2"},
+        {"english": "term3", "tamil": "சொல்3", "definition": "definition3"}
+      ],
+      "constantName": "REAL CONSTANT NAME",
+      "constantValue": "REAL NUMERIC VALUE",
+      "constantExplain": "Bilingual constant explanation. தமிழில் விளக்கம்."
+    },
     "bilingual": [
       {"english": "term1", "tamil": "சொல்1", "pronunciation": "pron1"},
       {"english": "term2", "tamil": "சொல்2", "pronunciation": "pron2"},
@@ -295,42 +330,7 @@ Output ONLY valid JSON (no markdown, no backticks):
     "videoStoryboard": [
       {"sceneNumber": 1, "visualDescription": "animation for ${topic}", "narrationText": "narration", "subtitles": "தமிழ் subtitle"},
       {"sceneNumber": 2, "visualDescription": "problem solving animation", "narrationText": "narration 2", "subtitles": "தமிழ் subtitle 2"}
-    ],
-    "infographic": {
-      "heroTitle": "REAL BILINGUAL TITLE FOR ${topic}",
-      "heroSubtitle": "Grade ${grade} ${subject}",
-      "heroIcon": "🔬",
-      "conceptColor": "emerald",
-      "modules": [
-        {"id": "m1", "title": "REAL CONCEPT 1 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "📌"},
-        {"id": "m2", "title": "REAL CONCEPT 2 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "🔍"},
-        {"id": "m3", "title": "REAL CONCEPT 3 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "⚡"},
-        {"id": "m4", "title": "REAL CONCEPT 4 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "🌟"}
-      ],
-      "stats": [
-        {"label": "REAL KPI 1 (அளவீடு)", "value": "REAL VALUE", "desc": "what this means for ${topic}"},
-        {"label": "REAL KPI 2 (சூத்திரம்)", "value": "FORMULA", "desc": "formula explanation"},
-        {"label": "REAL KPI 3 (அலகு)", "value": "UNIT", "desc": "unit explanation"}
-      ],
-      "workflow": [
-        {"step": "REAL STEP 1 (படிநிலை)", "desc": "Real step explanation for ${topic}. தமிழ்.", "icon": "1️⃣"},
-        {"step": "REAL STEP 2 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "2️⃣"},
-        {"step": "REAL STEP 3 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "3️⃣"},
-        {"step": "REAL STEP 4 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "4️⃣"}
-      ],
-      "formulaBox": "REAL PRIMARY FORMULA",
-      "formulaExplain": "Bilingual formula explanation. சூத்திர விளக்கம்.",
-      "lawTitle": "REAL LAW NAME (விதி அல்லது தேற்றம்)",
-      "lawDesc": "Real law statement. விதி கூற்று.",
-      "termTable": [
-        {"english": "term1", "tamil": "சொல்1", "definition": "definition1"},
-        {"english": "term2", "tamil": "சொல்2", "definition": "definition2"},
-        {"english": "term3", "tamil": "சொல்3", "definition": "definition3"}
-      ],
-      "constantName": "REAL CONSTANT NAME",
-      "constantValue": "REAL NUMERIC VALUE",
-      "constantExplain": "Bilingual constant explanation. தமிழில் விளக்கம்."
-    }
+    ]
   }
 }
 `;
@@ -474,24 +474,6 @@ Output ONLY valid JSON (no markdown, no backticks):
       "quiz": [{"question": "unit4 mcq?", "options": ["A) a","B) b","C) c","D) d"], "answer": "D) d", "rationale": "because"}]
     }
   ],
-  "slides": [
-    {
-      "title": "Slide Title (e.g. Premium Cover)",
-      "subtitle": "Visual Explanation / Subtitle",
-      "bullets": ["Bullet 1", "Bullet 2"],
-      "teacherNotes": "Study notes...",
-      "studentActivity": "Practice task...",
-      "illustrationPrompt": "Ultra realistic, 3D scientific illustration, glassmorphism, white background...",
-      "animationSuggestion": "Animated flow...",
-      "graphicType": "hero|concept|formula|comparison|process|experiment|application|summary|quiz",
-      "graphicData": {
-        "label": "Main label or concept name",
-        "values": ["Item 1", "Item 2", "Item 3", "Item 4"],
-        "formula": "E = mc²",
-        "variables": ["E = Energy", "m = Mass", "c = Speed of light"]
-      }
-    }
-  ],
   "infographic": {
     "heroTitle": "REAL BILINGUAL TITLE FOR ${topic}",
     "heroSubtitle": "Grade ${grade} ${subject} Self-Study",
@@ -523,10 +505,28 @@ Output ONLY valid JSON (no markdown, no backticks):
       {"english": "term2", "tamil": "சொல்2", "definition": "definition2"},
       {"english": "term3", "tamil": "சொல்3", "definition": "definition3"}
     ],
-    "constantName": "REAL CONSTANT",
-    "constantValue": "REAL VALUE",
+    "constantName": "REAL CONSTANT NAME",
+    "constantValue": "REAL NUMERIC VALUE",
     "constantExplain": "Bilingual constant explanation."
-  }
+  },
+  "slides": [
+    {
+      "title": "Slide Title (e.g. Premium Cover)",
+      "subtitle": "Visual Explanation / Subtitle",
+      "bullets": ["Bullet 1", "Bullet 2"],
+      "teacherNotes": "Study notes...",
+      "studentActivity": "Practice task...",
+      "illustrationPrompt": "Ultra realistic, 3D scientific illustration, glassmorphism, white background...",
+      "animationSuggestion": "Animated flow...",
+      "graphicType": "hero|concept|formula|comparison|process|experiment|application|summary|quiz",
+      "graphicData": {
+        "label": "Main label or concept name",
+        "values": ["Item 1", "Item 2", "Item 3", "Item 4"],
+        "formula": "E = mc²",
+        "variables": ["E = Energy", "m = Mass", "c = Speed of light"]
+      }
+    }
+  ],
 }
 `;
 
