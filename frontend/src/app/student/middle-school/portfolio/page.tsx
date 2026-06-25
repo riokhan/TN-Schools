@@ -180,7 +180,7 @@ const projects = [
 
 const badges = [
   { name: "Super Reader", description: "Read 10 story books this month!", icon: "📖", color: "from-emerald-400 to-teal-500" },
-  { name: "Math Ninja", description: "Solved all puzzles perfectly!", icon: "🥷", color: "from-indigo-400 to-purple-500" },
+  { name: "Math Ninja", description: "Solved all puzzles perfectly!", icon: "📐", color: "from-indigo-400 to-purple-500" },
   { name: "Kindness Star", description: "Helped a classmate today!", icon: "⭐", color: "from-amber-400 to-orange-500" },
   { name: "Science Explorer", description: "Completed 5 virtual lab experiments", icon: "🔬", color: "from-blue-400 to-cyan-500" }
 ];
