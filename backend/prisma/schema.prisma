@@ -113,6 +113,9 @@ model Teacher {
   subjects      String[] // ["Mathematics", "Science"]
   qualification String?
   joiningDate   DateTime?
+  address       String?
+  gender        String?
+  dob           DateTime?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -269,6 +272,9 @@ model HeadmasterStaff {
   leaveUsed   Int      @default(0)
   password    String   @default("123456")
   schoolId    String?
+  address     String?
+  gender      String?
+  dob         DateTime?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

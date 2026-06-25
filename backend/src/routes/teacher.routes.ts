@@ -785,4 +785,171 @@ router.get('/analytics/class', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/teacher/profile/:userId
+router.get('/profile/:userId', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+
+    // 1. Try to find in User + Teacher tables
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        teacher: {
+          include: { school: { select: { name: true } } }
+        },
+        school: { select: { name: true } }
+      }
+    });
+
+    if (user) {
+      return res.json({
+        success: true,
+        type: 'user',
+        data: {
+          id: user.id,
+          name: user.name,
+          email: user.email || '',
+          phone: user.mobile || '',
+          role: user.role,
+          schoolId: user.schoolId || user.teacher?.schoolId || '',
+          schoolName: user.school?.name || user.teacher?.school?.name || 'Tamil Nadu School',
+          emisId: user.teacher?.employeeId || user.emisId || 'N/A',
+          subjects: user.teacher?.subjects || [],
+          subject: user.teacher?.subjects?.join(', ') || 'General',
+          qualification: user.teacher?.qualification || 'N/A',
+          joiningDate: user.teacher?.joiningDate ? user.teacher.joiningDate.toISOString().split('T')[0] : '',
+          address: user.teacher?.address || '',
+          gender: user.teacher?.gender || '',
+          dob: user.teacher?.dob ? user.teacher.dob.toISOString().split('T')[0] : ''
+        }
+      });
+    }
+
+    // 2. Try to find in HeadmasterStaff table
+    const staff = await prisma.headmasterStaff.findUnique({
+      where: { id: userId }
+    });
+
+    if (staff) {
+      let schoolName = 'Tamil Nadu School';
+      if (staff.schoolId) {
+        const school = await prisma.school.findUnique({
+          where: { id: staff.schoolId },
+          select: { name: true }
+        });
+        if (school) schoolName = school.name;
+      }
+
+      return res.json({
+        success: true,
+        type: 'staff',
+        data: {
+          id: staff.id,
+          name: staff.name,
+          email: staff.email || '',
+          phone: staff.phone || '',
+          role: 'TEACHER',
+          schoolId: staff.schoolId || '',
+          schoolName,
+          emisId: staff.emisId || 'N/A',
+          subjects: [staff.subject],
+          subject: staff.subject || 'General',
+          qualification: 'N/A',
+          joiningDate: staff.createdAt ? staff.createdAt.toISOString().split('T')[0] : '',
+          address: staff.address || '',
+          gender: staff.gender || '',
+          dob: staff.dob ? staff.dob.toISOString().split('T')[0] : ''
+        }
+      });
+    }
+
+    return res.status(404).json({ success: false, error: 'Profile not found' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// PUT /api/teacher/profile/:userId
+router.put('/profile/:userId', async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    const { name, email, phone, subjects, qualification, joiningDate } = req.body;
+
+    // 1. Try to find in User
+    const user = await prisma.user.findUnique({
+      where: { id: userId }
+    });
+
+    if (user) {
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          name,
+          email: email || null,
+          mobile: phone || null,
+        }
+      });
+
+      const teacher = await prisma.teacher.findUnique({
+        where: { userId }
+      });
+
+      if (teacher) {
+        await prisma.teacher.update({
+          where: { userId },
+          data: {
+            subjects: Array.isArray(subjects) ? subjects : subjects ? String(subjects).split(',').map(s => s.trim()) : [],
+            qualification,
+            joiningDate: joiningDate ? new Date(joiningDate) : null,
+            address: req.body.address || null,
+            gender: req.body.gender || null,
+            dob: req.body.dob ? new Date(req.body.dob) : null,
+          }
+        });
+      } else if (user.schoolId) {
+        await prisma.teacher.create({
+          data: {
+            userId,
+            schoolId: user.schoolId,
+            subjects: Array.isArray(subjects) ? subjects : subjects ? String(subjects).split(',').map(s => s.trim()) : [],
+            qualification,
+            joiningDate: joiningDate ? new Date(joiningDate) : null,
+            employeeId: user.emisId || 'TCH-' + Math.floor(1000 + Math.random() * 9000),
+            address: req.body.address || null,
+            gender: req.body.gender || null,
+            dob: req.body.dob ? new Date(req.body.dob) : null,
+          }
+        });
+      }
+
+      return res.json({ success: true, message: 'Profile updated successfully' });
+    }
+
+    // 2. Try to find in HeadmasterStaff
+    const staff = await prisma.headmasterStaff.findUnique({
+      where: { id: userId }
+    });
+
+    if (staff) {
+      await prisma.headmasterStaff.update({
+        where: { id: userId },
+        data: {
+          name,
+          email: email || null,
+          phone: phone || 'N/A',
+          subject: Array.isArray(subjects) ? subjects[0] : subjects || 'General',
+          address: req.body.address || null,
+          gender: req.body.gender || null,
+          dob: req.body.dob ? new Date(req.body.dob) : null,
+        }
+      });
+      return res.json({ success: true, message: 'Profile updated successfully' });
+    }
+
+    return res.status(404).json({ success: false, error: 'Profile not found' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 export default router;
