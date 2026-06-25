@@ -257,8 +257,8 @@ export default function HomePage() {
     <div style={{ background: "#f5f5fb", fontFamily: "'Inter', 'Segoe UI', sans-serif", color: "#1a1a2e" }}>
 
       {/* ═══════ GOVERNMENT TOP STRIP ═══════ */}
-      <div style={{ background: "#3D3580", color: "#ffffff", padding: "6px 0", fontSize: "11px" }}>
-        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="hidden sm:block" style={{ background: "#3D3580", color: "#ffffff", padding: "6px 0", fontSize: "11px" }}>
+        <div className="px-4 md:px-8" style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <span>🇮🇳</span>
             <span style={{ fontWeight: 600 }}>{text.govtName}</span>
@@ -276,7 +276,7 @@ export default function HomePage() {
 
       {/* ═══════ ANNOUNCEMENT TICKER ═══════ */}
       <div style={{ background: "#F07800", color: "#fff", padding: "8px 0", fontSize: "12px", overflow: "hidden" }}>
-        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 2rem" }}>
+        <div className="px-4 md:px-8" style={{ maxWidth: "1280px", margin: "0 auto" }}>
           <span style={{ fontWeight: 500 }}>{text.announcementText}</span>
         </div>
       </div>
@@ -296,7 +296,7 @@ export default function HomePage() {
           transition: "all 0.3s"
         }}
       >
-        <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "0 2rem", display: "flex", alignItems: "center", justifyContent: "space-between", height: "68px" }}>
+        <div className="px-4 md:px-8" style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", height: "68px" }}>
           {/* Logo */}
           <Link href="/" style={{ display: "flex", alignItems: "center", gap: "14px", textDecoration: "none" }} id="nav-logo">
             <div style={{ width: "48px", height: "48px", background: "linear-gradient(135deg, #3D3580 0%, #7B7FC4 100%)", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", boxShadow: "0 2px 8px rgba(61,53,128,0.3)" }}>
@@ -304,12 +304,12 @@ export default function HomePage() {
             </div>
             <div>
               <div style={{ fontSize: "16px", fontWeight: 800, color: "#3D3580", lineHeight: "1.2", letterSpacing: "-0.3px" }}>TN Schools</div>
-              <div style={{ fontSize: "10px", color: "#F07800", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>AI Smart Ecosystem</div>
+              <div className="hidden sm:block" style={{ fontSize: "10px", color: "#F07800", fontWeight: 700, textTransform: "uppercase", letterSpacing: "1px" }}>AI Smart Ecosystem</div>
             </div>
           </Link>
 
           {/* Center Nav Links */}
-          <div style={{ display: "flex", alignItems: "center", gap: "32px" }} className="hidden md:flex">
+          <div className="hidden md:flex items-center" style={{ gap: "32px" }}>
             {[
               { label: text.navFeatures, href: "#features" },
               { label: text.navPortals, href: "#portals" },
@@ -372,10 +372,12 @@ export default function HomePage() {
                   }}
                 >
                   <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#10b981", display: "inline-block" }}></span>
-                  👤 {(session.user as any)?.name}
+                  <span className="hidden sm:inline">👤 {(session.user as any)?.name}</span>
+                  <span className="inline sm:hidden">👤 Portal</span>
                 </Link>
                 <button
                   id="nav-signout"
+                  className="hidden sm:block"
                   onClick={() => signOut({ callbackUrl: "/" })}
                   style={{
                     fontSize: "12px",

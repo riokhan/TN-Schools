@@ -518,7 +518,7 @@ export default function PortalLayout({
             
             {/* If title is provided, display title and subtitle like the screenshot, otherwise show search bar */}
             {resolvedTitle ? (
-              <div className="ml-2 text-left">
+              <div className="ml-2 text-left hidden md:block">
                 <h1 className="text-lg md:text-xl font-bold text-[var(--text-heading)] leading-tight">{resolvedTitle}</h1>
                 {resolvedSubtitle && (
                   <p className="text-xs text-[var(--text-muted)] font-medium mt-0.5">{resolvedSubtitle}</p>
@@ -680,6 +680,15 @@ export default function PortalLayout({
 
         {/* Children content relative to sit above absolute background */}
         <div className="relative">
+          {/* Mobile Page Header (visible on mobile only) */}
+          {resolvedTitle && (
+            <div className="md:hidden px-1 mb-5 text-left animate-in fade-in duration-300">
+              <h1 className="text-xl font-black text-white leading-tight drop-shadow-sm">{resolvedTitle}</h1>
+              {resolvedSubtitle && (
+                <p className="text-xs text-white/85 font-semibold mt-1">{resolvedSubtitle}</p>
+              )}
+            </div>
+          )}
           {children}
         </div>
       </div>
