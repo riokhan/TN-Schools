@@ -16,6 +16,8 @@ interface ConferenceSession {
   status: "upcoming" | "live" | "ended";
   notes?: string;
   createdAt: string;
+  className?: string;
+  section?: string;
 }
 
 interface School {
@@ -35,9 +37,14 @@ export default function ConnectWithSchoolPage({ role }: { role: string }) {
   const [selectedSchoolId, setSelectedSchoolId] = useState("");
   const [scheduledDate, setScheduledDate] = useState("");
   const [scheduledTime, setScheduledTime] = useState("");
+  const [selectedClass, setSelectedClass] = useState("");
+  const [selectedSection, setSelectedSection] = useState("");
   const [notes, setNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+
+  const CLASSES = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
+  const SECTIONS = ["A", "B", "C", "D", "E"];
 
   useEffect(() => {
     fetchData();
@@ -75,6 +82,8 @@ export default function ConnectWithSchoolPage({ role }: { role: string }) {
       id: crypto.randomUUID(),
       schoolId: selectedSchoolId,
       schoolName: school?.name || "Unknown School",
+      className: selectedClass,
+      section: selectedSection,
       scheduledAt,
       scheduledBy: session?.user?.name || role,
       role,
@@ -88,6 +97,8 @@ export default function ConnectWithSchoolPage({ role }: { role: string }) {
     localStorage.setItem("tn_conference_sessions", JSON.stringify(updated));
 
     setSelectedSchoolId("");
+    setSelectedClass("");
+    setSelectedSection("");
     setScheduledDate("");
     setScheduledTime("");
     setNotes("");
@@ -180,6 +191,40 @@ export default function ConnectWithSchoolPage({ role }: { role: string }) {
                     ))}
                   </select>
                 )}
+              </div>
+
+              {/* Class and Section Dropdowns */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">
+                    Class (Optional)
+                  </label>
+                  <select
+                    value={selectedClass}
+                    onChange={(e) => setSelectedClass(e.target.value)}
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                  >
+                    <option value="">-- All Classes --</option>
+                    {CLASSES.map((c) => (
+                      <option key={c} value={c}>Class {c}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-[var(--text-muted)] mb-1.5">
+                    Section (Optional)
+                  </label>
+                  <select
+                    value={selectedSection}
+                    onChange={(e) => setSelectedSection(e.target.value)}
+                    className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-sm text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
+                  >
+                    <option value="">-- All Sections --</option>
+                    {SECTIONS.map((s) => (
+                      <option key={s} value={s}>Section {s}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               {/* Selected School Preview */}
@@ -285,7 +330,10 @@ export default function ConnectWithSchoolPage({ role }: { role: string }) {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
-                            <h3 className="text-sm font-bold text-[var(--text-heading)]">{s.schoolName}</h3>
+                            <h3 className="text-sm font-bold text-[var(--text-heading)]">
+                              {s.schoolName}
+                              {s.className && ` - Class ${s.className}${s.section ? ` '${s.section}'` : ''}`}
+                            </h3>
                             {isToday && (
                               <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30">TODAY</span>
                             )}
