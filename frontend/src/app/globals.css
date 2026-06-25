@@ -624,6 +624,12 @@ h1, h2, h3, h4, h5, h6 {
     margin-left: 0;
     padding: 1rem;
   }
+  .topbar {
+    padding: 0.6rem 1rem !important;
+    margin-top: 0.5rem !important;
+    margin-bottom: 1.5rem !important;
+    border-radius: 1rem !important;
+  }
 }
 
 /* ===================== TOP NAVBAR ===================== */

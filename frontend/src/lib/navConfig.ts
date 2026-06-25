@@ -316,6 +316,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Grievances", href: "/block-education-officer/grievances", icon: "⚖️" },
       { label: "Financial Reports", href: "/block-education-officer/financials", icon: "💰" },
       { label: "Circulars", href: "/block-education-officer/circulars", icon: "📢" },
+      { label: "Connect with School", href: "/block-education-officer/connect", icon: "📡" },
     ],
   },
   DEO: {
@@ -339,6 +340,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Infrastructure", href: "/district-education-officer/infrastructure", icon: "🏗️" },
       { label: "Grievances", href: "/district-education-officer/grievances", icon: "⚖️" },
       { label: "Circulars", href: "/district-education-officer/circulars", icon: "📢" },
+      { label: "Connect with School", href: "/district-education-officer/connect", icon: "📡" },
     ],
   },
   COMMISSIONER: {
@@ -361,6 +363,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Schemes Overview", href: "/commissioner/schemes", icon: "📜" },
       { label: "Grievances Redressal", href: "/commissioner/grievances", icon: "⚖️" },
       { label: "Announcements", href: "/commissioner/announcements", icon: "📢" },
+      { label: "Connect with School", href: "/commissioner/connect", icon: "📡" },
     ],
   },
   MINISTER: {
@@ -383,6 +386,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Infrastructure Projects", href: "/minister/infrastructure", icon: "🏗️" },
       { label: "Public Grievances", href: "/minister/grievances", icon: "⚖️" },
       { label: "Press & Media", href: "/minister/media", icon: "📰" },
+      { label: "Connect with School", href: "/minister/connect", icon: "📡" },
     ],
   },
   SUPERADMIN: {

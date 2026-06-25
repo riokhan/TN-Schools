@@ -14,18 +14,58 @@ router.get('/', async (req: Request, res: Response) => {
 
     let classRooms: any[] = [];
     if (teacherId) {
-      classRooms = await prisma.$queryRaw`
-        SELECT * FROM "ClassRoom"
-        WHERE "schoolId" = ${String(schoolId)}
-          AND "teacherId" = ${String(teacherId)}
-        ORDER BY "className" ASC, section ASC
-      `;
+      const teacherIds: string[] = [String(teacherId)];
+
+      // 1. If teacherId is a User.id, let's find the HeadmasterStaff by email
+      const user = await prisma.user.findUnique({
+        where: { id: String(teacherId) },
+        select: { email: true }
+      });
+      if (user && user.email) {
+        const staff = await prisma.headmasterStaff.findFirst({
+          where: { email: user.email },
+          select: { id: true }
+        });
+        if (staff) {
+          teacherIds.push(staff.id);
+        }
+      }
+
+      // 2. If teacherId is a HeadmasterStaff.id, let's find the User by email
+      const staff = await prisma.headmasterStaff.findUnique({
+        where: { id: String(teacherId) },
+        select: { email: true }
+      });
+      if (staff && staff.email) {
+        const matchedUser = await prisma.user.findFirst({
+          where: { email: { equals: staff.email, mode: 'insensitive' } },
+          select: { id: true }
+        });
+        if (matchedUser) {
+          teacherIds.push(matchedUser.id);
+        }
+      }
+
+      classRooms = await prisma.classRoom.findMany({
+        where: {
+          schoolId: String(schoolId),
+          teacherId: { in: teacherIds }
+        },
+        orderBy: [
+          { className: 'asc' },
+          { section: 'asc' }
+        ]
+      });
     } else {
-      classRooms = await prisma.$queryRaw`
-        SELECT * FROM "ClassRoom"
-        WHERE "schoolId" = ${String(schoolId)}
-        ORDER BY "className" ASC, section ASC
-      `;
+      classRooms = await prisma.classRoom.findMany({
+        where: {
+          schoolId: String(schoolId)
+        },
+        orderBy: [
+          { className: 'asc' },
+          { section: 'asc' }
+        ]
+      });
     }
 
     return res.json({ success: true, data: classRooms, count: classRooms.length });

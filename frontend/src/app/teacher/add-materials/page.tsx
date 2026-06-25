@@ -28,6 +28,7 @@ export default function AddMaterialsPage() {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Material["category"]>("Notes");
   const [targetClass, setTargetClass] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [selectedFileSize, setSelectedFileSize] = useState<string>("");
   const [selectedFileFormat, setSelectedFileFormat] = useState<string>("PDF");
@@ -89,6 +90,7 @@ export default function AddMaterialsPage() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
+      setSelectedFile(file);
       setSelectedFileName(file.name);
       
       const sizeInMB = (file.size / (1024 * 1024)).toFixed(1);
@@ -99,11 +101,31 @@ export default function AddMaterialsPage() {
     }
   };
 
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title || !selectedFileName) return;
+    if (!title || !selectedFileName || !selectedFile) return;
 
     try {
+      Swal.fire({
+        title: "Uploading...",
+        text: "Please wait while we upload the study resource.",
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        },
+      });
+
+      const fileData = await fileToBase64(selectedFile);
+
       const res = await fetch(`${API_URL}/api/teacher/materials`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -115,12 +137,14 @@ export default function AddMaterialsPage() {
           size: selectedFileSize,
           schoolId: schoolId || null,
           userId: (session?.user as any)?.id,
+          fileData,
         }),
       });
       const result = await res.json();
       if (result.success) {
         setMaterials([result.data, ...materials]);
         setTitle("");
+        setSelectedFile(null);
         setSelectedFileName(null);
         setSelectedFileSize("");
         setSelectedFileFormat("PDF");
@@ -151,87 +175,40 @@ export default function AddMaterialsPage() {
     }
   };
 
-  const handleDownload = (material: Material) => {
-    const title = material.title;
-    const category = material.category;
-    const classSection = material.classSection;
-    const size = material.size;
-    const date = material.date;
-    const format = material.format;
+  const handleDownload = async (material: Material) => {
+    try {
+      Swal.fire({
+        title: "Downloading...",
+        text: `Downloading "${material.title}" from the server...`,
+        toast: true,
+        position: "top-end",
+        showConfirmButton: false,
+        timer: 1500,
+      });
 
-    // Create a dynamic minimal PDF file structure
-    const pdfContent = `%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.275 841.89] /Resources << /Font << /F1 << /Type /Font /Subtype /Type1 /BaseFont /Helvetica >> >> >> /Contents 4 0 R >>
-endobj
-4 0 obj
-<< /Length 350 >>
-stream
-BT
-/F1 22 Tf
-50 750 Td
-(Tamil Nadu School Education Department) Tj
-/F1 14 Tf
-0 -40 Td
-(STUDY MATERIAL RESOURCE) Tj
-0 -30 Td
-(Title: ${title}) Tj
-0 -25 Td
-(Category: ${category}) Tj
-0 -25 Td
-(Class Section: ${classSection}) Tj
-0 -25 Td
-(Format: ${format} | Size: ${size}) Tj
-0 -25 Td
-(Uploaded Date: ${date}) Tj
-0 -40 Td
-(This is an official smart learning resource generated for students.) Tj
-ET
-endstream
-endobj
-xref
-0 5
-0000000000 65535 f 
-0000000009 00000 n 
-0000000058 00000 n 
-0000000115 00000 n 
-0000000282 00000 n 
-trailer
-<< /Size 5 /Root 1 0 R >>
-startxref
-483
-%%EOF`;
-
-    const blob = new Blob([pdfContent], { type: "application/pdf" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${title.toLowerCase().replace(/\s+/g, "_")}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    Swal.fire({
-      title: "Downloading...",
-      text: `Your resource "${title}" is downloading.`,
-      icon: "success",
-      timer: 1500,
-      showConfirmButton: false,
-      background: "#ffffff",
-      color: "#1a1a2e",
-      toast: true,
-      position: "top-end",
-      customClass: {
-        popup: "rounded-xl border border-[#e5e7eb]"
+      const response = await fetch(`${API_URL}/api/teacher/materials/download/${material.id}`);
+      if (!response.ok) {
+        throw new Error("File download failed");
       }
-    });
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${material.title}.${material.format.toLowerCase()}`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode?.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Error downloading file:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Download Failed",
+        text: "Could not download file. The file might be missing on the server.",
+        confirmButtonColor: "#ef4444",
+      });
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -383,7 +360,7 @@ startxref
                 <span className="text-xs text-[var(--text-muted)] font-medium block">
                   {selectedFileName ? `${selectedFileName} (${selectedFileSize})` : "Click to select study resource file"}
                 </span>
-                <span className="text-[10px] text-[var(--text-muted)] mt-1 block">Supports PDF, Doc, PPT up to 15MB</span>
+                <span className="text-[10px] text-[var(--text-muted)] mt-1 block">Supports PDF, Doc, PPT up to 100MB</span>
               </div>
             </div>
 

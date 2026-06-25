@@ -1,7 +1,29 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../config/prisma';
+import { resolveUserId } from '../config/userResolver';
+import fs from 'fs';
+import path from 'path';
 
 const router = Router();
+
+async function createSafeNotification(userId: string, message: string) {
+  try {
+    const resolvedId = await resolveUserId(userId);
+    if (!resolvedId) {
+      console.warn(`[createSafeNotification] Could not resolve userId ${userId} to a PostgreSQL User. Skipping notification.`);
+      return;
+    }
+    await prisma.notification.create({
+      data: {
+        userId: resolvedId,
+        message,
+      }
+    });
+  } catch (err) {
+    console.error(`[createSafeNotification] Failed to create notification for user ${userId}:`, err);
+  }
+}
+
 
 // =========================================================================
 // 1. Study Materials
@@ -27,7 +49,7 @@ router.get('/materials', async (req: Request, res: Response) => {
 // POST /api/teacher/materials
 router.post('/materials', async (req: Request, res: Response) => {
   try {
-    const { title, category, classSection, format, size, schoolId, userId } = req.body;
+    const { title, category, classSection, format, size, schoolId, userId, fileData } = req.body;
     if (!title || !category || !classSection) {
       return res.status(400).json({ success: false, error: 'title, category, and classSection are required' });
     }
@@ -42,15 +64,40 @@ router.post('/materials', async (req: Request, res: Response) => {
         schoolId: schoolId || null,
       },
     });
+
+    if (fileData) {
+      const storeDir = path.join(__dirname, '../../store');
+      if (!fs.existsSync(storeDir)) {
+        fs.mkdirSync(storeDir, { recursive: true });
+      }
+      const base64Content = fileData.replace(/^data:.*;base64,/, "");
+      const filePath = path.join(storeDir, `${material.id}.${(format || 'PDF').toLowerCase()}`);
+      await fs.promises.writeFile(filePath, base64Content, 'base64');
+    }
+
     if (userId) {
-      await prisma.notification.create({
-        data: {
-          userId,
-          message: `Uploaded new study material "${title}" for ${classSection}`,
-        }
-      });
+      await createSafeNotification(userId, `Uploaded new study material "${title}" for ${classSection}`);
     }
     res.status(201).json({ success: true, data: material });
+  } catch (err) {
+    console.error('Error in POST /materials:', err);
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// GET /api/teacher/materials/download/:id
+router.get('/materials/download/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const material = await prisma.studyMaterial.findUnique({ where: { id } });
+    if (!material) {
+      return res.status(404).json({ success: false, error: 'Material not found' });
+    }
+    const filePath = path.join(__dirname, '../../store', `${material.id}.${material.format.toLowerCase()}`);
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, error: 'File not found on server' });
+    }
+    res.download(filePath, `${material.title}.${material.format.toLowerCase()}`);
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
   }
@@ -59,7 +106,19 @@ router.post('/materials', async (req: Request, res: Response) => {
 // DELETE /api/teacher/materials/:id
 router.delete('/materials/:id', async (req: Request, res: Response) => {
   try {
-    await prisma.studyMaterial.delete({ where: { id: req.params.id } });
+    const { id } = req.params;
+    const material = await prisma.studyMaterial.findUnique({ where: { id } });
+    if (material) {
+      const filePath = path.join(__dirname, '../../store', `${material.id}.${material.format.toLowerCase()}`);
+      if (fs.existsSync(filePath)) {
+        try {
+          fs.unlinkSync(filePath);
+        } catch (unlinkErr) {
+          console.error(`Failed to delete file on disk for material ${id}:`, unlinkErr);
+        }
+      }
+    }
+    await prisma.studyMaterial.delete({ where: { id } });
     res.json({ success: true, message: 'Material deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
@@ -131,12 +190,7 @@ router.post('/announcements', async (req: Request, res: Response) => {
       },
     });
     if (userId) {
-      await prisma.notification.create({
-        data: {
-          userId,
-          message: `Posted new announcement: "${title}"`,
-        }
-      });
+      await createSafeNotification(userId, `Posted new announcement: "${title}"`);
     }
     res.status(201).json({ success: true, data: announcement });
   } catch (err) {
@@ -198,12 +252,7 @@ router.post('/homework', async (req: Request, res: Response) => {
     });
 
     if (userId) {
-      await prisma.notification.create({
-        data: {
-          userId,
-          message: `Assigned new homework "${title}" for ${className}`,
-        }
-      });
+      await createSafeNotification(userId, `Assigned new homework "${title}" for ${className}`);
     }
 
     // Automatically seed submissions for all students in the class
@@ -359,12 +408,7 @@ router.post('/labs', async (req: Request, res: Response) => {
       },
     });
     if (userId) {
-      await prisma.notification.create({
-        data: {
-          userId,
-          message: `Scheduled new science lab "${name}" for ${classSection}`,
-        }
-      });
+      await createSafeNotification(userId, `Scheduled new science lab "${name}" for ${classSection}`);
     }
     res.status(201).json({ success: true, data: lab });
   } catch (err) {
@@ -420,12 +464,7 @@ router.post('/leave', async (req: Request, res: Response) => {
       } as any,
     });
     if (userId) {
-      await prisma.notification.create({
-        data: {
-          userId,
-          message: `Submitted leave request (${type}) for ${duration}`,
-        }
-      });
+      await createSafeNotification(userId, `Submitted leave request (${type}) for ${duration}`);
     }
     res.status(201).json({ success: true, data: leave });
   } catch (err) {
@@ -482,12 +521,7 @@ router.post('/lessons', async (req: Request, res: Response) => {
       },
     });
     if (userId) {
-      await prisma.notification.create({
-        data: {
-          userId,
-          message: `Generated AI Lesson Plan for "${topic}" (Grade ${grade})`,
-        }
-      });
+      await createSafeNotification(userId, `Generated AI Lesson Plan for "${topic}" (Grade ${grade})`);
     }
     res.status(201).json({ success: true, data: lesson });
   } catch (err) {
@@ -573,12 +607,7 @@ router.post('/questions', async (req: Request, res: Response) => {
 
     await prisma.question.createMany({ data: records });
     if (userId) {
-      await prisma.notification.create({
-        data: {
-          userId,
-          message: `Added ${questions.length} question(s) to the Question Bank for ${records[0]?.subject || 'Science'}`,
-        }
-      });
+      await createSafeNotification(userId, `Added ${questions.length} question(s) to the Question Bank for ${records[0]?.subject || 'Science'}`);
     }
     res.status(201).json({ success: true, count: records.length });
   } catch (err) {
@@ -652,12 +681,7 @@ router.post('/badges', async (req: Request, res: Response) => {
       },
     });
     if (userId) {
-      await prisma.notification.create({
-        data: {
-          userId,
-          message: `Awarded "${badge}" badge to ${studentName} (${classSection})`,
-        }
-      });
+      await createSafeNotification(userId, `Awarded "${badge}" badge to ${studentName} (${classSection})`);
     }
     res.status(201).json({ success: true, data: record });
   } catch (err) {
