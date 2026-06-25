@@ -3,6 +3,17 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectMongoDB } from './config/db';
 import { prisma } from './config/prisma';
+import { execSync } from 'child_process';
+
+// Auto-generate Prisma Client on startup to ensure types are in sync
+try {
+  console.log('🔄 [Startup] Generating Prisma Client...');
+  execSync('npx prisma generate', { stdio: 'inherit' });
+  console.log('✅ [Startup] Prisma Client generated successfully!');
+} catch (err) {
+  console.error('❌ [Startup] Failed to generate Prisma Client:', err);
+}
+
 
 // Route imports
 import aiRoutes        from './routes/ai.routes';
