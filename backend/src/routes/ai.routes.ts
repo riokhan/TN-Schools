@@ -295,6 +295,19 @@ Output ONLY valid JSON (no markdown, no backticks):
       {"english": "term2", "tamil": "சொல்2", "pronunciation": "pron2"},
       {"english": "term3", "tamil": "சொல்3", "pronunciation": "pron3"}
     ],
+    "podcast": {
+      "hosts": ["Aravind (AI Teacher)", "Meera (AI Expert)"],
+      "script": [
+        {"speaker": "Aravind", "text": "intro about ${topic}", "lang": "en"},
+        {"speaker": "Meera", "text": "வணக்கம்! explanation in Tamil", "lang": "ta"},
+        {"speaker": "Aravind", "text": "key concept explanation", "lang": "en"},
+        {"speaker": "Meera", "text": "summary in Tamil", "lang": "ta"}
+      ]
+    },
+    "videoStoryboard": [
+      {"sceneNumber": 1, "visualDescription": "animation for ${topic}", "narrationText": "narration", "subtitles": "தமிழ் subtitle"},
+      {"sceneNumber": 2, "visualDescription": "problem solving animation", "narrationText": "narration 2", "subtitles": "தமிழ் subtitle 2"}
+    ],
     "exitTickets": [
       {"question": "mcq 1?", "options": ["A) a","B) b","C) c","D) d"], "answer": "B) b", "rationale": "because"},
       {"question": "mcq 2?", "options": ["A) a","B) b","C) c","D) d"], "answer": "B) b", "rationale": "because"},
@@ -317,19 +330,6 @@ Output ONLY valid JSON (no markdown, no backticks):
           "variables": ["E = Energy", "m = Mass", "c = Speed of light"]
         }
       }
-    ],
-    "podcast": {
-      "hosts": ["Aravind (AI Teacher)", "Meera (AI Expert)"],
-      "script": [
-        {"speaker": "Aravind", "text": "intro about ${topic}", "lang": "en"},
-        {"speaker": "Meera", "text": "வணக்கம்! explanation in Tamil", "lang": "ta"},
-        {"speaker": "Aravind", "text": "key concept explanation", "lang": "en"},
-        {"speaker": "Meera", "text": "summary in Tamil", "lang": "ta"}
-      ]
-    },
-    "videoStoryboard": [
-      {"sceneNumber": 1, "visualDescription": "animation for ${topic}", "narrationText": "narration", "subtitles": "தமிழ் subtitle"},
-      {"sceneNumber": 2, "visualDescription": "problem solving animation", "narrationText": "narration 2", "subtitles": "தமிழ் subtitle 2"}
     ]
   }
 }
