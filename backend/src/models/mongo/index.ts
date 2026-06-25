@@ -26,7 +26,7 @@ const AIChatSchema = new Schema<IAIChat>({
   language:  { type: String, enum: ['tamil', 'english', 'bilingual'], default: 'bilingual' },
 }, { timestamps: true });
 
-export const AIChat = mongoose.model<IAIChat>('AIChat', AIChatSchema);
+export const AIChat = mongoose.models.AIChat || mongoose.model<IAIChat>('AIChat', AIChatSchema);
 
 // Digital Portfolio
 export interface IPortfolio extends Document {
@@ -48,7 +48,7 @@ const PortfolioSchema = new Schema<IPortfolio>({
   digiLockerLinked: { type: Boolean, default: false },
 }, { timestamps: true });
 
-export const Portfolio = mongoose.model<IPortfolio>('Portfolio', PortfolioSchema);
+export const Portfolio = mongoose.models.Portfolio || mongoose.model<IPortfolio>('Portfolio', PortfolioSchema);
 
 // Wellness / Mood Tracking
 export interface IWellness extends Document {
@@ -90,7 +90,7 @@ const WellnessSchema = new Schema<IWellness>({
   }
 }, { timestamps: true });
 
-export const Wellness = mongoose.model<IWellness>('Wellness', WellnessSchema);
+export const Wellness = mongoose.models.Wellness || mongoose.model<IWellness>('Wellness', WellnessSchema);
 
 // Learning Path
 export interface ILearningPath extends Document {
@@ -110,7 +110,7 @@ const LearningPathSchema = new Schema<ILearningPath>({
   weeklyGoals:  [String],
 }, { timestamps: true });
 
-export const LearningPath = mongoose.model<ILearningPath>('LearningPath', LearningPathSchema);
+export const LearningPath = mongoose.models.LearningPath || mongoose.model<ILearningPath>('LearningPath', LearningPathSchema);
 
 // ─── Super Admin Dynamic Page Management ──────────────────────
 
@@ -136,5 +136,5 @@ const ManagedPageSchema = new Schema<IManagedPage>({
   description: { type: String },
 }, { timestamps: true });
 
-export const ManagedPage = mongoose.model<IManagedPage>('ManagedPage', ManagedPageSchema);
+export const ManagedPage = mongoose.models.ManagedPage || mongoose.model<IManagedPage>('ManagedPage', ManagedPageSchema);
 

@@ -397,6 +397,7 @@ model StudyMaterial {
   size         String // "2.4 MB"
   date         String   @default("Today")
   schoolId     String?
+  fileContent  String?  // Base64 file data stored directly in PostgreSQL
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
