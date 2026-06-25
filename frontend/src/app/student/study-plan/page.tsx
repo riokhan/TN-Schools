@@ -614,7 +614,7 @@ export default function StudyPlanPage() {
                       )}
                       <button
                         type="button"
-                        onClick={() => playAudioGuide(activeUnit.id, activeUnit.audioGuide)}
+                        onClick={() => playAudioGuide(activeUnit.audioGuide)}
                         className={`px-3 py-1.5 rounded-xl font-bold text-[11px] text-white transition-all ${isPlayingAudio ? "bg-red-650 hover:bg-red-700" : "bg-indigo-650 hover:bg-indigo-700"}`}
                       >
                         {isPlayingAudio ? "⏹ Stop Guide" : "🔊 Listen Podcast"}
