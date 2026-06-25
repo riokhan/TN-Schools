@@ -126,7 +126,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Story Books", href: "/student/middle-school/stories", icon: "📚" },
       { label: "AI Helper", href: "/student/middle-school/ai", icon: "🤖" },
       { label: "Welfare & Benefits", href: "/student/middle-school/welfare", icon: "🎁" },
-      
+
       // Common Student Menu
       { label: "---", href: "#", icon: "" },
       { label: "Common Tools", href: "#", icon: "" },
@@ -208,13 +208,13 @@ export const roleConfigs: Record<string, PortalConfig> = {
     themeClass: "theme-teacher",
     accentColor: "#f59e0b",
     navItems: [
+      { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
       { label: "My Subjects (Science)", href: "/teacher", icon: "🔬" },
       { label: "Science Labs", href: "/teacher/labs", icon: "🧪" },
       { label: "Subject Analytics", href: "/teacher/subject-analytics", icon: "📊" },
 
       // Common Menu & Tools
       { label: "Admin & Tools", href: "#", icon: "" },
-      { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
       { label: "AI Lesson Planner", href: "/teacher/lesson-planner", icon: "📋" },
       { label: "Question Generator", href: "/teacher/questions", icon: "❓" },
       { label: "AI Evaluation", href: "/teacher/evaluation", icon: "✅" },
