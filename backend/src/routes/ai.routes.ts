@@ -4,32 +4,105 @@ import https from 'https';
 
 const router = Router();
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyCdcc6PqKE6SCbTIBNde3hj8FDEwKf024c";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-// Helper function to call Gemini API via HTTPS POST
+// ---------------------------------------------------------------------------
+// Robust multi-stage JSON repair (handles Gemini quirks)
+// ---------------------------------------------------------------------------
+function fixUnescapedControlChars(s: string): string {
+  let result = '';
+  let inString = false;
+  let escaped = false;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (escaped) { result += ch; escaped = false; continue; }
+    if (ch === '\\') { result += ch; escaped = true; continue; }
+    if (ch === '"') { result += ch; inString = !inString; continue; }
+    if (inString) {
+      if (ch === '\n') { result += '\\n'; continue; }
+      if (ch === '\r') { result += '\\r'; continue; }
+      if (ch === '\t') { result += '\\t'; continue; }
+    }
+    result += ch;
+  }
+  return result;
+}
+
+function attemptRepair(s: string): string {
+  let inString = false;
+  let escaped = false;
+  const stack: string[] = [];
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === '\\') { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (!inString) {
+      if (ch === '{') stack.push('}');
+      else if (ch === '[') stack.push(']');
+      else if ((ch === '}' || ch === ']') && stack.length > 0) stack.pop();
+    }
+  }
+  if (inString) s += '"';
+  s += stack.reverse().join('');
+  return s;
+}
+
+function robustParseJSON(text: string): any {
+  let s = text.trim();
+  // Stage 1: strip markdown fences
+  if (s.startsWith('```json')) s = s.slice(7).trim();
+  else if (s.startsWith('```')) s = s.slice(3).trim();
+  if (s.endsWith('```')) s = s.slice(0, s.length - 3).trim();
+  // Stage 2: extract outer {}
+  const firstBrace = s.indexOf('{');
+  const lastBrace = s.lastIndexOf('}');
+  if (firstBrace !== -1 && lastBrace > firstBrace) s = s.substring(firstBrace, lastBrace + 1);
+  // Stage 3: remove trailing commas
+  s = s.replace(/,\s*([\]}])/g, '$1');
+  // Stage 4: fix unescaped control chars
+  s = fixUnescapedControlChars(s);
+  // Stage 5: try parse; if fails, repair truncated JSON
+  try {
+    return JSON.parse(s);
+  } catch (e1) {
+    const repaired = attemptRepair(s);
+    try {
+      return JSON.parse(repaired);
+    } catch (e2) {
+      throw new Error(`JSON parse failed. Error: ${String(e1)}`);
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Gemini API helper
+// ---------------------------------------------------------------------------
 async function callGemini(prompt: string, jsonMode: boolean = false): Promise<any> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-  
+  if (!GEMINI_API_KEY || GEMINI_API_KEY.trim() === '') {
+    throw new Error('GEMINI_API_KEY is missing. Please add it to backend/.env');
+  }
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+
   const payload: any = {
-    contents: [
-      {
-        parts: [
-          { text: prompt }
-        ]
-      }
-    ]
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { maxOutputTokens: 8192 },
+    safetySettings: [
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    ],
   };
 
   if (jsonMode) {
-    payload.generationConfig = {
-      responseMimeType: "application/json"
-    };
+    payload.generationConfig.responseMimeType = 'application/json';
   }
 
   return new Promise((resolve, reject) => {
     const urlObj = new URL(url);
     const postData = JSON.stringify(payload);
-    
     const options = {
       hostname: urlObj.hostname,
       port: 443,
@@ -37,65 +110,106 @@ async function callGemini(prompt: string, jsonMode: boolean = false): Promise<an
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Content-Length': Buffer.byteLength(postData)
-      }
+        'Content-Length': Buffer.byteLength(postData),
+      },
     };
-    
+
     const req = https.request(options, (res) => {
       let body = '';
-      res.on('data', (chunk) => body += chunk);
+      res.on('data', (chunk) => (body += chunk));
       res.on('end', () => {
         if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
-          reject(new Error(`Gemini HTTPS status ${res.statusCode}: ${body}`));
-        } else {
-          try {
-            const parsed = JSON.parse(body);
-            const text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (!text) {
-              reject(new Error('Empty content returned from Gemini'));
-              return;
-            }
-            if (jsonMode) {
-              // Sometimes Gemini wraps output in ```json ... ``` despite configuration, clean it up
-              let cleanedText = text.trim();
-              if (cleanedText.startsWith('```json')) {
-                cleanedText = cleanedText.substring(7, cleanedText.length - 3).trim();
-              } else if (cleanedText.startsWith('```')) {
-                cleanedText = cleanedText.substring(3, cleanedText.length - 3).trim();
-              }
-              resolve(JSON.parse(cleanedText));
-            } else {
-              resolve(text);
-            }
-          } catch (e) {
-            reject(new Error(`Failed to parse Gemini response: ${body}. Error: ${String(e)}`));
+          reject(new Error(`Gemini API error ${res.statusCode}: ${body.substring(0, 500)}`));
+          return;
+        }
+        let parsed: any = null;
+        let text: string | undefined;
+        try {
+          parsed = JSON.parse(body);
+          text = parsed?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (!text) {
+            const finishReason = parsed?.candidates?.[0]?.finishReason;
+            reject(new Error(`Empty content from Gemini. Finish reason: ${finishReason || 'UNKNOWN'}`));
+            return;
           }
+          resolve(jsonMode ? robustParseJSON(text) : text);
+        } catch (e) {
+          const finishReason = parsed?.candidates?.[0]?.finishReason;
+          reject(new Error(`Failed to parse response. Finish: ${finishReason || 'UNKNOWN'}. Error: ${String(e)}. Snippet: ${text ? text.substring(0, 300) : body.substring(0, 300)}`));
         }
       });
     });
-    
+
     req.on('error', (err) => reject(err));
+    req.setTimeout(90000, () => req.destroy(new Error('Gemini API timed out after 90 seconds')));
     req.write(postData);
     req.end();
   });
 }
 
+// ---------------------------------------------------------------------------
+// Extract most-relevant 15,000 char window from a large textbook PDF
+// ---------------------------------------------------------------------------
+function limitContext(context: string | undefined, topic: string): string {
+  if (!context) return '';
+  const cleaned = context.trim();
+  if (cleaned.length <= 15000) return cleaned;
+  const keywords = topic.toLowerCase().split(/\s+/).filter((k) => k.length > 2);
+  if (keywords.length === 0) return cleaned.substring(0, 15000);
+  let bestIndex = 0;
+  let maxMatches = 0;
+  for (let i = 0; i < cleaned.length - 15000; i += 1000) {
+    const chunk = cleaned.substring(i, i + 15000).toLowerCase();
+    let matches = 0;
+    for (const kw of keywords) { if (chunk.includes(kw)) matches++; }
+    if (matches > maxMatches) { maxMatches = matches; bestIndex = i; }
+  }
+  return cleaned.substring(bestIndex, bestIndex + 15000);
+}
+
+// ===========================================================================
 // POST /api/ai/generate-lesson-plan
+// ===========================================================================
 router.post('/generate-lesson-plan', async (req: Request, res: Response) => {
   try {
     const { syllabus, grade, subject, topic, duration, textbookContext } = req.body;
-    
+    const truncatedContext = limitContext(textbookContext, topic);
+
     const prompt = `
-You are an expert curriculum developer for Tamil Nadu (TN) Schools. 
+You are an expert curriculum developer for Tamil Nadu (TN) Schools.
 Generate a comprehensive, syllabus-aligned lesson plan in JSON format for:
 Syllabus: ${syllabus}
 Grade/Class: ${grade}
 Subject: ${subject}
 Topic/Chapter: ${topic}
 Duration: ${duration}
-${textbookContext ? `Textbook extract context:\n${textbookContext}` : ""}
+${truncatedContext ? `Textbook extract context:\n${truncatedContext}` : ''}
 
-You MUST output ONLY a valid JSON object matching the exact structure below, without any markdown backticks or extra text:
+CRITICAL INSTRUCTION: If textbook context is provided, ONLY extract content about "${topic}". Ignore all other chapters.
+If "${topic}" is not found in the context, generate from standard TN Board curriculum.
+
+CONSTRAINTS: objectives=3, timeline=4, bilingual=3, exitTickets=1, slides=2, podcast=4 turns, videoStoryboard=2 scenes.
+
+INFOGRAPHIC RULES — MOST IMPORTANT:
+ALL infographic content MUST be about "${topic}" specifically. Do NOT use generic placeholders.
+Use REAL educational data from the PDF context or standard curriculum.
+- heroTitle: Tamil + English bilingual title for ${topic}
+- heroSubtitle: Grade ${grade} ${subject}
+- heroIcon: pick best emoji (🔬 science, 📐 math, 🌿 biology, ⚡ physics, 🌍 geography, 💻 computer, 🎨 arts)
+- conceptColor: one of emerald/sky/indigo/amber/rose/teal/violet
+- modules: 4 real concept modules about ${topic} (NOT generic Module 1/2/3/4)
+- stats: 3 real quantitative facts/formulas from ${topic}
+- workflow: 4 real sequential steps to understand ${topic}
+- formulaBox: the actual primary formula or law for ${topic}
+- formulaExplain: bilingual explanation of the formula
+- lawTitle: name of the main law/theorem (bilingual)
+- lawDesc: statement of the law (bilingual)
+- termTable: 3 real technical terms from ${topic} (english, tamil, definition)
+- constantName: a real key constant for ${topic}
+- constantValue: the actual numeric value
+- constantExplain: bilingual 1-sentence meaning
+
+Output ONLY valid JSON (no markdown, no backticks):
 {
   "syllabus": "${syllabus}",
   "grade": "${grade}",
@@ -103,81 +217,71 @@ You MUST output ONLY a valid JSON object matching the exact structure below, wit
   "topic": "${topic}",
   "duration": "${duration}",
   "planData": {
-    "objectives": [
-      "Specific learning objective 1 aligned with TN syllabus standards",
-      "Specific learning objective 2",
-      "Specific learning objective 3"
-    ],
+    "objectives": ["objective 1", "objective 2", "objective 3"],
     "timeline": [
-      { "time": "00-05 Mins", "activity": "The Hook (Introduction)", "description": "A creative hook/demonstration to engage students with ${topic}." },
-      { "time": "05-25 Mins", "activity": "Core Instruction & Theory", "description": "Step-by-step breakdown of theory, formula, and conceptual diagram outline." },
-      { "time": "25-40 Mins", "activity": "Guided Pair Practice", "description": "Collaborative exercises where students apply concepts." },
-      { "time": "40-45 Mins", "activity": "Exit Ticket Check", "description": "A short exit ticket MCQ to evaluate student understanding." }
+      {"time": "00-05 Mins", "activity": "The Hook", "description": "hook for ${topic}"},
+      {"time": "05-25 Mins", "activity": "Core Instruction", "description": "theory"},
+      {"time": "25-40 Mins", "activity": "Guided Practice", "description": "exercises"},
+      {"time": "40-45 Mins", "activity": "Exit Ticket", "description": "MCQ check"}
     ],
     "bilingual": [
-      { "english": "English Technical Term", "tamil": "தமிழ்க் கலைச்சொல்", "pronunciation": "Pronunciation in English script" }
+      {"english": "term1", "tamil": "சொல்1", "pronunciation": "pron1"},
+      {"english": "term2", "tamil": "சொல்2", "pronunciation": "pron2"},
+      {"english": "term3", "tamil": "சொல்3", "pronunciation": "pron3"}
     ],
-    "exitTickets": [
-      {
-        "question": "A conceptual multiple choice question on ${topic}",
-        "options": ["A) Option 1", "B) Option 2", "C) Option 3", "D) Option 4"],
-        "answer": "B) Option 2",
-        "rationale": "Brief explanation of why Option 2 is correct"
-      }
-    ],
+    "exitTickets": [{"question": "mcq?", "options": ["A) a","B) b","C) c","D) d"], "answer": "B) b", "rationale": "because"}],
     "slides": [
-      {
-        "title": "Core Concept of ${topic}",
-        "subtitle": "Essential definitions and ideas",
-        "bullets": [
-          "Key point explaining the core concept clearly",
-          "A practical application of this concept",
-          "Important equations or definitions to remember"
-        ],
-        "graphicType": "concept",
-        "graphicData": {
-          "label": "Main Components",
-          "values": ["Component A", "Component B", "Component C"]
-        }
-      },
-      {
-        "title": "Formulas & Equations",
-        "subtitle": "Mathematical and scientific representations",
-        "bullets": [
-          "Definition of terms in equations",
-          "How to apply these formulas in exams",
-          "Common mistakes to avoid"
-        ],
-        "graphicType": "diagram",
-        "graphicData": {
-          "label": "Variables",
-          "values": ["Variable X", "Variable Y"]
-        }
-      }
+      {"title": "slide1", "subtitle": "sub1", "bullets": ["b1","b2","b3"], "graphicType": "concept", "graphicData": {"label": "l", "values": ["v1","v2"]}},
+      {"title": "slide2", "subtitle": "sub2", "bullets": ["b1","b2","b3"], "graphicType": "application", "graphicData": {"label": "l", "values": ["v1","v2"]}}
     ],
     "podcast": {
       "hosts": ["Aravind (AI Teacher)", "Meera (AI Expert)"],
       "script": [
-        { "speaker": "Aravind", "text": "Welcome everyone! Today Meera and I are breaking down ${topic} for Grade ${grade}.", "lang": "en" },
-        { "speaker": "Meera", "text": "வணக்கம்! This topic is very interesting. Let us start by looking at how it works in our daily lives.", "lang": "ta" },
-        { "speaker": "Aravind", "text": "Exactly. Let's look at the core formula first. How do we explain it simply?", "lang": "en" },
-        { "speaker": "Meera", "text": "இதை எளிமையாகப் புரிந்துகொள்ள, நாம் ஒரு எளிய உதாரணத்தைப் பார்ப்போம்...", "lang": "ta" }
+        {"speaker": "Aravind", "text": "intro about ${topic}", "lang": "en"},
+        {"speaker": "Meera", "text": "வணக்கம்! explanation in Tamil", "lang": "ta"},
+        {"speaker": "Aravind", "text": "key concept explanation", "lang": "en"},
+        {"speaker": "Meera", "text": "summary in Tamil", "lang": "ta"}
       ]
     },
     "videoStoryboard": [
-      {
-        "sceneNumber": 1,
-        "visualDescription": "A clear animated diagram showing the hook concept with highlighted lines.",
-        "narrationText": "Let's begin by visualizing how this concept operates in nature.",
-        "subtitles": "இயற்கையில் இந்த கருத்து எவ்வாறு செயல்படுகிறது என்பதை காட்சிப்படுத்துவதன் மூலம் தொடங்குவோம்."
-      },
-      {
-        "sceneNumber": 2,
-        "visualDescription": "The main formula writing out on a digital chalkboard piece by piece.",
-        "narrationText": "Now, let's write down the mathematical relationship.",
-        "subtitles": "இப்போது, ​​அதன் கணிதத் தொடர்பை எழுதுவோம்."
-      }
-    ]
+      {"sceneNumber": 1, "visualDescription": "animation for ${topic}", "narrationText": "narration", "subtitles": "தமிழ் subtitle"},
+      {"sceneNumber": 2, "visualDescription": "problem solving animation", "narrationText": "narration 2", "subtitles": "தமிழ் subtitle 2"}
+    ],
+    "infographic": {
+      "heroTitle": "REAL BILINGUAL TITLE FOR ${topic}",
+      "heroSubtitle": "Grade ${grade} ${subject}",
+      "heroIcon": "🔬",
+      "conceptColor": "emerald",
+      "modules": [
+        {"id": "m1", "title": "REAL CONCEPT 1 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "📌"},
+        {"id": "m2", "title": "REAL CONCEPT 2 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "🔍"},
+        {"id": "m3", "title": "REAL CONCEPT 3 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "⚡"},
+        {"id": "m4", "title": "REAL CONCEPT 4 (தமிழ்)", "desc": "Real explanation from ${topic}. தமிழில் விளக்கம்.", "icon": "🌟"}
+      ],
+      "stats": [
+        {"label": "REAL KPI 1 (அளவீடு)", "value": "REAL VALUE", "desc": "what this means for ${topic}"},
+        {"label": "REAL KPI 2 (சூத்திரம்)", "value": "FORMULA", "desc": "formula explanation"},
+        {"label": "REAL KPI 3 (அலகு)", "value": "UNIT", "desc": "unit explanation"}
+      ],
+      "workflow": [
+        {"step": "REAL STEP 1 (படிநிலை)", "desc": "Real step explanation for ${topic}. தமிழ்.", "icon": "1️⃣"},
+        {"step": "REAL STEP 2 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "2️⃣"},
+        {"step": "REAL STEP 3 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "3️⃣"},
+        {"step": "REAL STEP 4 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "4️⃣"}
+      ],
+      "formulaBox": "REAL PRIMARY FORMULA",
+      "formulaExplain": "Bilingual formula explanation. சூத்திர விளக்கம்.",
+      "lawTitle": "REAL LAW NAME (விதி அல்லது தேற்றம்)",
+      "lawDesc": "Real law statement. விதி கூற்று.",
+      "termTable": [
+        {"english": "term1", "tamil": "சொல்1", "definition": "definition1"},
+        {"english": "term2", "tamil": "சொல்2", "definition": "definition2"},
+        {"english": "term3", "tamil": "சொல்3", "definition": "definition3"}
+      ],
+      "constantName": "REAL CONSTANT NAME",
+      "constantValue": "REAL NUMERIC VALUE",
+      "constantExplain": "Bilingual constant explanation. தமிழில் விளக்கம்."
+    }
   }
 }
 `;
@@ -189,81 +293,137 @@ You MUST output ONLY a valid JSON object matching the exact structure below, wit
   }
 });
 
+// ===========================================================================
 // POST /api/ai/generate-study-plan
+// ===========================================================================
 router.post('/generate-study-plan', async (req: Request, res: Response) => {
   try {
     const { subject, topic, grade, textbookContext } = req.body;
-    
+    const truncatedContext = limitContext(textbookContext, topic);
+
     const prompt = `
 You are an expert AI Study Buddy for Tamil Nadu State Board students.
-Create a personalized, 4-unit comprehensive self-study plan in JSON format for:
+Create a personalized, 4-unit self-study plan in JSON format for:
 Grade: ${grade}
 Subject: ${subject}
 Topic/Chapter: ${topic}
-${textbookContext ? `Textbook extract context:\n${textbookContext}` : ""}
+${truncatedContext ? `Textbook extract context:\n${truncatedContext}` : ''}
 
-You MUST output ONLY a valid JSON object matching the exact structure below, without any markdown backticks or extra text:
+CRITICAL INSTRUCTION: If textbook context is provided, ONLY extract content about "${topic}". Ignore all other chapters.
+
+CONSTRAINTS: goals=3, units=4, each unit: infographicCard (2 formulas, 2 keyConcepts, 1 illustration), audioGuide=2 turns, quiz=1 question.
+
+INFOGRAPHIC RULES — MOST IMPORTANT:
+ALL infographic content MUST be about "${topic}" specifically. Use REAL educational data from the context.
+- heroTitle: Tamil + English bilingual title for ${topic}
+- heroSubtitle: Grade ${grade} ${subject} self-study guide
+- heroIcon: pick best emoji for ${topic}
+- conceptColor: one of emerald/sky/indigo/amber/rose/teal/violet
+- modules: 4 real concept modules about ${topic}
+- stats: 3 real quantitative facts/formulas from ${topic}
+- workflow: 4 real steps to master ${topic}
+- formulaBox, formulaExplain, lawTitle, lawDesc, termTable (3 terms), constantName, constantValue, constantExplain
+
+Output ONLY valid JSON (no markdown, no backticks):
 {
   "subject": "${subject}",
   "topic": "${topic}",
   "grade": "${grade}",
-  "goals": [
-    "Understand the basic definitions of ${topic}",
-    "Solve school textbook exercises",
-    "Prepare for exam questions and test scenarios"
-  ],
+  "goals": ["goal1", "goal2", "goal3"],
   "units": [
     {
       "id": "u1",
       "title": "Unit 1: Fundamentals of ${topic}",
       "status": "In Progress",
-      "summary": "Introduction and basic concepts of this topic.",
+      "summary": "Introduction",
       "studyTime": "30 Minutes",
       "infographicCard": {
-        "title": "Basic Concepts Cheat Sheet",
-        "formulas": ["Equation/Formula 1", "Equation/Formula 2"],
-        "keyConcepts": ["Key definitions explained clearly", "Core idea summary"],
-        "illustrations": ["Description of a simple visual/diagram to remember"]
+        "title": "Cheat Sheet",
+        "formulas": ["formula1", "formula2"],
+        "keyConcepts": ["concept1", "concept2"],
+        "illustrations": ["visual description"]
       },
       "audioGuide": [
-        { "speaker": "Karthik (AI Buddy)", "text": "Hi Priya! Let's explore the fundamentals of ${topic} today.", "lang": "en" },
-        { "speaker": "Priya (AI Buddy)", "text": "ஆமாம் கார்த்திக்! This unit is very simple if you remember the basic definitions.", "lang": "ta" }
+        {"speaker": "Karthik (AI Buddy)", "text": "explanation in English", "lang": "en"},
+        {"speaker": "Priya (AI Buddy)", "text": "தமிழ் விளக்கம்", "lang": "ta"}
       ],
-      "quiz": [
-        {
-          "question": "A simple multiple choice question for Unit 1",
-          "options": ["A) Option 1", "B) Option 2", "C) Option 3", "D) Option 4"],
-          "answer": "A) Option 1",
-          "rationale": "Explanation for the correct answer"
-        }
-      ]
+      "quiz": [{"question": "mcq?", "options": ["A) a","B) b","C) c","D) d"], "answer": "A) a", "rationale": "because"}]
     },
     {
       "id": "u2",
-      "title": "Unit  unit 2: Advanced applications",
-      "status": "Not Started",
-      "summary": "Diving deeper into solving problems and analyzing equations.",
-      "studyTime": "45 Minutes",
-      "infographicCard": {
-        "title": "Advanced Application Guide",
-        "formulas": ["Complex Formula", "Application Rule"],
-        "keyConcepts": ["Important concepts for higher score"],
-        "illustrations": ["Step-by-step problem diagram"]
-      },
+      "title": "Unit 2: Key Concepts of ${topic}",
+      "status": "Pending",
+      "summary": "Core concepts",
+      "studyTime": "35 Minutes",
+      "infographicCard": {"title": "Concepts", "formulas": ["f1","f2"], "keyConcepts": ["c1","c2"], "illustrations": ["visual"]},
       "audioGuide": [
-        { "speaker": "Karthik (AI Buddy)", "text": "Next up is Unit 2. Here, we apply what we learned.", "lang": "en" },
-        { "speaker": "Priya (AI Buddy)", "text": "சரியாக சொன்னாய்! Let's look at a sample problem.", "lang": "ta" }
+        {"speaker": "Karthik (AI Buddy)", "text": "English explanation unit 2", "lang": "en"},
+        {"speaker": "Priya (AI Buddy)", "text": "தமிழ் unit 2", "lang": "ta"}
       ],
-      "quiz": [
-        {
-          "question": "A problem solving question for Unit 2",
-          "options": ["A) Val 1", "B) Val 2", "C) Val 3", "D) Val 4"],
-          "answer": "C) Val 3",
-          "rationale": "Detailed steps to solve the equation"
-        }
-      ]
+      "quiz": [{"question": "unit2 mcq?", "options": ["A) a","B) b","C) c","D) d"], "answer": "B) b", "rationale": "because"}]
+    },
+    {
+      "id": "u3",
+      "title": "Unit 3: Problem Solving for ${topic}",
+      "status": "Pending",
+      "summary": "Practice and problems",
+      "studyTime": "40 Minutes",
+      "infographicCard": {"title": "Practice", "formulas": ["f1","f2"], "keyConcepts": ["c1","c2"], "illustrations": ["visual"]},
+      "audioGuide": [
+        {"speaker": "Karthik (AI Buddy)", "text": "English explanation unit 3", "lang": "en"},
+        {"speaker": "Priya (AI Buddy)", "text": "தமிழ் unit 3", "lang": "ta"}
+      ],
+      "quiz": [{"question": "unit3 mcq?", "options": ["A) a","B) b","C) c","D) d"], "answer": "C) c", "rationale": "because"}]
+    },
+    {
+      "id": "u4",
+      "title": "Unit 4: Exam Preparation for ${topic}",
+      "status": "Pending",
+      "summary": "Revision and exam tips",
+      "studyTime": "25 Minutes",
+      "infographicCard": {"title": "Revision", "formulas": ["f1","f2"], "keyConcepts": ["c1","c2"], "illustrations": ["visual"]},
+      "audioGuide": [
+        {"speaker": "Karthik (AI Buddy)", "text": "English explanation unit 4", "lang": "en"},
+        {"speaker": "Priya (AI Buddy)", "text": "தமிழ் unit 4", "lang": "ta"}
+      ],
+      "quiz": [{"question": "unit4 mcq?", "options": ["A) a","B) b","C) c","D) d"], "answer": "D) d", "rationale": "because"}]
     }
-  ]
+  ],
+  "infographic": {
+    "heroTitle": "REAL BILINGUAL TITLE FOR ${topic}",
+    "heroSubtitle": "Grade ${grade} ${subject} Self-Study",
+    "heroIcon": "📚",
+    "conceptColor": "sky",
+    "modules": [
+      {"id": "m1", "title": "REAL CONCEPT 1 (தமிழ்)", "desc": "Real bilingual explanation.", "icon": "📌"},
+      {"id": "m2", "title": "REAL CONCEPT 2 (தமிழ்)", "desc": "Real bilingual explanation.", "icon": "🔍"},
+      {"id": "m3", "title": "REAL CONCEPT 3 (தமிழ்)", "desc": "Real bilingual explanation.", "icon": "⚡"},
+      {"id": "m4", "title": "REAL CONCEPT 4 (தமிழ்)", "desc": "Real bilingual explanation.", "icon": "🌟"}
+    ],
+    "stats": [
+      {"label": "REAL STAT 1", "value": "VALUE1", "desc": "explanation"},
+      {"label": "REAL STAT 2", "value": "VALUE2", "desc": "explanation"},
+      {"label": "REAL STAT 3", "value": "VALUE3", "desc": "explanation"}
+    ],
+    "workflow": [
+      {"step": "REAL STEP 1 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "1️⃣"},
+      {"step": "REAL STEP 2 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "2️⃣"},
+      {"step": "REAL STEP 3 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "3️⃣"},
+      {"step": "REAL STEP 4 (படிநிலை)", "desc": "Real step explanation. தமிழ்.", "icon": "4️⃣"}
+    ],
+    "formulaBox": "REAL PRIMARY FORMULA FOR ${topic}",
+    "formulaExplain": "Bilingual formula explanation. சூத்திர விளக்கம்.",
+    "lawTitle": "REAL LAW NAME (விதி)",
+    "lawDesc": "Real bilingual law statement.",
+    "termTable": [
+      {"english": "term1", "tamil": "சொல்1", "definition": "definition1"},
+      {"english": "term2", "tamil": "சொல்2", "definition": "definition2"},
+      {"english": "term3", "tamil": "சொல்3", "definition": "definition3"}
+    ],
+    "constantName": "REAL CONSTANT",
+    "constantValue": "REAL VALUE",
+    "constantExplain": "Bilingual constant explanation."
+  }
 }
 `;
 
@@ -274,22 +434,29 @@ You MUST output ONLY a valid JSON object matching the exact structure below, wit
   }
 });
 
+// ===========================================================================
 // POST /api/ai/chat-tutor
+// ===========================================================================
 router.post('/chat-tutor', async (req: Request, res: Response) => {
   try {
     const { subject, grade, messages, currentMessage, language } = req.body;
-    
-    const prompt = `
-You are a helpful, bilingual AI Tutor for Tamil Nadu school students. 
-You speak both Tamil (தமிழ்) and English (Tanglish is also allowed for easy explanation).
-The student is studying: Subject = ${subject}, Grade = ${grade}.
-Student is talking to you in ${language} mode.
 
-Current conversation history:
-${(messages || []).map((m: any) => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.content}`).join('\n')}
+    const historyText = (messages || [])
+      .map((m: any) => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.content}`)
+      .join('\n');
+
+    const prompt = `
+You are a helpful, bilingual AI Tutor for Tamil Nadu school students.
+You speak both Tamil (தமிழ்) and English (Tanglish is also allowed).
+The student is studying: Subject = ${subject}, Grade = ${grade}.
+Language mode: ${language}.
+
+Conversation history:
+${historyText}
 Student: ${currentMessage}
 
-Answer the student's question clearly. Use formatting like bullet points, bold text, and numbered lists where appropriate. Keep the tone encouraging, supportive, and pedagogical. If in bilingual mode, alternate sentences or phrases between English and Tamil so it acts as a friendly classroom explanation.
+Answer clearly with bullet points, bold text, and numbered lists where helpful.
+Keep the tone encouraging and pedagogical. Alternate English/Tamil sentences in bilingual mode.
 `;
 
     const result = await callGemini(prompt, false);
@@ -299,7 +466,9 @@ Answer the student's question clearly. Use formatting like bullet points, bold t
   }
 });
 
+// ===========================================================================
 // POST /api/ai/chat — Save AI chat session
+// ===========================================================================
 router.post('/chat', async (req: Request, res: Response) => {
   try {
     const { studentId, sessionId, messages, subject, language } = req.body;

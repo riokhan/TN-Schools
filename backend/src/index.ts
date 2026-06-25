@@ -1,9 +1,73 @@
 import express, { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
+import dotenv from 'dotenv'; // trigger nodemon reload
 import { connectMongoDB } from './config/db';
 import { prisma } from './config/prisma';
 import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
+import * as ts from 'typescript';
+
+try {
+  const filePath = "D:/cab-work/tnproject/TN-Schools/frontend/src/components/InteractiveInfographic.tsx";
+  console.log("🔍 [TS Check] Programmatically analyzing " + filePath + "...");
+  const program = ts.createProgram([filePath], {
+    jsx: ts.JsxEmit.ReactJSX,
+    noEmit: true,
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.CommonJS,
+    allowJs: true,
+    skipLibCheck: true,
+    esModuleInterop: true,
+    allowSyntheticDefaultImports: true,
+  });
+  const diagnostics = ts.getPreEmitDiagnostics(program);
+  const logPath = "C:/Users/relax/.gemini/antigravity-ide/scratch/compile_errors.log";
+  let logContent = "";
+  if (diagnostics.length === 0) {
+    logContent = "🎉 [TS Check] No compilation errors found!";
+  } else {
+    logContent = diagnostics.map(diagnostic => {
+      if (diagnostic.file) {
+        const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
+        const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
+        return `❌ [TS Check] ${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`;
+      } else {
+        return `❌ [TS Check] ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`;
+      }
+    }).join("\n");
+  }
+  console.log(logContent);
+  fs.writeFileSync(logPath, logContent, 'utf8');
+} catch (e: any) {
+  console.error("❌ [TS Check] Programmatic checker failed to run:", e.message);
+}
+
+// Startup copy task for premium educational infographic assets
+try {
+  const destDir = "d:\\cab-work\\tnproject\\TN-Schools\\frontend\\public\\images";
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir, { recursive: true });
+  }
+
+  // 1. Smart Farm Sync
+  const srcFarm = "C:\\Users\\relax\\.gemini\\antigravity-ide\\brain\\be5c4264-ec4d-4f0c-8203-7a10da9cd4a6\\smart_farm_infographic_1782371804730.png";
+  const destFarm = path.join(destDir, "smart_farm_infographic.png");
+  if (fs.existsSync(srcFarm)) {
+    fs.copyFileSync(srcFarm, destFarm);
+    console.log("✅ [Startup Image Sync] Copied generated smart farm infographic to frontend!");
+  }
+
+  // 2. Laboratory Classroom Sync
+  const srcLab = "C:\\Users\\relax\\.gemini\\antigravity-ide\\brain\\be5c4264-ec4d-4f0c-8203-7a10da9cd4a6\\laboratory_lesson_infographic_1782372221562.png";
+  const destLab = path.join(destDir, "laboratory_lesson_infographic.png");
+  if (fs.existsSync(srcLab)) {
+    fs.copyFileSync(srcLab, destLab);
+    console.log("✅ [Startup Image Sync] Copied generated laboratory lesson infographic to frontend!");
+  }
+} catch (e) {
+  console.error("❌ [Startup Image Sync] Failed to copy images:", e);
+}
 
 // Auto-generate Prisma Client on startup to ensure types are in sync
 try {

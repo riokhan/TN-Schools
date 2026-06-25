@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 import Swal from "sweetalert2";
+import InteractiveInfographic from "@/components/InteractiveInfographic";
 
 const syllabusOptions = ["TN State Board (Samacheer Kalvi)", "CBSE", "ICSE"];
 const grades = ["Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"];
@@ -11,7 +12,7 @@ const subjects = ["Mathematics", "Science", "Social Science", "English", "Tamil"
 
 const steps = [
   "Reading uploaded Textbook chapter...",
-  "Querying Gemini 3.5 Flash AI Engine...",
+  "Querying Gemini 2.5 Flash AI Engine...",
   "Structuring pedagogical activities (Hook, Core, Evaluation)...",
   "Translating technical terminology to Tamil...",
   "Generating concept slides & visual infographics...",
@@ -33,6 +34,7 @@ interface LessonPlan {
     slides?: { title: string; subtitle: string; bullets: string[]; graphicType: string; graphicData?: { label: string; values: string[] } }[];
     podcast?: { hosts: string[]; script: { speaker: string; text: string; lang: string }[] };
     videoStoryboard?: { sceneNumber: number; visualDescription: string; narrationText: string; subtitles: string }[];
+    infographic?: any;
   };
 }
 
@@ -66,8 +68,8 @@ export default function LessonPlannerPage() {
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
 
-  // NotebookLM Studio Modals
-  const [activeStudioTool, setActiveStudioTool] = useState<"slides" | "podcast" | "video" | "bilingual" | "assessment" | null>(null);
+  // Intelligence Studio Modals
+  const [activeStudioTool, setActiveStudioTool] = useState<"slides" | "podcast" | "video" | "bilingual" | "assessment" | "visualExplain" | null>(null);
 
   // Concept slide deck state
   const [activeSlide, setActiveSlide] = useState(0);
@@ -129,21 +131,59 @@ export default function LessonPlannerPage() {
     setIsReadingFile(true);
 
     const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result as string;
-      if (file.name.endsWith(".pdf")) {
-        setUploadedText(`Textbook PDF Name: ${file.name}. Size: ${(file.size / 1024).toFixed(1)} KB. Extracted content: Algebra and geometry fundamentals, right-angle triangular calculations, trigonometric functions (sin, cos, tan), Pythagoras theorem (a^2 + b^2 = c^2), real-world trigonometry application (shadow lengths, angle of elevation, tall structures), and exit tickets.`);
-      } else {
-        setUploadedText(text);
+    reader.onload = async (event) => {
+      try {
+        if (file.name.endsWith(".pdf")) {
+          const arrayBuffer = event.target?.result as ArrayBuffer;
+          
+          // Load PDF.js from CDN dynamically
+          const pdfjsLib = (window as any)['pdfjs-dist/build/pdf'];
+          if (!pdfjsLib) {
+            await new Promise<void>((resolve, reject) => {
+              const script = document.createElement('script');
+              script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+              script.onload = () => resolve();
+              script.onerror = () => reject(new Error('Failed to load PDF script.'));
+              document.head.appendChild(script);
+            });
+          }
+
+          const pdfjs = (window as any)['pdfjs-dist/build/pdf'];
+          pdfjs.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
+          const loadingTask = pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) });
+          const pdfDoc = await loadingTask.promise;
+          let extractedText = "";
+
+          for (let i = 1; i <= pdfDoc.numPages; i++) {
+            const page = await pdfDoc.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map((item: any) => item.str).join(" ");
+            extractedText += pageText + "\n";
+          }
+
+          setUploadedText(extractedText);
+        } else {
+          setUploadedText(event.target?.result as string);
+        }
+
+        setIsReadingFile(false);
+        Swal.fire({
+          icon: "success",
+          title: "Textbook Chapter Uploaded!",
+          text: `Successfully read and parsed ${file.name} context.`,
+          timer: 1800,
+          showConfirmButton: false,
+        });
+      } catch (err) {
+        console.error(err);
+        setIsReadingFile(false);
+        Swal.fire({
+          icon: "error",
+          title: "PDF Parsing Failed",
+          text: "Could not extract text from the PDF file. Please copy-paste text instead.",
+        });
       }
-      setIsReadingFile(false);
-      Swal.fire({
-        icon: "success",
-        title: "Textbook Chapter Uploaded!",
-        text: `Successfully read "${file.name}" to inject into Gemini AI context.`,
-        timer: 1800,
-        showConfirmButton: false,
-      });
     };
     
     if (file.name.endsWith(".pdf")) {
@@ -161,9 +201,15 @@ export default function LessonPlannerPage() {
     setCurrentPlan(null);
     setCurrentStep(0);
     setActiveSlide(0);
+    setVideoScene(0);
+    setIsVideoPlaying(false);
+    if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
     window.speechSynthesis.cancel();
     setIsPlayingPodcast(false);
     setPodcastIndex(-1);
+    setActiveStudioTool(null);
+    setChatMessages([]);
+    setChatInput("");
 
     // Run step increments
     let stepInterval = setInterval(() => {
@@ -346,7 +392,7 @@ export default function LessonPlannerPage() {
     }
   };
 
-  // NotebookLM Audio Podcast reader via browser SpeechSynthesis
+  // Intelligence Audio Podcast reader via browser SpeechSynthesis
   const speakPodcast = (script: any[]) => {
     if (isPlayingPodcast) {
       window.speechSynthesis.cancel();
@@ -433,7 +479,7 @@ export default function LessonPlannerPage() {
 
   return (
     <PortalLayout
-      title="AI Lesson Studio (NotebookLM Style)"
+      title="AI Lesson Studio (Intelligence Style)"
       subtitle="Bilingual AI chapter sources, real-time doc chatting, and visual studio output synthesis"
     >
       <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-160px)] overflow-hidden">
@@ -559,9 +605,21 @@ export default function LessonPlannerPage() {
                     onClick={() => {
                       setCurrentPlan(plan);
                       setActiveSlide(0);
+                      setVideoScene(0);
+                      setIsVideoPlaying(false);
+                      if (videoIntervalRef.current) clearInterval(videoIntervalRef.current);
                       window.speechSynthesis.cancel();
                       setIsPlayingPodcast(false);
                       setPodcastIndex(-1);
+                      setActiveStudioTool(null);
+                      setChatInput("");
+
+                      // Sync search parameters in sidebar
+                      setSyllabus(plan.syllabus);
+                      setGrade(plan.grade);
+                      setSubject(plan.subject);
+                      setTopic(plan.topic);
+                      setDuration(plan.duration);
                     }}
                     className={`p-2.5 rounded-xl border text-[11px] cursor-pointer transition-all flex justify-between items-center ${
                       currentPlan?.id === plan.id
@@ -592,7 +650,7 @@ export default function LessonPlannerPage() {
           {isGenerating ? (
             <div className="theme-card p-8 flex-1 flex flex-col items-center justify-center text-center bg-slate-900 border border-slate-800 rounded-3xl">
               <div className="w-12 h-12 rounded-full border-4 border-amber-500/20 border-t-amber-500 animate-spin mb-6" />
-              <h3 className="text-white font-semibold text-sm mb-2">NotebookLM Synthesis Active</h3>
+              <h3 className="text-white font-semibold text-sm mb-2">Intelligence Synthesis Active</h3>
               <div className="space-y-2 w-full max-w-xs mt-3">
                 {steps.map((stepText, idx) => {
                   let status = "text-slate-655";
@@ -610,7 +668,7 @@ export default function LessonPlannerPage() {
           ) : !currentPlan ? (
             <div className="theme-card p-12 flex-grow flex flex-col items-center justify-center text-center border border-dashed border-slate-800 bg-slate-900/10 rounded-3xl">
               <span className="text-4xl mb-4">📓</span>
-              <h3 className="text-white font-bold text-sm">NotebookLM Class Workspace</h3>
+              <h3 className="text-white font-bold text-sm">Intelligence Class Workspace</h3>
               <p className="text-xs text-slate-400 max-w-sm mt-1.5 leading-relaxed">
                 Configure grade and syllabus parameters or upload a chapter PDF, then generate. Or select a saved chapter from the list.
               </p>
@@ -662,11 +720,11 @@ export default function LessonPlannerPage() {
                 </div>
               </div>
 
-              {/* Chat Workspace (NotebookLM Style) */}
+              {/* Chat Workspace (Intelligence Style) */}
               <div className="h-[38%] rounded-2xl border border-slate-800 bg-slate-900/50 p-4 flex flex-col justify-between overflow-hidden">
                 <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-850 pb-1.5 flex justify-between items-center">
                   <span>🤖 Chat with Source Chapter</span>
-                  <span className="text-emerald-400 lowercase">connected to Gemini 3.5</span>
+                  <span className="text-emerald-400 lowercase">connected to Gemini 2.5</span>
                 </div>
 
                 {/* Message Log */}
@@ -713,10 +771,10 @@ export default function LessonPlannerPage() {
           )}
         </div>
 
-        {/* Panel 3: NotebookLM Studio Tools (Right) */}
+        {/* Panel 3: Intelligence Studio Tools (Right) */}
         <div className="xl:col-span-1 border-l border-slate-800 pl-6 overflow-y-auto h-full space-y-4">
           <h2 className="text-white font-bold text-xs flex items-center gap-2 mb-2 px-1">
-            <span>✨</span> NotebookLM Studio
+            <span>✨</span> Intelligence Studio
           </h2>
           
           {!currentPlan ? (
@@ -724,6 +782,7 @@ export default function LessonPlannerPage() {
           ) : (
             <div className="grid grid-cols-1 gap-3">
               {[
+                { id: "visualExplain", label: "Visual Infographic", icon: "📊", desc: "Interactive explain view" },
                 { id: "podcast", label: "Audio Overview", icon: "🎙️", desc: "Host podcast summary" },
                 { id: "slides", label: "Slide Deck", icon: "🖼️", desc: "Interactive slides" },
                 { id: "video", label: "Video Overview", icon: "🎥", desc: "Animated storyboard" },
@@ -753,23 +812,40 @@ export default function LessonPlannerPage() {
 
       </div>
 
-      {/* NotebookLM Studio Overlay Modals */}
+      {/* Intelligence Studio Overlay Modals */}
       {activeStudioTool && currentPlan && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="w-full max-w-3xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+          <div className="w-full max-w-6xl rounded-3xl bg-slate-900 border border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             
             {/* Modal Header */}
             <div className="p-5 border-b border-slate-800 bg-slate-950 flex justify-between items-center">
               <div>
                 <span className="text-[10px] font-bold text-amber-500 uppercase tracking-widest block">Studio Tool Output</span>
                 <h3 className="text-white font-black text-sm">
-                  {activeStudioTool === "podcast" && "🎙️ NotebookLM Audio Podcast"}
+                  {activeStudioTool === "visualExplain" && "📊 Intelligence Visual Explain"}
+                  {activeStudioTool === "podcast" && "🎙️ Intelligence Audio Podcast"}
                   {activeStudioTool === "slides" && "🖼️ Concept Infographic Slide Deck"}
                   {activeStudioTool === "video" && "🎥 Video Storyboard Simulation"}
                   {activeStudioTool === "bilingual" && "🌐 Bilingual glossary"}
                   {activeStudioTool === "assessment" && "✍️ Exit Tickets Quiz"}
                 </h3>
               </div>
+            <div className="flex items-center gap-3">
+              {activeStudioTool === "visualExplain" && (
+                <a
+                  href={`/infographic-view?planId=${currentPlan.id}&topic=${encodeURIComponent(currentPlan.topic)}&subject=${encodeURIComponent(currentPlan.subject)}&role=teacher`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => {
+                    if (currentPlan.id === "temp-unsaved") {
+                      sessionStorage.setItem("tempInfographicData", JSON.stringify(currentPlan.planData?.infographic || currentPlan.infographic));
+                    }
+                  }}
+                  className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-md hover:scale-105"
+                >
+                  ↗️ Open Separate Page
+                </a>
+              )}
               <button
                 onClick={() => {
                   setActiveStudioTool(null);
@@ -784,9 +860,20 @@ export default function LessonPlannerPage() {
                 ✕
               </button>
             </div>
+            </div>
 
             {/* Modal Body */}
-            <div className="p-6 overflow-y-auto flex-1 max-h-[60vh] text-xs">
+            <div className="p-6 overflow-y-auto flex-1 max-h-[78vh] text-xs">
+              
+              {/* Visual Infographic Tool */}
+              {activeStudioTool === "visualExplain" && (
+                <InteractiveInfographic 
+                  key={currentPlan.topic}
+                  topic={currentPlan.topic} 
+                  subject={currentPlan.subject} 
+                  data={currentPlan.planData?.infographic} 
+                />
+              )}
               
               {/* Slides Tool */}
               {activeStudioTool === "slides" && (
@@ -805,57 +892,103 @@ export default function LessonPlannerPage() {
 
                     return (
                       <div className="space-y-5 flex flex-col justify-between flex-grow">
-                        <div className="p-6 rounded-2xl bg-gradient-to-br from-slate-950 to-slate-900 border border-slate-850 flex flex-col md:flex-row gap-6 items-center min-h-[220px]">
-                          <div className="flex-1 space-y-3">
-                            <span className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">Slide {activeSlide + 1} of {slides.length}</span>
-                            <h4 className="text-white font-black text-base">{slide.title}</h4>
-                            <p className="text-slate-400 font-medium text-xs">{slide.subtitle}</p>
-                            <ul className="space-y-1.5 mt-4 font-sans list-inside">
-                              {slide.bullets?.map((bullet, idx) => (
-                                <li key={idx} className="flex items-start gap-1.5 text-slate-300">
-                                  <span className="text-amber-500 mt-0.5">•</span>
-                                  <span>{bullet}</span>
-                                </li>
-                              ))}
-                            </ul>
+                        {/* Glowing Blueprint Slide Container */}
+                        <div className="bg-slate-950 border border-cyan-500/30 bg-[linear-gradient(rgba(10,15,30,0.96),rgba(10,15,30,0.96)),linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:20px_20px] shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-3xl relative p-6 md:p-8 text-slate-100 min-h-[350px] flex flex-col justify-between overflow-hidden">
+                          
+                          {/* Blueprint corner grid lines */}
+                          <div className="absolute top-2 left-2 text-cyan-500/40 font-mono text-[8px] font-bold">+ 0.00</div>
+                          <div className="absolute top-2 right-2 text-cyan-500/40 font-mono text-[8px] font-bold">+ 1.00</div>
+                          <div className="absolute bottom-2 left-2 text-cyan-500/40 font-mono text-[8px] font-bold">- 1.00</div>
+                          
+                          {/* Slide Header */}
+                          <div className="text-center border-b border-cyan-500/10 pb-4">
+                            <span className="text-[9px] text-amber-500 font-mono font-bold uppercase tracking-wider block mb-1">Slide {activeSlide + 1} of {slides.length}</span>
+                            <h4 className="text-amber-400 font-extrabold text-base md:text-xl font-tamil tracking-wide drop-shadow-[0_0_6px_rgba(245,158,11,0.3)]">
+                              {slide.title}
+                            </h4>
+                            <p className="text-cyan-400 font-bold text-[10px] uppercase tracking-widest mt-1">
+                              {slide.subtitle || "Concept Overview"}
+                            </p>
                           </div>
 
-                          <div className="w-full md:w-56 p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center text-center">
-                            {slide.graphicType === "concept" ? (
-                              <div className="space-y-2 w-full">
-                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{slide.graphicData?.label || "Flow"}</div>
-                                <div className="flex flex-col gap-1 items-center">
-                                  {slide.graphicData?.values?.map((v, idx) => (
-                                    <div key={idx} className="flex flex-col items-center w-full">
-                                      <div className="px-2 py-1 bg-amber-500/10 text-amber-400 rounded-lg font-mono text-[9px] font-bold border border-amber-500/25 w-full text-center">
-                                        {v}
-                                      </div>
-                                      {idx < (slide.graphicData?.values?.length || 0) - 1 && <span className="text-amber-550/40 text-[9px] py-0.5">↓</span>}
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ) : slide.graphicType === "diagram" ? (
-                              <div className="space-y-2 w-full">
-                                <div className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">{slide.graphicData?.label || "Variables"}</div>
-                                <div className="flex justify-center gap-3">
-                                  {slide.graphicData?.values?.map((v, idx) => (
-                                    <div key={idx} className="flex flex-col items-center">
-                                      <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-[10px] mb-1">
-                                        {v.substring(0, 2)}
-                                      </div>
-                                      <span className="text-[8px] text-slate-400 truncate w-12 text-center">{v}</span>
-                                    </div>
-                                  ))}
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="space-y-2">
-                                <span className="text-2xl block animate-bounce">💡</span>
-                                <span className="text-[9px] font-semibold text-slate-400">Concept Map</span>
-                              </div>
-                            )}
+                          {/* Slide Content Grid */}
+                          <div className="flex flex-col md:flex-row gap-6 items-center flex-grow mt-6 z-10">
+                            
+                            {/* Text Content */}
+                            <div className="flex-1 space-y-4">
+                              <ul className="space-y-3 font-sans list-none">
+                                {slide.bullets?.map((bullet, idx) => (
+                                  <li key={idx} className="flex items-start gap-2.5 text-slate-200 text-xs md:text-sm">
+                                    <span className="text-cyan-400 font-extrabold mt-0.5">•</span>
+                                    <span className="leading-relaxed">{bullet}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+
+                            {/* Visual graphic on the right (Satellite, Radar, or mechanical arm) */}
+                            <div className="w-full md:w-64 p-4 rounded-2xl border border-cyan-500/20 bg-slate-900/40 flex flex-col items-center justify-center text-center shadow-[0_0_15px_rgba(6,182,212,0.1)] shrink-0 min-h-[160px] relative">
+                              {slide.title.toLowerCase().includes("nasa") || slide.title.toLowerCase().includes("orbiter") || slide.title.toLowerCase().includes("விண்கலம்") || slide.title.toLowerCase().includes("அலகுகள்") || slide.title.toLowerCase().includes("loss") ? (
+                                // Draw Satellite
+                                <svg viewBox="0 0 100 100" className="w-24 h-24 stroke-cyan-400 fill-none">
+                                  <circle cx="50" cy="50" r="10" strokeWidth="1.5" />
+                                  {/* Solar wings */}
+                                  <rect x="15" y="46" width="25" height="8" strokeWidth="1.2" fill="rgba(6,182,212,0.1)" />
+                                  <rect x="60" y="46" width="25" height="8" strokeWidth="1.2" fill="rgba(6,182,212,0.1)" />
+                                  <line x1="27" y1="46" x2="27" y2="54" strokeWidth="1" />
+                                  <line x1="33" y1="46" x2="33" y2="54" strokeWidth="1" />
+                                  <line x1="67" y1="46" x2="67" y2="54" strokeWidth="1" />
+                                  <line x1="73" y1="46" x2="73" y2="54" strokeWidth="1" />
+                                  {/* Antennas */}
+                                  <line x1="50" y1="40" x2="50" y2="20" strokeWidth="1.5" />
+                                  <circle cx="50" cy="18" r="2" fill="#06b6d4" />
+                                  {/* Thrusters */}
+                                  <path d="M 45 60 L 55 60 L 58 70 L 42 70 Z" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" strokeWidth="1" />
+                                  {/* Earth/Planet line indicator */}
+                                  <path d="M 20 85 Q 50 75 80 85" stroke="#ef4444" strokeWidth="1" strokeDasharray="3 3" />
+                                </svg>
+                              ) : slide.title.toLowerCase().includes("விசை") || slide.title.toLowerCase().includes("அழுத்தம்") || slide.title.toLowerCase().includes("force") || slide.title.toLowerCase().includes("pressure") || slide.title.toLowerCase().includes("பருப்பொருள்") ? (
+                                // Draw Mechanical Arm/Hand
+                                <svg viewBox="0 0 100 100" className="w-24 h-24 stroke-cyan-400 fill-none">
+                                  {/* Hand outlines */}
+                                  <path d="M 25 70 L 40 45 L 45 25 M 40 45 L 53 20 M 40 45 L 63 24 M 40 45 L 70 35 M 40 45 L 48 70 Z" strokeWidth="1.5" strokeLinecap="round" />
+                                  <circle cx="45" cy="25" r="2.5" fill="#06b6d4" />
+                                  <circle cx="53" cy="20" r="2.5" fill="#06b6d4" />
+                                  <circle cx="63" cy="24" r="2.5" fill="#06b6d4" />
+                                  <circle cx="70" cy="35" r="2.5" fill="#06b6d4" />
+                                  {/* Force arrow lines */}
+                                  <line x1="30" y1="45" x2="80" y2="45" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="2 2" />
+                                  <polygon points="80,42 88,45 80,48" fill="#f59e0b" stroke="#f59e0b" />
+                                  {/* Gears */}
+                                  <circle cx="35" cy="60" r="6" strokeWidth="1" />
+                                  <circle cx="45" cy="65" r="4" strokeWidth="1" />
+                                </svg>
+                              ) : (
+                                // Draw Eye Scanner/Radar circle
+                                <svg viewBox="0 0 100 100" className="w-24 h-24 stroke-cyan-400 fill-none">
+                                  <circle cx="50" cy="50" r="30" strokeWidth="1" strokeDasharray="3 3" />
+                                  <circle cx="50" cy="50" r="22" strokeWidth="1.5" />
+                                  <circle cx="50" cy="50" r="6" fill="#06b6d4" />
+                                  <line x1="15" y1="50" x2="85" y2="50" strokeWidth="1" />
+                                  <line x1="50" y1="15" x2="50" y2="85" strokeWidth="1" />
+                                  {/* Grid indicators */}
+                                  <circle cx="38" cy="38" r="2" fill="#f59e0b" />
+                                  <circle cx="62" cy="38" r="2" fill="#f59e0b" />
+                                  <circle cx="38" cy="62" r="2" fill="#f59e0b" />
+                                  <circle cx="62" cy="62" r="2" fill="#f59e0b" />
+                                </svg>
+                              )}
+
+                              <span className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest mt-2">Diagram Sandbox</span>
+                            </div>
+
                           </div>
+
+                          {/* Brand mark at bottom right */}
+                          <div className="absolute bottom-2 right-4 text-cyan-500/40 font-mono text-[9px] uppercase tracking-widest z-0 flex items-center gap-1 font-bold">
+                            <span>Intelligence</span>
+                          </div>
+
                         </div>
 
                         <div className="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-850">
@@ -901,7 +1034,7 @@ export default function LessonPlannerPage() {
                               <div className="w-8 h-8 rounded-full bg-rose-600 border border-slate-950 flex items-center justify-center text-xs">👩‍🏫</div>
                             </div>
                             <div>
-                              <h4 className="text-white font-bold text-xs leading-tight">NotebookLM AI Podcast Player</h4>
+                              <h4 className="text-white font-bold text-xs leading-tight">Intelligence AI Podcast Player</h4>
                               <p className="text-[9px] text-slate-500">Hosts: {podcast.hosts?.join(" & ")}</p>
                             </div>
                           </div>

@@ -29,5 +29,17 @@ module.exports = {
       }
     },
   },
+  safelist: [
+    // Dynamic color classes used in InteractiveInfographic
+    { pattern: /bg-(emerald|sky|indigo|amber|rose|teal|violet)-(50|100|400|500|600)/ },
+    { pattern: /text-(emerald|sky|indigo|amber|rose|teal|violet)-(400|500|600)/ },
+    { pattern: /border-(emerald|sky|indigo|amber|rose|teal|violet)-(400|500)/ },
+    { pattern: /ring-(emerald|sky|indigo|amber|rose|teal|violet)-400\/20/ },
+    { pattern: /from-(emerald|sky|indigo|amber|rose|teal|violet)-50/ },
+    { pattern: /to-(cyan|purple|orange|pink)-50/ },
+    { pattern: /hover:bg-(emerald|sky|indigo|amber|rose|teal|violet)-50/ },
+    { pattern: /hover:border-(emerald|sky|indigo|amber|rose|teal|violet)-(400|500)/ },
+    { pattern: /group-hover:text-(emerald|sky|indigo|amber|rose|teal|violet)-600/ },
+  ],
   plugins: [],
 };

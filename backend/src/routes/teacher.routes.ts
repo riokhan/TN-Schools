@@ -451,6 +451,21 @@ router.get('/lessons', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/teacher/lessons/:id
+router.get('/lessons/:id', async (req: Request, res: Response) => {
+  try {
+    const lesson = await prisma.lessonPlan.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!lesson) {
+      return res.status(404).json({ success: false, error: 'Lesson plan not found' });
+    }
+    res.json({ success: true, data: lesson });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 // POST /api/teacher/lessons
 router.post('/lessons', async (req: Request, res: Response) => {
   try {
