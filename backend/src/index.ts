@@ -58,7 +58,17 @@ const app: Express = express();
 const port = process.env.PORT || 5000;
 
 // ─── Middleware ──────────────────────────────────────────────
-app.use(cors({ origin: process.env.NEXTAUTH_URL || 'http://localhost:3000', credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true);
+    const isAllowed = origin === 'http://localhost:3000' ||
+                      origin === 'https://tn-schools.vercel.app' ||
+                      /^(https?:\/\/tn-schools(-[a-z0-9-]+)?\.vercel\.app)$/.test(origin) ||
+                      (process.env.NEXTAUTH_URL && origin === process.env.NEXTAUTH_URL);
+    callback(null, isAllowed ? true : false);
+  },
+  credentials: true
+}));
 app.use(express.json({ limit: '150mb' }));
 app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
