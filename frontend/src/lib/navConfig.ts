@@ -236,6 +236,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Daily Attendance", href: "/teacher/attendance", icon: "📅" },
       { label: "Announcements", href: "/teacher/announcements", icon: "📢" },
       { label: "Leave Requests", href: "/teacher/leave", icon: "📄" },
+      { label: "Club Events", href: "/teacher/events", icon: "📅" },
     ],
   },
   PARENT: {
@@ -290,6 +291,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Media Gallery", href: "/headmaster/gallery", icon: "🖼️" },
       { label: "Rewards & Honors", href: "/headmaster/rewards", icon: "🏆" },
       { label: "School History", href: "/headmaster/history", icon: "📜" },
+      { label: "Clubs & Activities", href: "/headmaster/clubs", icon: "🎭" },
     ],
   },
   BEO: {

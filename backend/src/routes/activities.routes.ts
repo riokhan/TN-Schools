@@ -65,4 +65,50 @@ router.get('/student/:studentId', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/activities/clubs — Create a new club (Headmaster)
+router.post('/clubs', async (req: Request, res: Response) => {
+  try {
+    const { name, category, icon, themeColor, themeBg, themeTagBg, schoolId } = req.body;
+    
+    const club = await prisma.club.create({
+      data: {
+        name,
+        category,
+        icon,
+        themeColor,
+        themeBg,
+        themeTagBg,
+        schoolId
+      }
+    });
+    
+    res.json({ success: true, data: club });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// POST /api/activities/events — Create a new event (Teacher/Sponsor)
+router.post('/events', async (req: Request, res: Response) => {
+  try {
+    const { title, eventDate, type, icon, themeColor, clubId, schoolId } = req.body;
+    
+    const event = await prisma.clubEvent.create({
+      data: {
+        title,
+        eventDate: new Date(eventDate),
+        type,
+        icon,
+        themeColor,
+        clubId,
+        schoolId
+      }
+    });
+    
+    res.json({ success: true, data: event });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 export default router;
