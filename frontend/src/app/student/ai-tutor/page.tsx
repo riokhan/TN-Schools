@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 
 
@@ -21,6 +22,10 @@ const suggestedQuestions = [
 const subjects = ["Mathematics", "Science", "Tamil", "English", "Social Science", "Physics", "Chemistry", "Biology"];
 
 export default function AITutorPage() {
+  const { data: session } = useSession();
+  const studentClass = (session?.user as any)?.class || "10";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
@@ -33,23 +38,44 @@ export default function AITutorPage() {
   const [language, setLanguage] = useState<"bilingual" | "tamil" | "english">("bilingual");
   const [isTyping, setIsTyping] = useState(false);
 
-  const sendMessage = () => {
+  const sendMessage = async () => {
     if (!input.trim()) return;
     const userMsg: Message = { role: "user", content: input, time: "Now" };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMsg: Message = {
-        role: "assistant",
-        content: `Great question about **${selectedSubject}**! 🎯\n\nI'm connecting to the AI engine to provide a detailed, step-by-step explanation in ${language === "tamil" ? "Tamil" : language === "english" ? "English" : "both Tamil and English"}.\n\n*(In production, this connects to Gemini AI / OpenAI with your school syllabus context.)*`,
-        time: "Now",
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+    try {
+      const chatHistory = messages.map(m => ({ role: m.role, content: m.content }));
+      const res = await fetch(`${API_URL}/api/ai/chat-tutor`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subject: selectedSubject,
+          grade: `Grade ${studentClass}`,
+          messages: chatHistory,
+          currentMessage: userMsg.content,
+          language
+        })
+      });
+      const data = await res.json();
+      if (data.success && data.text) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: data.text, time: "Now" }
+        ]);
+      } else {
+        throw new Error(data.error || "Failed to fetch AI completion");
+      }
+    } catch (err) {
+      console.error(err);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", content: "Error connecting to AI Tutor. Please check your network or try again later.", time: "Now" }
+      ]);
+    } finally {
       setIsTyping(false);
-    }, 1500);
+    }
   };
 
   return (
