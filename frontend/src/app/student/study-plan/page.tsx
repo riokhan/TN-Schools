@@ -1312,7 +1312,7 @@ export default function StudyPlanPage() {
               )}
               
               {/* Infographic Cheat sheet */}
-              {activeStudioTool === "unit-infographic" && (
+              {activeStudioTool === "unit-infographic" && activeUnit && (
                 <div className="p-6 rounded-2xl bg-gradient-to-br from-indigo-950 to-slate-950 border border-indigo-500/20 space-y-4">
                   <div className="border-b border-indigo-500/20 pb-2">
                     <h4 className="text-white font-black text-base leading-snug">{activeUnit.infographicCard?.title || "Concept Guide"}</h4>
@@ -1353,7 +1353,7 @@ export default function StudyPlanPage() {
               )}
 
               {/* Audio guide */}
-              {activeStudioTool === "unit-audio" && (
+              {activeStudioTool === "unit-audio" && activeUnit && (
                 <div className="space-y-4">
                   <div className="p-4 rounded-xl bg-slate-950 border border-slate-850 flex items-center justify-between">
                     <div>
@@ -1398,8 +1398,8 @@ export default function StudyPlanPage() {
               )}
 
               {/* Unit Quiz test */}
-              {activeStudioTool === "unit-quiz" && (
-                <div className="space-y-4">
+              {activeStudioTool === "unit-quiz" && activeUnit && (
+                <div className="space-y-4 font-sans">
                   {activeUnit.quiz?.map((q, qIdx) => {
                     const key = `${activeUnit.id}-${qIdx}`;
                     const selectedOpt = selectedAnswers[key];

@@ -27,6 +27,7 @@ interface LessonPlan {
   subject: string;
   topic: string;
   duration: string;
+  infographic?: any;
   planData: {
     objectives: string[];
     timeline: { time: string; activity: string; description: string }[];
