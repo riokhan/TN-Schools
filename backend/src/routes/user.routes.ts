@@ -180,16 +180,27 @@ router.post('/auth', async (req: Request, res: Response) => {
         return res.status(400).json({ success: false, error: 'Incorrect phone number.' });
       }
 
-      return res.json({
-        success: true,
-        data: {
-          id: student.user.id,
-          name: student.user.name,
-          email: student.user.email || `${student.rollNumber}@tn.gov.in`,
-          role: 'STUDENT',
-          class: student.class
-        }
-      });
+    console.log("Student Login:");
+console.log({
+  schoolId: student.schoolId,
+  class: student.class,
+  section: student.section,
+});
+
+return res.json({
+  success: true,
+  data: {
+    id: student.user.id,
+    name: student.user.name,
+    email: student.user.email || `${student.rollNumber}@tn.gov.in`,
+    role: "STUDENT",
+
+    // IMPORTANT
+    schoolId: student.schoolId,
+    class: student.class,
+    section: student.section,
+  },
+});
     } else {
       // Staff / Parent login by Email and Password
       if (!email || !password) {
@@ -203,22 +214,47 @@ router.post('/auth', async (req: Request, res: Response) => {
         where: { email: { equals: cleanEmail, mode: 'insensitive' } }
       });
 
-      if (pgUser) {
-        if (pgUser.passwordHash !== password) {
-          return res.status(400).json({ success: false, error: 'Invalid password.' });
-        }
+    if (pgUser) {
+    if (pgUser.passwordHash !== password) {
+        return res.status(400).json({
+            success: false,
+            error: "Invalid password."
+        });
+    }
+
+    if (pgUser.role === "TEACHER") {
+        const teacher = await prisma.headmasterStaff.findFirst({
+            where: {
+                email: {
+                    equals: cleanEmail,
+                    mode: "insensitive",
+                },
+            },
+        });
+
         return res.json({
-          success: true,
-          data: {
+            success: true,
+            data: {
+                id: teacher?.id ?? pgUser.id,
+                name: teacher?.name ?? pgUser.name,
+                email: pgUser.email,
+                role: "TEACHER",
+                schoolId: teacher?.schoolId ?? pgUser.schoolId,
+            },
+        });
+    }
+
+    return res.json({
+        success: true,
+        data: {
             id: pgUser.id,
             name: pgUser.name,
             email: pgUser.email,
             role: pgUser.role,
-            schoolId: pgUser.schoolId
-          }
-        });
-      }
-
+            schoolId: pgUser.schoolId,
+        },
+    });
+}
       // ── Step 2: Check headmasterStaff (MongoDB via Prisma) ──
       const staffMember = await prisma.headmasterStaff.findFirst({
         where: { email: cleanEmail }
@@ -273,3 +309,4 @@ router.post('/auth', async (req: Request, res: Response) => {
 });
 
 export default router;
+

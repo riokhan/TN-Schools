@@ -3,6 +3,57 @@ import { prisma } from '../config/prisma';
 
 const router = Router();
 
+
+/* ------------------- GET ANNOUNCEMENTS ------------------- */
+router.get("/announcements", async (req: Request, res: Response) => {
+  try {
+    const { schoolId, class: cls, section } = req.query;
+
+    console.log(req.query);
+
+    if (!schoolId || !cls) {
+      return res.status(400).json({
+        success: false,
+        error: "schoolId and class are required",
+      });
+    }
+
+    const classSection = section
+      ? `${cls}${section}`
+      : String(cls);
+
+    const target = `Class ${classSection} Parents`;
+
+    console.log("Searching target:", target);
+
+    const announcements = await prisma.announcement.findMany({
+      where: {
+        schoolId: String(schoolId),
+        OR: [
+          { target },
+          { target: "All Parents taught by me" },
+        ],
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    console.log(announcements);
+
+    res.json({
+      success: true,
+      data: announcements,
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      error: String(err),
+    });
+  }
+});
+
 // GET /api/students/:id — Get student profile with marks & attendance
 router.get('/:id', async (req: Request, res: Response) => {
   try {
