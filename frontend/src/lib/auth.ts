@@ -54,6 +54,7 @@ export const authOptions: NextAuthOptions = {
         token.id = (user as any).id;
         token.schoolId = (user as any).schoolId;
         token.class = (user as any).class;
+          token.section = (user as any).section;   // ✅ ADD THIS
       }
       return token;
     },
@@ -63,6 +64,7 @@ export const authOptions: NextAuthOptions = {
         (session.user as any).id = token.id;
         (session.user as any).schoolId = token.schoolId;
         (session.user as any).class = token.class;
+          (session.user as any).section = token.section;   // ✅ ADD THIS
       }
       return session;
     },
