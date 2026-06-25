@@ -838,7 +838,7 @@ export default function LessonPlannerPage() {
                   rel="noopener noreferrer"
                   onClick={() => {
                     if (currentPlan.id === "temp-unsaved") {
-                      sessionStorage.setItem("tempInfographicData", JSON.stringify(currentPlan.planData?.infographic || currentPlan.infographic));
+                      localStorage.setItem("tempInfographicData", JSON.stringify(currentPlan.planData?.infographic || currentPlan.infographic));
                     }
                   }}
                   className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-md hover:scale-105"

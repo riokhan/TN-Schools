@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Poppins } from "next/font/google";
+import { Poppins, Noto_Sans_Tamil } from "next/font/google";
 import "./globals.css";
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import ThemeProvider from "@/providers/ThemeProvider";
@@ -9,6 +9,13 @@ const poppins = Poppins({
   subsets: ["latin"], 
   display: "swap",
   variable: "--font-poppins"
+});
+
+const notoSansTamil = Noto_Sans_Tamil({
+  weight: ['300', '400', '500', '600', '700', '800'],
+  subsets: ["tamil"],
+  display: "swap",
+  variable: "--font-tamil"
 });
 
 export const metadata: Metadata = {
@@ -24,7 +31,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${poppins.variable} font-sans`}>
+      <body className={`${poppins.variable} ${notoSansTamil.variable} font-sans`}>
         <ThemeProvider>
           <NextAuthProvider>{children}</NextAuthProvider>
         </ThemeProvider>

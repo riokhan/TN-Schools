@@ -56,12 +56,12 @@ function InfographicViewContent() {
         setSubject(urlSubject || "Subject");
         
         try {
-          const tempData = sessionStorage.getItem("tempInfographicData");
+          const tempData = localStorage.getItem("tempInfographicData");
           if (tempData) {
             setInfographicData(JSON.parse(tempData));
           }
         } catch (e) {
-          console.error("Failed to parse temp infographic data from session storage");
+          console.error("Failed to parse temp infographic data from local storage");
         }
         
         setLoading(false);

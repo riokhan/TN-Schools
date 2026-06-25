@@ -898,7 +898,7 @@ export default function StudyPlanPage() {
                   rel="noopener noreferrer"
                   onClick={() => {
                     if (!currentPlan.id || currentPlan.id === "temp-unsaved") {
-                      sessionStorage.setItem("tempInfographicData", JSON.stringify(currentPlan.planData?.infographic || currentPlan.infographic));
+                      localStorage.setItem("tempInfographicData", JSON.stringify(currentPlan.planData?.infographic || currentPlan.infographic));
                     }
                   }}
                   className="px-3 py-1.5 rounded-xl bg-indigo-650 hover:bg-indigo-700 text-white font-bold text-[10.5px] uppercase tracking-wider transition-colors flex items-center gap-1 shadow-md hover:scale-105"
