@@ -15,6 +15,7 @@ interface Club {
 
 export default function HeadmasterClubsPage() {
   const [clubs, setClubs] = useState<Club[]>([]);
+  const [teachers, setTeachers] = useState<{ id: string, name: string }[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Form State
@@ -24,11 +25,30 @@ export default function HeadmasterClubsPage() {
   const [themeColor, setThemeColor] = useState("text-emerald-600 dark:text-emerald-400");
   const [themeBg, setThemeBg] = useState("bg-emerald-500/10 border-emerald-500/20");
   const [themeTagBg, setThemeTagBg] = useState("bg-emerald-500/20");
+  const [description, setDescription] = useState("");
+  const [sponsor, setSponsor] = useState("");
+  const [meetingTime, setMeetingTime] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchClubs();
+    fetchTeachers();
   }, []);
+
+  const fetchTeachers = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/api/teacher/list`);
+      const json = await res.json();
+      if (json.success) {
+        setTeachers(json.data || []);
+        if (json.data && json.data.length > 0) {
+          setSponsor(json.data[0].name);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch teachers:", err);
+    }
+  };
 
   const fetchClubs = async () => {
     try {
@@ -52,7 +72,7 @@ export default function HeadmasterClubsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name, category, icon, themeColor, themeBg, themeTagBg
+          name, category, icon, themeColor, themeBg, themeTagBg, description, sponsor, meetingTime
         })
       });
       const json = await res.json();
@@ -116,6 +136,42 @@ export default function HeadmasterClubsPage() {
                 value={icon} 
                 onChange={(e) => setIcon(e.target.value)} 
                 className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent outline-none focus:border-blue-500 transition-colors"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1">Faculty Sponsor</label>
+              <select 
+                required 
+                value={sponsor} 
+                onChange={(e) => setSponsor(e.target.value)} 
+                className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent outline-none focus:border-blue-500 transition-colors"
+              >
+                {teachers.length === 0 && <option value="">Loading teachers...</option>}
+                {teachers.map(teacher => (
+                  <option key={teacher.id} value={teacher.name}>{teacher.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1">Meeting Time</label>
+              <input 
+                required 
+                type="text" 
+                value={meetingTime} 
+                onChange={(e) => setMeetingTime(e.target.value)} 
+                className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent outline-none focus:border-blue-500 transition-colors"
+                placeholder="e.g. Every Friday at 4 PM"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold mb-1">About the Club</label>
+              <textarea 
+                required 
+                rows={3}
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)} 
+                className="w-full px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-transparent outline-none focus:border-blue-500 transition-colors custom-scrollbar"
+                placeholder="Describe the club's activities and goals..."
               />
             </div>
             <button 

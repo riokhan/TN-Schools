@@ -66,6 +66,28 @@ router.delete('/materials/:id', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/teacher/list — Fetch staff from HeadmasterStaff table for dropdowns
+router.get('/list', async (req: Request, res: Response) => {
+  try {
+    const { schoolId } = req.query;
+
+    const staff = await prisma.headmasterStaff.findMany({
+      where: schoolId ? { schoolId: String(schoolId) } : undefined,
+      select: { id: true, name: true, subject: true },
+      orderBy: { name: 'asc' },
+    });
+
+    const mapped = staff.map(s => ({
+      id: s.id,
+      name: `${s.name} (${s.subject})`,
+    }));
+
+    res.json({ success: true, data: mapped });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 // =========================================================================
 // 2. Announcements
 // =========================================================================

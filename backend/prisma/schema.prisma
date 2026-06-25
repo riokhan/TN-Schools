@@ -544,6 +544,9 @@ model Club {
   themeColor String // e.g. "text-emerald-600 dark:text-emerald-400"
   themeBg    String // e.g. "bg-emerald-500/10 border-emerald-500/20"
   themeTagBg String // e.g. "bg-emerald-500/20"
+  description String? @default("Join us to build your portfolio, make lifelong friends, and develop critical leadership skills!")
+  sponsor    String?  @default("Faculty Sponsor")
+  meetingTime String? @default("TBD")
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

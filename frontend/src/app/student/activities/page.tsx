@@ -454,7 +454,7 @@ export default function ExtracurricularsPage() {
                     <span>👥</span> {club.members} Active Members
                   </p>
                   <Link 
-                    href={`/student/activities/${club.name.toLowerCase().replace(" ", "-")}`}
+                    href={`/student/activities/${club.id}`}
                     className={`block text-center w-full py-2 rounded-xl text-sm font-bold bg-white dark:bg-slate-900/50 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/50 transition-colors ${club.color}`}
                   >
                     Learn More & Join

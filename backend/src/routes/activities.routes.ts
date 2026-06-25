@@ -68,7 +68,7 @@ router.get('/student/:studentId', async (req: Request, res: Response) => {
 // POST /api/activities/clubs — Create a new club (Headmaster)
 router.post('/clubs', async (req: Request, res: Response) => {
   try {
-    const { name, category, icon, themeColor, themeBg, themeTagBg, schoolId } = req.body;
+    const { name, category, icon, themeColor, themeBg, themeTagBg, description, sponsor, meetingTime, schoolId } = req.body;
     
     const club = await prisma.club.create({
       data: {
@@ -78,6 +78,9 @@ router.post('/clubs', async (req: Request, res: Response) => {
         themeColor,
         themeBg,
         themeTagBg,
+        description,
+        sponsor,
+        meetingTime,
         schoolId
       }
     });
@@ -106,6 +109,33 @@ router.post('/events', async (req: Request, res: Response) => {
     });
     
     res.json({ success: true, data: event });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// GET /api/activities/club/:id — Fetch a single club details
+router.get('/club/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    
+    const club = await prisma.club.findUnique({
+      where: { id },
+      include: {
+        events: {
+          orderBy: { eventDate: 'asc' }
+        },
+        _count: {
+          select: { members: true }
+        }
+      }
+    });
+
+    if (!club) {
+      return res.status(404).json({ success: false, error: 'Club not found' });
+    }
+
+    res.json({ success: true, data: club });
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
   }
