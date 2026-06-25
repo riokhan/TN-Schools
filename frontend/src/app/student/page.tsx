@@ -3,9 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 
 export default async function StudentDashboard() {
-  // Enforce a minimum 2-second delay to allow the beautiful loading animation to play
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
   const session = await getServerSession(authOptions);
   
   // Extract student class from session if available
