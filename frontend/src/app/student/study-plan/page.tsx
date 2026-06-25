@@ -946,7 +946,7 @@ export default function StudyPlanPage() {
               {activeStudioTool === "teacher-slides" && currentPlan && (
                 <div className="space-y-4 flex flex-col justify-between h-full">
                   {(() => {
-                    const slides = currentPlan.slides || [
+                    const slides = currentPlan.slides || ([
                       {
                         title: "Introduction",
                         subtitle: "Concept Overview",
@@ -954,7 +954,7 @@ export default function StudyPlanPage() {
                         graphicType: "concept",
                         graphicData: { label: "Steps", values: ["Learn", "Practice"] }
                       }
-                    ];
+                    ] as any[]);
                     const slide = slides[activeSlide] || slides[0];
                     const slideNum = activeSlide + 1;
                     const totalSlides = slides.length;

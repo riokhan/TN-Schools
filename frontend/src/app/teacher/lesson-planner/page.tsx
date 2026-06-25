@@ -33,7 +33,7 @@ interface LessonPlan {
     timeline: { time: string; activity: string; description: string }[];
     bilingual: { english: string; tamil: string; pronunciation: string }[];
     exitTickets: { question: string; options: string[]; answer: string; rationale: string }[];
-    slides?: { title: string; subtitle: string; bullets: string[]; graphicType: string; graphicData?: { label: string; values: string[] } }[];
+    slides?: { title: string; subtitle: string; bullets: string[]; graphicType: string; graphicData?: { label: string; values: string[] }; illustrationPrompt?: string; animationSuggestion?: string }[];
     podcast?: { hosts: string[]; script: { speaker: string; text: string; lang: string }[] };
     videoStoryboard?: { sceneNumber: number; visualDescription: string; narrationText: string; subtitles: string }[];
     infographic?: any;
@@ -882,7 +882,7 @@ export default function LessonPlannerPage() {
               {activeStudioTool === "slides" && (
                 <div className="space-y-4 flex flex-col justify-between h-full">
                   {(() => {
-                    const slides = currentPlan.planData?.slides || [
+                    const slides = currentPlan.planData?.slides || ([
                       {
                         title: "Introduction",
                         subtitle: "Concept Overview",
@@ -890,7 +890,7 @@ export default function LessonPlannerPage() {
                         graphicType: "concept",
                         graphicData: { label: "Steps", values: ["Learn", "Practice"] }
                       }
-                    ];
+                    ] as any[]);
                     const slide = slides[activeSlide] || slides[0];
                     const slideNum = activeSlide + 1;
                     const totalSlides = slides.length;
