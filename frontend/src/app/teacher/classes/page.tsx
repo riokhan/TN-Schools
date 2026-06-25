@@ -432,7 +432,7 @@ export default function ClassesPage() {
           {/* Table Footer */}
           <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400 flex justify-between items-center">
             <span>Showing {filtered.length} of {classes.length} classes</span>
-            <span>Data stored in PostgreSQL · TN Schools AI</span>
+            {/* <span>Data stored in PostgreSQL · TN Schools AI</span> */}
           </div>
         </div>
       )}

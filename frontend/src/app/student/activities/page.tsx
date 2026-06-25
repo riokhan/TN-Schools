@@ -352,11 +352,11 @@ export default function ExtracurricularsPage() {
 
           {/* Upcoming Events Calendar */}
           <div className="glass rounded-3xl p-6 border border-slate-200 dark:border-slate-700/50 bg-white dark:bg-transparent">
-            <div className="flex items-center justify-between mb-4">
+             <div className="flex items-center justify-between mb-4">
                <h2 className="text-lg font-bold text-black dark:text-white flex items-center gap-2">
                  <span className="text-xl">🗓️</span> Upcoming Events
                </h2>
-               <Link href="#" className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold">View Calendar</Link>
+               <button onClick={(e) => { e.preventDefault(); alert('Calendar view is coming soon!'); }} className="text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 font-bold">View Calendar</button>
             </div>
             
             <ul className="space-y-0">
