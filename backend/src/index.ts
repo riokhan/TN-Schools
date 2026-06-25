@@ -40,8 +40,8 @@ const port = process.env.PORT || 5000;
 
 // ─── Middleware ──────────────────────────────────────────────
 app.use(cors({ origin: process.env.NEXTAUTH_URL || 'http://localhost:3000', credentials: true }));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '150mb' }));
+app.use(express.urlencoded({ limit: '150mb', extended: true }));
 
 // ─── Connect Databases ───────────────────────────────────────
 connectMongoDB();  // MongoDB Atlas

@@ -360,7 +360,7 @@ export default function AddMaterialsPage() {
                 <span className="text-xs text-[var(--text-muted)] font-medium block">
                   {selectedFileName ? `${selectedFileName} (${selectedFileSize})` : "Click to select study resource file"}
                 </span>
-                <span className="text-[10px] text-[var(--text-muted)] mt-1 block">Supports PDF, Doc, PPT up to 15MB</span>
+                <span className="text-[10px] text-[var(--text-muted)] mt-1 block">Supports PDF, Doc, PPT up to 100MB</span>
               </div>
             </div>
 
