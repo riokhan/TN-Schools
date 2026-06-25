@@ -6,50 +6,6 @@ import { prisma } from './config/prisma';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import * as ts from 'typescript';
-
-try {
-  const filePath = path.join(__dirname, '../../frontend/src/components/InteractiveInfographic.tsx');
-  if (fs.existsSync(filePath)) {
-    console.log("🔍 [TS Check] Programmatically analyzing " + filePath + "...");
-    const program = ts.createProgram([filePath], {
-      jsx: ts.JsxEmit.ReactJSX,
-      noEmit: true,
-      target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.CommonJS,
-      allowJs: true,
-      skipLibCheck: true,
-      esModuleInterop: true,
-      allowSyntheticDefaultImports: true,
-    });
-    const diagnostics = ts.getPreEmitDiagnostics(program);
-    const logPath = "C:/Users/WIN/.gemini/antigravity-ide/scratch/compile_errors.log";
-    let logContent = "";
-    if (diagnostics.length === 0) {
-      logContent = "🎉 [TS Check] No compilation errors found!";
-    } else {
-      logContent = diagnostics.map(diagnostic => {
-        if (diagnostic.file) {
-          const { line, character } = ts.getLineAndCharacterOfPosition(diagnostic.file, diagnostic.start!);
-          const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n");
-          return `❌ [TS Check] ${diagnostic.file.fileName} (${line + 1},${character + 1}): ${message}`;
-        } else {
-          return `❌ [TS Check] ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`;
-        }
-      }).join("\n");
-    }
-    console.log(logContent);
-    const logDir = path.dirname(logPath);
-    if (!fs.existsSync(logDir)) {
-      fs.mkdirSync(logDir, { recursive: true });
-    }
-    fs.writeFileSync(logPath, logContent, 'utf8');
-  } else {
-    console.log("ℹ️ [TS Check] Infographic file not found at " + filePath + ". Skipping check.");
-  }
-} catch (e: any) {
-  console.error("❌ [TS Check] Programmatic checker failed to run:", e.message);
-}
 
 // Startup copy task for premium educational infographic assets
 try {
