@@ -141,4 +141,56 @@ router.get('/club/:id', async (req: Request, res: Response) => {
   }
 });
 
+// GET /api/activities/club/:id/membership/:studentId — Check if student is already a member
+router.get('/club/:id/membership/:studentId', async (req: Request, res: Response) => {
+  try {
+    const { id, studentId } = req.params;
+    const member = await prisma.clubMember.findUnique({
+      where: { clubId_studentId: { clubId: id, studentId } }
+    });
+    res.json({ success: true, isMember: !!member, data: member });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// POST /api/activities/join — Student joins a club
+router.post('/join', async (req: Request, res: Response) => {
+  try {
+    const { clubId, studentId } = req.body;
+    if (!clubId || !studentId) {
+      return res.status(400).json({ success: false, error: 'clubId and studentId are required' });
+    }
+
+    // Check if already a member
+    const existing = await prisma.clubMember.findUnique({
+      where: { clubId_studentId: { clubId, studentId } }
+    });
+    if (existing) {
+      return res.status(409).json({ success: false, error: 'Already a member of this club' });
+    }
+
+    const member = await prisma.clubMember.create({
+      data: { clubId, studentId, role: 'Member' }
+    });
+
+    res.json({ success: true, data: member });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
+// DELETE /api/activities/leave — Student leaves a club
+router.delete('/leave', async (req: Request, res: Response) => {
+  try {
+    const { clubId, studentId } = req.body;
+    await prisma.clubMember.delete({
+      where: { clubId_studentId: { clubId, studentId } }
+    });
+    res.json({ success: true, message: 'Left club successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, error: String(err) });
+  }
+});
+
 export default router;
