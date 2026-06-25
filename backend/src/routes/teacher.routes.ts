@@ -62,18 +62,9 @@ router.post('/materials', async (req: Request, res: Response) => {
         size: size || '1.5 MB',
         date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
         schoolId: schoolId || null,
+        fileContent: fileData || null, // Persist base64 data directly to database
       },
     });
-
-    if (fileData) {
-      const storeDir = path.join(__dirname, '../../store');
-      if (!fs.existsSync(storeDir)) {
-        fs.mkdirSync(storeDir, { recursive: true });
-      }
-      const base64Content = fileData.replace(/^data:.*;base64,/, "");
-      const filePath = path.join(storeDir, `${material.id}.${(format || 'PDF').toLowerCase()}`);
-      await fs.promises.writeFile(filePath, base64Content, 'base64');
-    }
 
     if (userId) {
       await createSafeNotification(userId, `Uploaded new study material "${title}" for ${classSection}`);
@@ -93,11 +84,22 @@ router.get('/materials/download/:id', async (req: Request, res: Response) => {
     if (!material) {
       return res.status(404).json({ success: false, error: 'Material not found' });
     }
-    const filePath = path.join(__dirname, '../../store', `${material.id}.${material.format.toLowerCase()}`);
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ success: false, error: 'File not found on server' });
+
+    if (material.fileContent) {
+      const base64Content = material.fileContent.replace(/^data:.*;base64,/, "");
+      const buffer = Buffer.from(base64Content, 'base64');
+      const filename = `${material.title.replace(/[^a-zA-Z0-9]/g, '_')}.${material.format.toLowerCase()}`;
+      res.setHeader('Content-Type', material.format.toLowerCase() === 'pdf' ? 'application/pdf' : 'application/octet-stream');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      return res.send(buffer);
+    } else {
+      // Fallback to local disk file for backwards compatibility
+      const filePath = path.join(__dirname, '../../store', `${material.id}.${material.format.toLowerCase()}`);
+      if (fs.existsSync(filePath)) {
+        return res.download(filePath, `${material.title}.${material.format.toLowerCase()}`);
+      }
+      return res.status(404).json({ success: false, error: 'File content not found in database or disk' });
     }
-    res.download(filePath, `${material.title}.${material.format.toLowerCase()}`);
   } catch (err) {
     res.status(500).json({ success: false, error: String(err) });
   }
@@ -109,6 +111,7 @@ router.delete('/materials/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const material = await prisma.studyMaterial.findUnique({ where: { id } });
     if (material) {
+      // Clean up local disk file if it exists (for backwards compatibility)
       const filePath = path.join(__dirname, '../../store', `${material.id}.${material.format.toLowerCase()}`);
       if (fs.existsSync(filePath)) {
         try {
