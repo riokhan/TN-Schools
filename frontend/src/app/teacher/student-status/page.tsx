@@ -30,6 +30,7 @@ export default function StudentStatusPage() {
   const [students, setStudents] = useState<RosterStudent[]>([]);
   const [rawStudents, setRawStudents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
 
   // Award badge state
   const [targetStudentId, setTargetStudentId] = useState("");
@@ -45,23 +46,45 @@ export default function StudentStatusPage() {
   ];
 
   const fetchData = async () => {
+    if (!schoolId || !session?.user) return;
+    const teacherId = (session.user as any).id;
     try {
       setLoading(true);
       
-      // Fetch students
-      const studentsRes = await fetch(`${API_URL}/api/students${schoolId ? `?schoolId=${schoolId}` : ""}`);
+      // 1. Fetch teacher classes
+      const classesRes = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+      const classesData = await classesRes.json();
+      let activeClasses: any[] = [];
+      if (classesData.success && Array.isArray(classesData.data)) {
+        setTeacherClasses(classesData.data);
+        activeClasses = classesData.data;
+      }
+
+      if (activeClasses.length === 0) {
+        setStudents([]);
+        setRawStudents([]);
+        setTargetStudentId("");
+        setLoading(false);
+        return;
+      }
+
+      // 2. Fetch students
+      const studentsRes = await fetch(`${API_URL}/api/students?schoolId=${schoolId}`);
       const studentsData = await studentsRes.json();
 
-      // Fetch badges
-      const badgesRes = await fetch(`${API_URL}/api/teacher/badges${schoolId ? `?schoolId=${schoolId}` : ""}`);
+      // 3. Fetch badges
+      const badgesRes = await fetch(`${API_URL}/api/teacher/badges?schoolId=${schoolId}`);
       const badgesData = await badgesRes.json();
 
       if (studentsData.success && studentsData.data) {
-        setRawStudents(studentsData.data);
+        const filteredStudents = studentsData.data.filter((s: any) =>
+          activeClasses.some(tc => tc.className === s.class && tc.section === s.section)
+        );
+        setRawStudents(filteredStudents);
         
         const badgesList: StudentBadge[] = badgesData.success ? badgesData.data : [];
 
-        const mappedRoster: RosterStudent[] = studentsData.data.map((st: any, idx: number) => {
+        const mappedRoster: RosterStudent[] = filteredStudents.map((st: any, idx: number) => {
           // Filter badges for this student
           const studentBadges = badgesList
             .filter((b) => b.studentId === st.id)
@@ -85,6 +108,8 @@ export default function StudentStatusPage() {
         setStudents(mappedRoster);
         if (mappedRoster.length > 0) {
           setTargetStudentId(mappedRoster[0].id);
+        } else {
+          setTargetStudentId("");
         }
       }
     } catch (err) {
@@ -96,7 +121,7 @@ export default function StudentStatusPage() {
 
   useEffect(() => {
     fetchData();
-  }, [schoolId, API_URL]);
+  }, [schoolId, API_URL, session]);
 
   const handleAwardBadge = async () => {
     const studentObj = students.find((s) => s.id === targetStudentId);

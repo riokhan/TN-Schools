@@ -32,8 +32,9 @@ export default function SubjectAnalyticsPage() {
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [classStudents, setClassStudents] = useState<DiagnosticStudent[]>([]);
-  const [selectedClassId, setSelectedClassId] = useState<"10a" | "10b">("10a");
+  const [selectedClass, setSelectedClass] = useState("");
   const [activeCategory, setActiveCategory] = useState<"All" | "Physics" | "Chemistry" | "Biology">("All");
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
   
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -57,6 +58,27 @@ export default function SubjectAnalyticsPage() {
     syllabus: "State Board",
     duration: "6 Hours",
   });
+
+  // Fetch teacher classes on mount
+  useEffect(() => {
+    const fetchTeacherClasses = async () => {
+      if (!schoolId || !session?.user) return;
+      const teacherId = (session.user as any).id;
+      try {
+        const res = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setTeacherClasses(data.data);
+          if (data.data.length > 0) {
+            setSelectedClass(`${data.data[0].className}${data.data[0].section}`);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching teacher classes:", err);
+      }
+    };
+    fetchTeacherClasses();
+  }, [schoolId, session, API_URL]);
 
   const fetchChapters = async () => {
     try {
@@ -90,9 +112,13 @@ export default function SubjectAnalyticsPage() {
   };
 
   const fetchClassDiagnostics = async () => {
+    if (!schoolId || !selectedClass) {
+      setClassStudents([]);
+      return;
+    }
     try {
-      const clsNum = selectedClassId === "10a" ? "10" : "10";
-      const secLetter = selectedClassId === "10a" ? "A" : "B";
+      const clsNum = selectedClass.replace(/\D/g, "");
+      const secLetter = selectedClass.replace(/\d/g, "").toUpperCase();
       const res = await fetch(
         `${API_URL}/api/teacher/analytics/class?schoolId=${schoolId || ""}&class=${clsNum}&section=${secLetter}`
       );
@@ -143,7 +169,7 @@ export default function SubjectAnalyticsPage() {
       setLoading(false);
     };
     loadAllData();
-  }, [schoolId, selectedClassId, API_URL]);
+  }, [schoolId, selectedClass, API_URL]);
 
   const filteredChapters = chapters.filter(
     (c) => activeCategory === "All" || c.category === activeCategory
@@ -365,26 +391,27 @@ export default function SubjectAnalyticsPage() {
       {/* Class Selector Bar */}
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 bg-[var(--bg-card)] hover:bg-[var(--bg-card-hover)] p-4 rounded-2xl border border-[var(--border)] mb-6">
         <div className="flex gap-2">
-          <button
-            onClick={() => setSelectedClassId("10a")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              selectedClassId === "10a"
-                ? "bg-[var(--primary)] text-white shadow-sm"
-                : "bg-[var(--bg-main)] text-[var(--text-muted)] hover:bg-slate-800"
-            }`}
-          >
-            Class 10A - Science
-          </button>
-          <button
-            onClick={() => setSelectedClassId("10b")}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-              selectedClassId === "10b"
-                ? "bg-[var(--primary)] text-white shadow-sm"
-                : "bg-[var(--bg-main)] text-[var(--text-muted)] hover:bg-slate-800"
-            }`}
-          >
-            Class 10B - Science
-          </button>
+          {teacherClasses.length > 0 ? (
+            teacherClasses.map((cls) => {
+              const val = `${cls.className}${cls.section}`;
+              const isSelected = selectedClass === val;
+              return (
+                <button
+                  key={cls.id}
+                  onClick={() => setSelectedClass(val)}
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                    isSelected
+                      ? "bg-[var(--primary)] text-white shadow-sm"
+                      : "bg-[var(--bg-main)] text-[var(--text-muted)] hover:bg-slate-800"
+                  }`}
+                >
+                  Class {cls.className}{cls.section} - {cls.subject}
+                </button>
+              );
+            })
+          ) : (
+            <span className="text-xs text-[var(--text-muted)] italic">No classes assigned</span>
+          )}
         </div>
         <div className="text-xs text-[var(--text-muted)] font-medium">
           Data sync: <span className="text-emerald-400 font-bold">Live</span>

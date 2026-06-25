@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { roleConfigs, NavItem } from "@/lib/navConfig";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useTheme } from "next-themes";
@@ -99,6 +99,8 @@ export default function PortalLayout({
 }: PortalLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const navRef = useRef<HTMLElement>(null);
+
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -110,6 +112,25 @@ export default function PortalLayout({
   const [disabledRoutes, setDisabledRoutes] = useState<Set<string>>(new Set());
   const { data: session, status } = useSession();
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  // Preserve and restore sidebar scroll position
+  useEffect(() => {
+    const savedScrollTop = sessionStorage.getItem("sidebar-scroll");
+    if (savedScrollTop && navRef.current) {
+      navRef.current.scrollTop = parseInt(savedScrollTop, 10);
+    } else {
+      const activeItem = navRef.current?.querySelector(".sidebar-item.active");
+      if (activeItem) {
+        activeItem.scrollIntoView({ block: "nearest" });
+      }
+    }
+  }, [disabledRoutes, pathname]);
+
+  const handleScroll = () => {
+    if (navRef.current) {
+      sessionStorage.setItem("sidebar-scroll", navRef.current.scrollTop.toString());
+    }
+  };
 
   const fetchNotifications = async () => {
     if (!session?.user) return;
@@ -397,7 +418,7 @@ export default function PortalLayout({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto">
+        <nav ref={navRef} onScroll={handleScroll} className="flex-1 overflow-y-auto">
           <div className="px-5 mb-2 text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">
             MAIN
           </div>
@@ -432,6 +453,7 @@ export default function PortalLayout({
                 key={item.href}
                 href={item.href}
                 className={`sidebar-item ${isActive ? "active" : ""}`}
+                scroll={false}
               >
                 <span className="text-lg opacity-80">{item.icon}</span>
                 <span>{item.label}</span>
@@ -641,13 +663,13 @@ export default function PortalLayout({
                      <div className="text-xs font-bold text-[var(--text-heading)] truncate">{displayName}</div>
                      <div className="text-[10px] text-[var(--text-muted)] truncate">{displayEmail}</div>
                    </div>
-                   <Link href="#" className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors">
+                   <Link href="#" scroll={false} className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors">
                      👤 {t.profileTitle}
                    </Link>
-                   <Link href="#" className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors">
+                   <Link href="#" scroll={false} className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors">
                      ⚙️ {t.settings}
                    </Link>
-                   <Link href="#" className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors">
+                   <Link href="#" scroll={false} className="flex items-center gap-2 px-4 py-2 text-xs text-[var(--text-main)] hover:bg-[var(--sidebar-item-hover-bg)] transition-colors">
                      ❓ {t.help}
                    </Link>
                  </div>

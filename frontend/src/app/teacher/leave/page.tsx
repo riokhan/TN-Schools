@@ -28,6 +28,7 @@ export default function LeaveRequestsPage() {
   const [requests, setRequests] = useState<LeaveRequest[]>([]);
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loading, setLoading] = useState(true);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
 
   // Form State
   const [leaveType, setLeaveType] = useState("Casual Leave");
@@ -48,18 +49,46 @@ export default function LeaveRequestsPage() {
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!schoolId || !session?.user) return;
+      const teacherId = (session.user as any).id;
       try {
         setLoading(true);
-        const leaveRes = await fetch(`${API_URL}/api/teacher/leave${schoolId ? `?schoolId=${schoolId}` : ""}`);
-        const leaveData = await leaveRes.json();
-        if (leaveData.success && leaveData.data) {
-          setRequests(leaveData.data);
+        // 1. Fetch teacher classes
+        const classesRes = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+        const classesData = await classesRes.json();
+        let activeClasses: any[] = [];
+        if (classesData.success && Array.isArray(classesData.data)) {
+          setTeacherClasses(classesData.data);
+          activeClasses = classesData.data;
         }
 
-        const studentRes = await fetch(`${API_URL}/api/students${schoolId ? `?schoolId=${schoolId}` : ""}`);
+        if (activeClasses.length === 0) {
+          setRequests([]);
+          setStaffList([]);
+          setStudentName("Select Student");
+          setLoading(false);
+          return;
+        }
+
+        // 2. Fetch Leave history
+        const leaveRes = await fetch(`${API_URL}/api/teacher/leave?schoolId=${schoolId}`);
+        const leaveData = await leaveRes.json();
+        if (leaveData.success && leaveData.data) {
+          const filteredRequests = leaveData.data.filter((req: any) =>
+            activeClasses.some(tc => req.studentName && req.studentName.includes(`Class ${tc.className}${tc.section}`))
+          );
+          setRequests(filteredRequests);
+        }
+
+        // 3. Fetch Students
+        const studentRes = await fetch(`${API_URL}/api/students?schoolId=${schoolId}`);
         const studentData = await studentRes.json();
         if (studentData.success && studentData.data) {
-          const mappedStudents = studentData.data.map((s: any) => ({
+          const filteredStudents = studentData.data.filter((s: any) =>
+            activeClasses.some(tc => tc.className === s.class && tc.section === s.section)
+          );
+
+          const mappedStudents = filteredStudents.map((s: any) => ({
             id: s.id,
             name: s.user?.name || "Unknown Student",
             subject: `Class ${s.class}${s.section}`,
@@ -79,7 +108,7 @@ export default function LeaveRequestsPage() {
     };
 
     fetchData();
-  }, [schoolId, API_URL]);
+  }, [schoolId, API_URL, session]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

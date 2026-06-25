@@ -38,25 +38,57 @@ export default function HomeworkPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingSubs, setLoadingSubs] = useState(false);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
 
   // New Homework Form State
   const [newTitle, setNewTitle] = useState("");
-  const [newClass, setNewClass] = useState("10A - Mathematics");
+  const [newClass, setNewClass] = useState("");
   const [newDueDate, setNewDueDate] = useState("June 25, 2026");
   const [newDesc, setNewDesc] = useState("");
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
 
+  // Fetch teacher classes on mount
+  useEffect(() => {
+    const fetchTeacherClasses = async () => {
+      if (!schoolId || !session?.user) return;
+      const teacherId = (session.user as any).id;
+      try {
+        const res = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setTeacherClasses(data.data);
+          if (data.data.length > 0) {
+            setNewClass(`${data.data[0].className}${data.data[0].section} - ${data.data[0].subject}`);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching teacher classes:", err);
+      }
+    };
+    fetchTeacherClasses();
+  }, [schoolId, session, API_URL]);
+
   const fetchHomework = async () => {
+    if (!schoolId || teacherClasses.length === 0) {
+      setAssignments([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await fetch(`${API_URL}/api/teacher/homework?schoolId=${schoolId || ""}`);
       const result = await res.json();
       if (result.success && result.data) {
-        setAssignments(result.data);
-        if (result.data.length > 0 && !selectedHwId) {
-          // Select first homework matching active status
-          const firstHw = result.data.find((a: any) => a.status === activeTab) || result.data[0];
+        const filtered = result.data.filter((hw: any) =>
+          teacherClasses.some(tc => `${tc.className}${tc.section} - ${tc.subject}` === hw.className)
+        );
+        setAssignments(filtered);
+        if (filtered.length > 0) {
+          // Select first homework matching active status or fall back
+          const firstHw = filtered.find((a: any) => a.status === activeTab) || filtered[0];
           setSelectedHwId(firstHw.id);
+        } else {
+          setSelectedHwId("");
         }
       }
     } catch (err) {
@@ -65,6 +97,10 @@ export default function HomeworkPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchHomework();
+  }, [schoolId, teacherClasses]);
 
   const fetchSubmissions = async (hwId: string) => {
     if (!hwId) return;
@@ -83,10 +119,6 @@ export default function HomeworkPage() {
       setLoadingSubs(false);
     }
   };
-
-  useEffect(() => {
-    fetchHomework();
-  }, [schoolId]);
 
   useEffect(() => {
     if (selectedHwId) {
@@ -419,9 +451,15 @@ export default function HomeworkPage() {
                     onChange={(e) => setNewClass(e.target.value)}
                     className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2.5 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)]"
                   >
-                    <option value="10A - Mathematics">10A - Mathematics</option>
-                    <option value="10B - Mathematics">10B - Mathematics</option>
-                    <option value="9A - Mathematics">9A - Mathematics</option>
+                    {teacherClasses.length > 0 ? (
+                      teacherClasses.map((cls) => (
+                        <option key={cls.id} value={`${cls.className}${cls.section} - ${cls.subject}`}>
+                          Class {cls.className}{cls.section} - {cls.subject}
+                        </option>
+                      ))
+                    ) : (
+                      <option value="">No Classes Assigned</option>
+                    )}
                   </select>
                 </div>
 

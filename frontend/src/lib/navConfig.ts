@@ -127,7 +127,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Story Books", href: "/student/middle-school/stories", icon: "📚" },
       { label: "AI Helper", href: "/student/middle-school/ai", icon: "🤖" },
       { label: "Welfare & Benefits", href: "/student/middle-school/welfare", icon: "🎁" },
-      
+
       // Common Student Menu
       { label: "---", href: "#", icon: "" },
       { label: "Common Tools", href: "#", icon: "" },
@@ -211,13 +211,12 @@ export const roleConfigs: Record<string, PortalConfig> = {
     themeClass: "theme-teacher",
     accentColor: "#f59e0b",
     navItems: [
-      { label: "My Subjects (Science)", href: "/teacher", icon: "🔬" },
+      { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
       { label: "Science Labs", href: "/teacher/labs", icon: "🧪" },
       { label: "Subject Analytics", href: "/teacher/subject-analytics", icon: "📊" },
 
       // Common Menu & Tools
       { label: "Admin & Tools", href: "#", icon: "" },
-      { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
       { label: "AI Lesson Planner", href: "/teacher/lesson-planner", icon: "📋" },
       { label: "Question Generator", href: "/teacher/questions", icon: "❓" },
       { label: "AI Evaluation", href: "/teacher/evaluation", icon: "✅" },
@@ -239,6 +238,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Daily Attendance", href: "/teacher/attendance", icon: "📅" },
       { label: "Announcements", href: "/teacher/announcements", icon: "📢" },
       { label: "Leave Requests", href: "/teacher/leave", icon: "📄" },
+      { label: "Club Events", href: "/teacher/events", icon: "📅" },
     ],
   },
   PARENT: {
@@ -293,6 +293,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Media Gallery", href: "/headmaster/gallery", icon: "🖼️" },
       { label: "Rewards & Honors", href: "/headmaster/rewards", icon: "🏆" },
       { label: "School History", href: "/headmaster/history", icon: "📜" },
+      { label: "Clubs & Activities", href: "/headmaster/clubs", icon: "🎭" },
     ],
   },
   BEO: {

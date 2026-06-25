@@ -29,6 +29,25 @@ export default function StudentProfilesPage() {
   const [selectedStudent, setSelectedStudent] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
+
+  // Fetch teacher classes on mount
+  useEffect(() => {
+    const fetchTeacherClasses = async () => {
+      if (!schoolId || !session?.user) return;
+      const teacherId = (session.user as any).id;
+      try {
+        const res = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setTeacherClasses(data.data);
+        }
+      } catch (err) {
+        console.error("Error fetching teacher classes:", err);
+      }
+    };
+    fetchTeacherClasses();
+  }, [schoolId, session, API_URL]);
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -132,7 +151,9 @@ export default function StudentProfilesPage() {
     const matchesSearch =
       student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       student.emis.includes(searchTerm);
-    const matchesClass = selectedClass === "All" || student.class === selectedClass;
+    const matchesClass = selectedClass === "All"
+      ? teacherClasses.some(tc => `${tc.className}${tc.section}` === student.class)
+      : student.class === selectedClass;
     return matchesSearch && matchesClass;
   });
 
@@ -154,11 +175,11 @@ export default function StudentProfilesPage() {
             className="bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors w-32"
           >
             <option value="All">All Classes</option>
-            <option value="10A">Class 10A</option>
-            <option value="10B">Class 10B</option>
-            <option value="9A">Class 9A</option>
-            <option value="9B">Class 9B</option>
-            <option value="8A">Class 8A</option>
+            {teacherClasses.map((cls) => (
+              <option key={cls.id} value={`${cls.className}${cls.section}`}>
+                Class {cls.className}{cls.section}
+              </option>
+            ))}
           </select>
         </div>
         <div className="text-xs text-[var(--text-muted)] font-semibold self-end md:self-auto shrink-0">
