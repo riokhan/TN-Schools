@@ -121,6 +121,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Dashboard", href: "/student/middle-school", icon: "🏠" },
       { label: "My Subjects", href: "/student/subjects", icon: "📖" },
       { label: "Homework", href: "/student/homework", icon: "📝" },
+      { label: "Self-Study Plan", href: "/student/study-plan", icon: "⚡" },
       { label: "My Badges", href: "/student/middle-school/badges", icon: "🏅" },
       { label: "Fun Quizzes", href: "/student/middle-school/quizzes", icon: "🎮" },
       { label: "Story Books", href: "/student/middle-school/stories", icon: "📚" },
@@ -151,6 +152,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Dashboard", href: "/student/high-school", icon: "🏠" },
       { label: "My Subjects", href: "/student/subjects", icon: "📖" },
       { label: "Homework", href: "/student/homework", icon: "📝" },
+      { label: "Self-Study Plan", href: "/student/study-plan", icon: "⚡" },
       { label: "Board Prep", href: "/student/high-school/board-prep", icon: "🎯" },
       { label: "Mock Tests", href: "/student/high-school/mock-tests", icon: "📝" },
       { label: "Study Boost", href: "/student/high-school/study-boost", icon: "⚡" },
@@ -181,6 +183,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Dashboard", href: "/student/higher-secondary", icon: "🏠" },
       { label: "My Subjects", href: "/student/subjects", icon: "📖" },
       { label: "Homework", href: "/student/homework", icon: "📝" },
+      { label: "Self-Study Plan", href: "/student/study-plan", icon: "⚡" },
       { label: "Board Prep", href: "/student/higher-secondary/board-prep", icon: "🎯" },
       { label: "NEET/JEE Prep", href: "/student/higher-secondary/competitive", icon: "🚀" },
       { label: "Mock Tests", href: "/student/higher-secondary/mock-tests", icon: "📝" },
@@ -209,7 +212,6 @@ export const roleConfigs: Record<string, PortalConfig> = {
     accentColor: "#f59e0b",
     navItems: [
       { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
-      { label: "My Subjects (Science)", href: "/teacher", icon: "🔬" },
       { label: "Science Labs", href: "/teacher/labs", icon: "🧪" },
       { label: "Subject Analytics", href: "/teacher/subject-analytics", icon: "📊" },
 

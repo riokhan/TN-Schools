@@ -46,32 +46,63 @@ export default function ScienceLabsPage() {
 
   // Form state for creating a new session
   const [newLabName, setNewLabName] = useState("");
-  const [newLabClass, setNewLabClass] = useState("Class 10A");
+  const [newLabClass, setNewLabClass] = useState("");
   const [newLabDate, setNewLabDate] = useState("");
   const [showAddForm, setShowAddForm] = useState(false);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
+      if (!schoolId || !session?.user) return;
+      const teacherId = (session.user as any).id;
       try {
         setLoading(true);
-        // Fetch Labs
-        const labsRes = await fetch(`${API_URL}/api/teacher/labs${schoolId ? `?schoolId=${schoolId}` : ""}`);
+        // 1. Fetch teacher classes
+        const classesRes = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+        const classesData = await classesRes.json();
+        let activeClasses: any[] = [];
+        if (classesData.success && Array.isArray(classesData.data)) {
+          setTeacherClasses(classesData.data);
+          activeClasses = classesData.data;
+          if (classesData.data.length > 0) {
+            setNewLabClass(`Class ${classesData.data[0].className}${classesData.data[0].section}`);
+          }
+        }
+
+        if (activeClasses.length === 0) {
+          setExperiments([]);
+          setStudentGrades([]);
+          setLoading(false);
+          return;
+        }
+
+        // 2. Fetch Labs
+        const labsRes = await fetch(`${API_URL}/api/teacher/labs?schoolId=${schoolId}`);
         const labsData = await labsRes.json();
         if (labsData.success && labsData.data) {
-          setExperiments(labsData.data);
+          // Filter labs to only show those matching teacher's classes
+          const filteredLabs = labsData.data.filter((exp: any) =>
+            activeClasses.some(tc => `Class ${tc.className}${tc.section}` === exp.classSection)
+          );
+          setExperiments(filteredLabs);
           
           // Check if there is an active session
-          const active = labsData.data.find((e: any) => e.status === "active");
+          const active = filteredLabs.find((e: any) => e.status === "active");
           if (active) {
             setActiveExp(active);
           }
         }
 
-        // Fetch Students to populate roster
-        const studentsRes = await fetch(`${API_URL}/api/students${schoolId ? `?schoolId=${schoolId}` : ""}`);
+        // 3. Fetch Students to populate roster
+        const studentsRes = await fetch(`${API_URL}/api/students?schoolId=${schoolId}`);
         const studentsData = await studentsRes.json();
         if (studentsData.success && studentsData.data) {
-          const mappedGrades = studentsData.data.map((student: any, idx: number) => ({
+          // Filter students to only show those belonging to teacher's classes
+          const filteredStudents = studentsData.data.filter((st: any) =>
+            activeClasses.some(tc => tc.className === st.class && tc.section === st.section)
+          );
+          
+          const mappedGrades = filteredStudents.map((student: any, idx: number) => ({
             id: student.id,
             name: student.user?.name || "Student Name",
             conduct: idx % 3 === 0 ? "Excellent" : idx % 3 === 1 ? "Good" : "Needs Attention",
@@ -88,7 +119,7 @@ export default function ScienceLabsPage() {
     };
 
     fetchData();
-  }, [schoolId, API_URL]);
+  }, [schoolId, API_URL, session]);
 
   const toggleSafety = async (id: string, currentVal: boolean) => {
     try {
@@ -645,11 +676,15 @@ export default function ScienceLabsPage() {
                   onChange={(e) => setNewLabClass(e.target.value)}
                   className="bg-[var(--bg-card)] border border-[var(--border)] rounded-lg p-2 text-xs text-[var(--text-heading)] outline-none"
                 >
-                  <option value="Class 10A">Class 10A</option>
-                  <option value="Class 10B">Class 10B</option>
-                  <option value="Class 9A">Class 9A</option>
-                  <option value="Class 8A">Class 8A</option>
-                  <option value="Class 12B">Class 12B</option>
+                  {teacherClasses.length > 0 ? (
+                    teacherClasses.map((cls) => (
+                      <option key={cls.id} value={`Class ${cls.className}${cls.section}`}>
+                        Class {cls.className}{cls.section}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No Classes Assigned</option>
+                  )}
                 </select>
                 <input
                   type="text"

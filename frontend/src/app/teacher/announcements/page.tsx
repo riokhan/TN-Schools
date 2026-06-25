@@ -23,21 +23,54 @@ export default function AnnouncementsPage() {
 
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
 
   // Form State
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
-  const [target, setTarget] = useState("Class 10A Parents");
+  const [target, setTarget] = useState("");
   const [pinToTop, setPinToTop] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
+  // Fetch teacher classes on mount
+  useEffect(() => {
+    const fetchTeacherClasses = async () => {
+      if (!schoolId || !session?.user) return;
+      const teacherId = (session.user as any).id;
+      try {
+        const res = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setTeacherClasses(data.data);
+          if (data.data.length > 0) {
+            setTarget(`Class ${data.data[0].className}${data.data[0].section} Parents`);
+          } else {
+            setTarget("All Parents taught by me");
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching teacher classes:", err);
+      }
+    };
+    fetchTeacherClasses();
+  }, [schoolId, session, API_URL]);
+
   const fetchAnnouncements = async () => {
+    if (!schoolId || teacherClasses.length === 0) {
+      setAnnouncements([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await fetch(`${API_URL}/api/teacher/announcements?schoolId=${schoolId || ""}`);
       const result = await res.json();
-      if (result.success) {
-        setAnnouncements(result.data);
+      if (result.success && result.data) {
+        const filtered = result.data.filter((ann: any) =>
+          ann.target === "All Parents taught by me" ||
+          teacherClasses.some(tc => `Class ${tc.className}${tc.section} Parents` === ann.target)
+        );
+        setAnnouncements(filtered);
       }
     } catch (err) {
       console.error("Error fetching announcements:", err);
@@ -48,7 +81,7 @@ export default function AnnouncementsPage() {
 
   useEffect(() => {
     fetchAnnouncements();
-  }, [schoolId]);
+  }, [schoolId, teacherClasses]);
 
   const handleBroadcast = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,9 +206,11 @@ export default function AnnouncementsPage() {
                 onChange={(e) => setTarget(e.target.value)}
                 className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               >
-                <option value="Class 10A Parents">Class 10A Parents</option>
-                <option value="Class 9B Parents">Class 9B Parents</option>
-                <option value="Class 8A Parents">Class 8A Parents</option>
+                {teacherClasses.length > 0 && teacherClasses.map((cls) => (
+                  <option key={cls.id} value={`Class ${cls.className}${cls.section} Parents`}>
+                    Class {cls.className}{cls.section} Parents
+                  </option>
+                ))}
                 <option value="All Parents taught by me">All Parents taught by me</option>
               </select>
             </div>
