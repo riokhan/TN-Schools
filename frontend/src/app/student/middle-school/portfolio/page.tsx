@@ -160,6 +160,7 @@
 import React, { useState, useEffect } from "react";
 import PortalLayout from "@/components/PortalLayout";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 const getApiBase = () => {
   let url = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
@@ -171,18 +172,18 @@ const getApiBase = () => {
 
 const API_BASE = getApiBase();
 
+const BADGE_META: Record<string, { icon: string; color: string }> = {
+  "🔬 Star Scientist":  { icon: "🔬", color: "from-blue-400 to-indigo-500" },
+  "📝 Homework Pro":   { icon: "📝", color: "from-amber-400 to-orange-500" },
+  "💬 Active Speaker": { icon: "💬", color: "from-emerald-400 to-teal-500" },
+  "🌟 Mentor Star":    { icon: "🌟", color: "from-purple-400 to-fuchsia-500" },
+};
+
 const projects = [
   { title: "Solar System Model", subject: "Science", date: "Last Week", type: "Craft", grade: "Super Star! ⭐", icon: "🪐", color: "#10b981" },
   { title: "My Favorite Animal Essay", subject: "English", date: "2 Weeks Ago", type: "Writing", grade: "Great Job! 👍", icon: "🐶", color: "#f59e0b" },
   { title: "Math Puzzle Challenge", subject: "Mathematics", date: "Last Month", type: "Game", grade: "Math Wizard! 🧙‍♂️", icon: "🧩", color: "#6366f1" },
   { title: "History of Cholas", subject: "Social Science", date: "Last Month", type: "Drawing", grade: "Creative! 🎨", icon: "👑", color: "#ec4899" }
-];
-
-const badges = [
-  { name: "Super Reader", description: "Read 10 story books this month!", icon: "📖", color: "from-emerald-400 to-teal-500" },
-  { name: "Math Ninja", description: "Solved all puzzles perfectly!", icon: "📐", color: "from-indigo-400 to-purple-500" },
-  { name: "Kindness Star", description: "Helped a classmate today!", icon: "⭐", color: "from-amber-400 to-orange-500" },
-  { name: "Science Explorer", description: "Completed 5 virtual lab experiments", icon: "🔬", color: "from-blue-400 to-cyan-500" }
 ];
 
 const skills = [
@@ -195,6 +196,8 @@ const skills = [
 export default function MiddleSchoolPortfolio() {
   const { data: session } = useSession();
   const [student, setStudent] = useState<any>(null);
+  const [earnedBadges, setEarnedBadges] = useState<any[]>([]);
+  const [badgesLoading, setBadgesLoading] = useState(true);
 
   useEffect(() => {
     fetch(`${API_BASE}/api/students`)
@@ -204,10 +207,39 @@ export default function MiddleSchoolPortfolio() {
           const myStudent = (session?.user as any)?.id 
             ? json.data.find((s: any) => s.userId === (session?.user as any)?.id)
             : null;
-          setStudent(myStudent || json.data[0]);
+          const resolved = myStudent || json.data[0];
+          setStudent(resolved);
+
+          // Fetch badges for this student
+          const schoolId = (session?.user as any)?.schoolId;
+          const url = schoolId
+            ? `${API_BASE}/api/teacher/badges?schoolId=${schoolId}`
+            : `${API_BASE}/api/teacher/badges`;
+
+          return fetch(url)
+            .then((r) => r.json())
+            .then((bJson) => {
+              if (bJson.success) {
+                const filtered = resolved
+                  ? bJson.data.filter((b: any) => b.studentId === resolved.id)
+                  : bJson.data;
+                const shaped = filtered.map((b: any) => {
+                  const meta = BADGE_META[b.badge] || { icon: "🏅", color: "from-slate-400 to-slate-600" };
+                  return {
+                    id: b.id,
+                    name: b.badge,
+                    icon: meta.icon,
+                    color: meta.color,
+                    description: b.remark || "Awarded by your teacher",
+                  };
+                });
+                setEarnedBadges(shaped);
+              }
+            });
         }
       })
-      .catch((err) => console.error(err));
+      .catch((err) => console.error(err))
+      .finally(() => setBadgesLoading(false));
   }, [session]);
 
   const userName = session?.user?.name || student?.user?.name || "Student";
@@ -246,7 +278,7 @@ export default function MiddleSchoolPortfolio() {
              </div>
              <div className="flex justify-between items-center mb-3">
                 <span className="text-sm font-semibold text-black dark:text-slate-300 flex items-center gap-2"><span>🏅</span> Badges Collected</span>
-                <span className="text-base font-black text-amber-600 dark:text-amber-400">{badges.length}</span>
+                <span className="text-base font-black text-amber-600 dark:text-amber-400">{badgesLoading ? "…" : earnedBadges.length}</span>
              </div>
              <div className="flex justify-between items-center">
                 <span className="text-sm font-semibold text-black dark:text-slate-300 flex items-center gap-2"><span>🏆</span> Current Level</span>
@@ -293,21 +325,30 @@ export default function MiddleSchoolPortfolio() {
              <h2 className="text-xl font-black text-black dark:text-white flex items-center gap-3">
                <span className="text-3xl">🏅</span> Badge Collection
              </h2>
-             <button className="text-sm font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors bg-amber-400/10 px-4 py-2 rounded-xl">See All Badges →</button>
+             <Link href="/student/middle-school/badges" className="text-sm font-bold text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 transition-colors bg-amber-400/10 px-4 py-2 rounded-xl">See All Badges →</Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {badges.map((b, i) => (
-              <div key={i} className="flex flex-col items-center text-center gap-3 bg-slate-50 dark:bg-slate-900/40 p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/30 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:border-amber-500/30 transition-colors cursor-default">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl bg-gradient-to-br ${b.color} shadow-lg shrink-0 transform hover:rotate-12 transition-transform`}>
-                  {b.icon}
+          {badgesLoading ? (
+            <div className="flex justify-center py-8"><div className="w-6 h-6 border-4 border-amber-400 border-t-transparent rounded-full animate-spin"></div></div>
+          ) : earnedBadges.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {earnedBadges.slice(0, 4).map((b) => (
+                <div key={b.id} className="flex flex-col items-center text-center gap-3 bg-slate-50 dark:bg-slate-900/40 p-5 rounded-2xl border-2 border-slate-200 dark:border-slate-700/30 hover:bg-slate-100 dark:hover:bg-slate-800/50 hover:border-amber-500/30 transition-colors cursor-default">
+                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center text-3xl bg-gradient-to-br ${b.color} shadow-lg shrink-0 transform hover:rotate-12 transition-transform`}>
+                    {b.icon}
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-black dark:text-white mb-1">{b.name}</h3>
+                    <p className="text-xs font-medium text-black dark:text-slate-400 leading-snug">{b.description}</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-sm font-black text-black dark:text-white mb-1">{b.name}</h3>
-                  <p className="text-xs font-medium text-black dark:text-slate-400 leading-snug">{b.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10">
+              <div className="text-4xl mb-3">🎖️</div>
+              <p className="text-sm text-slate-500 dark:text-slate-400">No badges yet! Keep up the great work.</p>
+            </div>
+          )}
         </div>
 
         {/* Skills Radar / Progress */}
