@@ -31,6 +31,12 @@ export default function ScienceLabsPage() {
   const [studentGrades, setStudentGrades] = useState<StudentLabGrade[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Active Session states
+  const [activeExp, setActiveExp] = useState<Experiment | null>(null);
+  const [naohVolume, setNaohVolume] = useState(0);
+  const [isFlowing, setIsFlowing] = useState(false);
+  const [liveStudents, setLiveStudents] = useState<any[]>([]);
+
   // AI Generator States
   const [labTopic, setLabTopic] = useState("Photosynthesis Rate under Blue Light");
   const [labGrade, setLabGrade] = useState("9");
@@ -53,6 +59,12 @@ export default function ScienceLabsPage() {
         const labsData = await labsRes.json();
         if (labsData.success && labsData.data) {
           setExperiments(labsData.data);
+          
+          // Check if there is an active session
+          const active = labsData.data.find((e: any) => e.status === "active");
+          if (active) {
+            setActiveExp(active);
+          }
         }
 
         // Fetch Students to populate roster
@@ -113,6 +125,195 @@ export default function ScienceLabsPage() {
       });
     }
   };
+
+  const startSession = async (exp: Experiment) => {
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/labs/${exp.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setExperiments(experiments.map((e) => (e.id === exp.id ? { ...e, status: "active" } : e)));
+        setActiveExp({ ...exp, status: "active" });
+        Swal.fire({
+          icon: "success",
+          title: "Session Started",
+          text: `Lab session for "${exp.name}" is now live!`,
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to Start",
+          text: data.error || "Failed to start the lab session.",
+          confirmButtonColor: "#ef4444",
+        });
+      }
+    } catch (err) {
+      console.error("Error starting session", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Could not connect to database.",
+        confirmButtonColor: "#ef4444",
+      });
+    }
+  };
+
+  const endSession = async (id: string) => {
+    const result = await Swal.fire({
+      title: "End Lab Session?",
+      text: "This will complete the session and log student reports.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#10b981",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, complete it!",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(`${API_URL}/api/teacher/labs/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "completed" }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setExperiments(experiments.map((e) => (e.id === id ? { ...e, status: "completed" } : e)));
+        setActiveExp(null);
+        Swal.fire({
+          icon: "success",
+          title: "Session Completed",
+          text: "The lab session has been recorded as completed.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to End",
+          text: data.error || "Failed to end the lab session.",
+          confirmButtonColor: "#ef4444",
+        });
+      }
+    } catch (err) {
+      console.error("Error ending session", err);
+    }
+  };
+
+  // Titration pH curve computation
+  const getTitrationStats = (vol: number) => {
+    let ph = 1.0;
+    let desc = "Strongly Acidic (HCl)";
+    let col = "rgba(255, 255, 255, 0.1)";
+    
+    if (vol < 18) {
+      ph = 1.0 + (vol / 18) * 1.8;
+    } else if (vol >= 18 && vol < 19.5) {
+      ph = 2.8 + ((vol - 18) / 1.5) * 1.7;
+      desc = "Weakly Acidic";
+    } else if (vol >= 19.5 && vol < 20.5) {
+      ph = 4.5 + (vol - 19.5) * 5.0;
+      desc = ph >= 6.5 && ph <= 7.5 ? "Neutralized (Endpoint)" : ph < 6.5 ? "Slightly Acidic" : "Slightly Basic";
+    } else if (vol >= 20.5 && vol < 22) {
+      ph = 9.5 + ((vol - 20.5) / 1.5) * 1.5;
+      desc = "Weakly Basic";
+    } else {
+      ph = 11.0 + ((vol - 22) / 3) * 1.0;
+      desc = "Strongly Basic (NaOH)";
+    }
+    
+    if (ph < 8.2) {
+      col = "rgba(255, 255, 255, 0.15)";
+    } else if (ph >= 8.2 && ph < 10) {
+      const alpha = 0.15 + ((ph - 8.2) / 1.8) * 0.45;
+      col = `rgba(244, 143, 177, ${alpha})`;
+    } else {
+      col = "rgba(233, 30, 99, 0.85)";
+    }
+    
+    return { ph: Math.min(14, parseFloat(ph.toFixed(2))), desc, color: col };
+  };
+
+  const { ph: currentPh, desc: phDesc, color: solutionColor } = getTitrationStats(naohVolume);
+
+  // Flow control hook
+  useEffect(() => {
+    let timer: any;
+    if (isFlowing) {
+      timer = setInterval(() => {
+        setNaohVolume((v) => {
+          const nextVal = parseFloat((v + 0.15).toFixed(2));
+          if (nextVal >= 25) {
+            setIsFlowing(false);
+            return 25;
+          }
+          return nextVal;
+        });
+      }, 100);
+    }
+    return () => clearInterval(timer);
+  }, [isFlowing]);
+
+  // Live student progress simulation
+  useEffect(() => {
+    if (!activeExp) {
+      setLiveStudents([]);
+      return;
+    }
+    
+    const initialRoster = studentGrades.map((sg, idx) => {
+      let statusText = "Ready to start";
+      let progressVal = 0;
+      if (idx % 4 === 0) {
+        statusText = "Aligning apparatus";
+        progressVal = 20;
+      } else if (idx % 4 === 1) {
+        statusText = "Standardizing solution";
+        progressVal = 50;
+      } else if (idx % 4 === 2) {
+        statusText = "Titrating Trial 1";
+        progressVal = 70;
+      } else {
+        statusText = "Ready to start";
+        progressVal = 0;
+      }
+      return { ...sg, statusText, progressVal };
+    });
+    setLiveStudents(initialRoster);
+
+    const interval = setInterval(() => {
+      setLiveStudents((prev) =>
+        prev.map((student) => {
+          if (Math.random() > 0.4) {
+            let nextProgress = student.progressVal + Math.floor(Math.random() * 15) + 5;
+            if (nextProgress >= 100) {
+              nextProgress = 100;
+              return { ...student, progressVal: 100, statusText: "Finished experiment ✓" };
+            }
+            
+            let statusText = student.statusText;
+            if (nextProgress > 20 && nextProgress <= 50) {
+              statusText = "Standardizing solution";
+            } else if (nextProgress > 50 && nextProgress <= 85) {
+              statusText = "Titrating Trial 1";
+            } else if (nextProgress > 85 && nextProgress < 100) {
+              statusText = "Calculating volume & endpoint";
+            }
+            return { ...student, progressVal: nextProgress, statusText };
+          }
+          return student;
+        })
+      );
+    }, 4500);
+
+    return () => clearInterval(interval);
+  }, [activeExp, studentGrades]);
 
   const handleGradeChange = (id: string, newGrade: string) => {
     setStudentGrades(
@@ -205,6 +406,207 @@ export default function ScienceLabsPage() {
       }, 1500);
     }, 1200);
   };
+
+  if (activeExp) {
+    return (
+      <PortalLayout title="Active Science Lab" subtitle={`Live monitoring of: ${activeExp.name}`}>
+        <div className="mb-6 flex items-center justify-between">
+          <button
+            onClick={() => setActiveExp(null)}
+            className="flex items-center gap-2 px-4 py-2 bg-[var(--bg-card)] border border-[var(--border)] rounded-xl text-xs font-bold text-[var(--text-heading)] hover:bg-[var(--bg-card-hover)] transition-all"
+          >
+            ← Back to Lab Manager
+          </button>
+          
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold rounded-full animate-pulse">
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+              LIVE SESSION
+            </span>
+            <button
+              onClick={() => endSession(activeExp.id)}
+              className="py-2 px-4 rounded-xl font-bold bg-red-600 hover:bg-red-700 text-white text-xs transition-all shadow-md"
+            >
+              End Session
+            </button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Simulation Panel */}
+          <div className="lg:col-span-2 theme-card p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-base font-bold text-[var(--text-heading)]">🧪 Titration Simulation (Teacher Console)</h2>
+                <button
+                  onClick={() => {
+                    setNaohVolume(0);
+                    setIsFlowing(false);
+                  }}
+                  className="px-3 py-1 border border-[var(--border)] rounded-lg text-[10px] font-bold text-[var(--text-muted)] hover:text-[var(--text-heading)]"
+                >
+                  Reset Simulator
+                </button>
+              </div>
+              <p className="text-xs text-[var(--text-muted)] mb-6">
+                Interact with the burette control below to add NaOH solution into the beaker containing HCl. Phenolphthalein will indicate the endpoint (neutralization) at pH 7-8.
+              </p>
+            </div>
+
+            {/* Visualizer Frame */}
+            <div className="bg-slate-900/10 dark:bg-slate-900/30 border border-[var(--border)] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-around gap-8 min-h-[340px]">
+              {/* Burette Graphic */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Burette (NaOH)</span>
+                <div className="w-[24px] h-[220px] bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-t-full relative shadow-inner flex items-end">
+                  {/* Markings */}
+                  <div className="absolute inset-0 flex flex-col justify-between p-1 select-none pointer-events-none opacity-40">
+                    <span className="text-[8px] text-slate-500 font-mono">0ml</span>
+                    <span className="text-[8px] text-slate-500 font-mono">5ml</span>
+                    <span className="text-[8px] text-slate-500 font-mono">10ml</span>
+                    <span className="text-[8px] text-slate-500 font-mono">15ml</span>
+                    <span className="text-[8px] text-slate-500 font-mono">20ml</span>
+                    <span className="text-[8px] text-slate-500 font-mono">25ml</span>
+                  </div>
+                  {/* Liquid fill */}
+                  <div
+                    className="w-full bg-cyan-400/40 rounded-b-md transition-all duration-300"
+                    style={{ height: `${((25 - naohVolume) / 25) * 100}%` }}
+                  />
+                  {/* Liquid flow stream when flowing */}
+                  {isFlowing && (
+                    <div className="absolute -bottom-[65px] left-1/2 -translate-x-1/2 w-[2px] h-[70px] bg-cyan-400/30 animate-pulse" />
+                  )}
+                </div>
+                <span className="text-xs font-bold text-[var(--text-heading)]">{naohVolume.toFixed(2)} / 25.0 mL</span>
+              </div>
+
+              {/* Stopcock Controls */}
+              <div className="flex flex-col gap-3 max-w-[180px] w-full">
+                <button
+                  onClick={() => setNaohVolume((v) => Math.min(25, parseFloat((v + 0.1).toFixed(2))))}
+                  disabled={naohVolume >= 25}
+                  className="w-full py-2 bg-[var(--bg-main)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-xl text-xs font-bold text-[var(--text-heading)] transition-all"
+                >
+                  + Add 0.1 mL (Drop)
+                </button>
+                <button
+                  onClick={() => setNaohVolume((v) => Math.min(25, parseFloat((v + 1.0).toFixed(2))))}
+                  disabled={naohVolume >= 25}
+                  className="w-full py-2 bg-[var(--bg-main)] hover:bg-[var(--bg-card-hover)] border border-[var(--border)] rounded-xl text-xs font-bold text-[var(--text-heading)] transition-all"
+                >
+                  + Add 1.0 mL (Fast)
+                </button>
+                <button
+                  onClick={() => setIsFlowing(!isFlowing)}
+                  disabled={naohVolume >= 25}
+                  className={`w-full py-2.5 rounded-xl text-xs font-bold transition-all ${
+                    isFlowing
+                      ? "bg-amber-500 hover:bg-amber-600 text-slate-950"
+                      : "bg-indigo-600 hover:bg-indigo-700 text-white"
+                  }`}
+                >
+                  {isFlowing ? "⏹ Stop Flow" : "▶ Start Constant Flow"}
+                </button>
+              </div>
+
+              {/* Beaker Graphic */}
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-wider">Beaker (HCl)</span>
+                <div className="w-[110px] h-[130px] border-2 border-t-0 border-slate-300 dark:border-slate-700 rounded-b-2xl relative shadow-md flex items-end overflow-hidden">
+                  {/* Markings */}
+                  <div className="absolute inset-y-0 left-2 flex flex-col justify-between py-4 select-none pointer-events-none opacity-30">
+                    <div className="w-2 border-t border-slate-500"></div>
+                    <div className="w-2 border-t border-slate-500"></div>
+                    <div className="w-2 border-t border-slate-500"></div>
+                  </div>
+                  {/* Solution liquid */}
+                  <div
+                    className="w-full rounded-b-xl transition-colors duration-500"
+                    style={{
+                      height: `${45 + (naohVolume / 25) * 25}%`,
+                      backgroundColor: solutionColor,
+                    }}
+                  />
+                </div>
+                <span className="text-xs font-bold text-[var(--text-heading)]">{(50 + naohVolume).toFixed(1)} mL Total</span>
+              </div>
+            </div>
+
+            {/* Readout Panels */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-4 border-t border-[var(--border)]">
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Indicator</span>
+                <span className="text-xs font-bold text-[var(--text-heading)]">Phenolphthalein</span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Solution pH</span>
+                <span className={`text-xs font-black ${currentPh >= 6.8 && currentPh <= 7.5 ? "text-emerald-500" : currentPh > 7.5 ? "text-pink-500" : "text-amber-500"}`}>{currentPh.toFixed(2)}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Liquid State</span>
+                <span className="text-xs font-bold text-[var(--text-heading)]">{phDesc}</span>
+              </div>
+              <div>
+                <span className="block text-[10px] uppercase font-bold text-[var(--text-muted)] tracking-wider">Endpoint Volume</span>
+                <span className="text-xs font-bold text-[var(--text-heading)]">~20.0 mL NaOH</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Roster & Live Students */}
+          <div className="glass rounded-2xl border border-slate-800 p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-bold text-white text-base">👥 Student Workspace Monitor</h3>
+                <span className="text-[10px] font-bold bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 px-2 py-0.5 rounded-full">
+                  {liveStudents.length} Online
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                Live feedback showing individual student laboratory simulation progress from their respective portals.
+              </p>
+
+              <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
+                {liveStudents.map((student) => (
+                  <div key={student.id} className="bg-slate-900/40 p-3 rounded-xl border border-slate-800 flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-200">{student.name}</span>
+                      <span className={`text-[9px] font-medium px-2 py-0.5 rounded-full ${
+                        student.progressVal === 100
+                          ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/25"
+                          : "bg-blue-500/10 text-blue-400 border border-blue-500/25"
+                      }`}>
+                        {student.statusText}
+                      </span>
+                    </div>
+                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          student.progressVal === 100 ? "bg-emerald-500" : "bg-indigo-500"
+                        }`}
+                        style={{ width: `${student.progressVal}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-3 bg-red-950/20 border border-red-500/20 rounded-xl mt-4">
+              <span className="block text-[10px] uppercase font-bold text-red-400 mb-1">⚠️ Safety Meter</span>
+              <div className="flex items-center gap-3">
+                <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div className="bg-emerald-500 h-full rounded-full w-[96%]" />
+                </div>
+                <span className="text-xs font-bold text-emerald-400">96% Safe</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </PortalLayout>
+    );
+  }
 
   return (
     <PortalLayout title="Science Labs Manager" subtitle="Manage experimental sessions, lab manuals, and safety compliance.">
@@ -324,9 +726,27 @@ export default function ScienceLabsPage() {
                       <span className={`w-2 h-2 rounded-full ${exp.safetyCheck ? "bg-emerald-500" : "bg-red-500 animate-pulse"}`}></span>
                       {exp.safetyCheck ? "Safety Approved" : "Safety Unverified"}
                     </button>
-                    <button className="btn-primary py-1.5 text-[11px] px-4 shadow-none hover:shadow-[var(--primary-shadow-1)]">
-                      Start Session
-                    </button>
+                    {exp.status === "scheduled" && (
+                      <button
+                        onClick={() => startSession(exp)}
+                        className="btn-primary py-1.5 text-[11px] px-4 shadow-none hover:shadow-[var(--primary-shadow-1)] bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold"
+                      >
+                        Start Session
+                      </button>
+                    )}
+                    {exp.status === "active" && (
+                      <button
+                        onClick={() => setActiveExp(exp)}
+                        className="py-1.5 text-[11px] px-4 rounded-xl font-bold bg-amber-500 hover:bg-amber-600 text-slate-950 shadow-none"
+                      >
+                        View Session
+                      </button>
+                    )}
+                    {exp.status === "completed" && (
+                      <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-3 py-1.5 rounded-full border border-emerald-500/20 flex items-center gap-1">
+                        ✓ Completed
+                      </span>
+                    )}
                   </div>
                 </div>
               ))}
