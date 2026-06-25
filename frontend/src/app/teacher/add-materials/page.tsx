@@ -22,24 +22,54 @@ export default function AddMaterialsPage() {
 
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
 
   // Upload Form State
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Material["category"]>("Notes");
-  const [targetClass, setTargetClass] = useState("Class 10A");
+  const [targetClass, setTargetClass] = useState("");
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
   const [selectedFileSize, setSelectedFileSize] = useState<string>("");
   const [selectedFileFormat, setSelectedFileFormat] = useState<string>("PDF");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeTab, setActiveTab] = useState<"All" | "Notes" | "Worksheet" | "Video Reference" | "Exam Prep">("All");
 
+  // Fetch teacher classes on mount
+  useEffect(() => {
+    const fetchTeacherClasses = async () => {
+      if (!schoolId || !session?.user) return;
+      const teacherId = (session.user as any).id;
+      try {
+        const res = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setTeacherClasses(data.data);
+          if (data.data.length > 0) {
+            setTargetClass(`Class ${data.data[0].className}${data.data[0].section}`);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching teacher classes:", err);
+      }
+    };
+    fetchTeacherClasses();
+  }, [schoolId, session, API_URL]);
+
   const fetchMaterials = async () => {
+    if (!schoolId || teacherClasses.length === 0) {
+      setMaterials([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       const res = await fetch(`${API_URL}/api/teacher/materials?schoolId=${schoolId || ""}`);
       const result = await res.json();
-      if (result.success) {
-        setMaterials(result.data);
+      if (result.success && result.data) {
+        const filtered = result.data.filter((m: any) =>
+          teacherClasses.some(tc => `Class ${tc.className}${tc.section}` === m.classSection)
+        );
+        setMaterials(filtered);
       }
     } catch (err) {
       console.error("Error fetching materials:", err);
@@ -50,7 +80,7 @@ export default function AddMaterialsPage() {
 
   useEffect(() => {
     fetchMaterials();
-  }, [schoolId]);
+  }, [schoolId, teacherClasses]);
 
   const handleFileSelectClick = () => {
     fileInputRef.current?.click();
@@ -323,10 +353,15 @@ startxref
                   onChange={(e) => setTargetClass(e.target.value)}
                   className="w-full bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
                 >
-                  <option value="Class 10A">Class 10A</option>
-                  <option value="Class 9B">Class 9B</option>
-                  <option value="Class 8A">Class 8A</option>
-                  <option value="Class 12B">Class 12B</option>
+                  {teacherClasses.length > 0 ? (
+                    teacherClasses.map((cls) => (
+                      <option key={cls.id} value={`Class ${cls.className}${cls.section}`}>
+                        Class {cls.className}{cls.section}
+                      </option>
+                    ))
+                  ) : (
+                    <option value="">No Classes Assigned</option>
+                  )}
                 </select>
               </div>
             </div>

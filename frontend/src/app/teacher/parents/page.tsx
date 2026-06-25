@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import PortalLayout from "@/components/PortalLayout";
 import * as XLSX from "xlsx";
 import Swal from "sweetalert2";
+import { useSession } from "next-auth/react";
 
 interface ParentRecord {
   id: string;
@@ -25,9 +26,14 @@ interface School {
 }
 
 export default function TeacherParentsPage() {
+  const { data: session } = useSession();
+  const sessionSchoolId = (session?.user as any)?.schoolId;
+  const teacherId = (session?.user as any)?.id;
+
   const [parents, setParents] = useState<ParentRecord[]>([]);
   const [schools, setSchools] = useState<School[]>([]);
   const [loading, setLoading] = useState(true);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -42,7 +48,7 @@ export default function TeacherParentsPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [studentName, setStudentName] = useState("");
-  const [studentClass, setStudentClass] = useState("6");
+  const [studentClass, setStudentClass] = useState("");
   const [term, setTerm] = useState("2025-26");
   const [schoolId, setSchoolId] = useState("");
   const [password, setPassword] = useState("123456");
@@ -53,8 +59,8 @@ export default function TeacherParentsPage() {
     try {
       setLoading(true);
       
-      // Fetch Parents
-      const res = await fetch(`${API_URL}/api/headmaster/parents`);
+      // Fetch Parents with session school ID filter if available
+      const res = await fetch(`${API_URL}/api/headmaster/parents${sessionSchoolId ? `?schoolId=${sessionSchoolId}` : ""}`);
       const parentData = await res.json();
       
       // Fetch Schools
@@ -78,9 +84,30 @@ export default function TeacherParentsPage() {
     }
   };
 
+  // Fetch teacher classes
+  useEffect(() => {
+    const fetchTeacherClasses = async () => {
+      if (!sessionSchoolId || !teacherId) return;
+      try {
+        const res = await fetch(`${API_URL}/api/classes?schoolId=${sessionSchoolId}&teacherId=${teacherId}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setTeacherClasses(data.data);
+          if (data.data.length > 0) {
+            setStudentClass(`${data.data[0].className}${data.data[0].section}`);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching teacher classes:", err);
+      }
+    };
+    fetchTeacherClasses();
+  }, [sessionSchoolId, teacherId, API_URL]);
+
+  // Fetch parents when school ID is available/changed
   useEffect(() => {
     fetchParentsAndSchools();
-  }, []);
+  }, [sessionSchoolId]);
 
   const handleEditClick = (p: ParentRecord) => {
     setEditingId(p.id);
@@ -103,7 +130,11 @@ export default function TeacherParentsPage() {
     setPhone("");
     setEmail("");
     setStudentName("");
-    setStudentClass("6");
+    if (teacherClasses.length > 0) {
+      setStudentClass(`${teacherClasses[0].className}${teacherClasses[0].section}`);
+    } else {
+      setStudentClass("");
+    }
     setTerm("2025-26");
     setSchoolId("");
     setPassword("123456");
@@ -256,7 +287,7 @@ export default function TeacherParentsPage() {
           studentClass: String(row["Student Class"] || row["Class"] || row["class"] || "N/A").trim(),
           term: String(row["Term"] || row["Academic Year"] || row["term"] || "2025-26").trim(),
           password: String(row["Password"] || row["password"] || "123456").trim(),
-          schoolId: schoolId || null,
+          schoolId: sessionSchoolId || schoolId || null,
         })).filter((p) => p.name && p.phone && p.role);
 
         if (parentsData.length === 0) {
@@ -332,13 +363,22 @@ export default function TeacherParentsPage() {
     XLSX.writeFile(wb, "parents_bulk_import_template.xlsx");
   };
 
-  const filteredParents = parents.filter(
-    (p) =>
+  const filteredParents = parents.filter((p) => {
+    const matchesSearch =
       p.name.toLowerCase().includes(search.toLowerCase()) ||
       p.studentName.toLowerCase().includes(search.toLowerCase()) ||
       p.phone.includes(search) ||
-      (p.email || "").toLowerCase().includes(search.toLowerCase())
-  );
+      (p.email || "").toLowerCase().includes(search.toLowerCase());
+
+    const matchesClass = teacherClasses.some((tc) => {
+      const tcStr = `${tc.className}${tc.section}`.replace(/[-\s]/g, "").toUpperCase();
+      let pClassStr = p.studentClass.replace(/[-\s]/g, "").toUpperCase();
+      pClassStr = pClassStr.replace(/^CLASS/i, "");
+      return pClassStr === tcStr || pClassStr === tc.className.toUpperCase();
+    });
+
+    return matchesSearch && matchesClass;
+  });
 
   const getSchoolName = (id: string | null) => {
     if (!id) return "Unassigned";
@@ -368,20 +408,20 @@ export default function TeacherParentsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-6">
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-0.5">
           <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider block mb-1">Total Parents</span>
-          <div className="text-2xl font-black text-slate-800 dark:text-white">{parents.length}</div>
+          <div className="text-2xl font-black text-slate-800 dark:text-white">{filteredParents.length}</div>
           <span className="text-[9px] text-slate-450 dark:text-slate-500 font-semibold">Registered in system</span>
         </div>
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-0.5">
           <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider block mb-1">PTA Committee Members</span>
           <div className="text-2xl font-black text-slate-800 dark:text-white">
-            {parents.filter((p) => p.role !== "Parent").length}
+            {filteredParents.filter((p) => p.role !== "Parent").length}
           </div>
           <span className="text-[9px] text-slate-450 dark:text-slate-500 font-semibold">Executive body</span>
         </div>
         <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-0.5">
           <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider block mb-1">Schools Connected</span>
           <div className="text-2xl font-black text-slate-800 dark:text-white">
-            {new Set(parents.map((p) => p.schoolId).filter(Boolean)).size}
+            {new Set(filteredParents.map((p) => p.schoolId).filter(Boolean)).size}
           </div>
           <span className="text-[9px] text-slate-450 dark:text-slate-500 font-semibold">Separate campuses</span>
         </div>
@@ -433,7 +473,10 @@ export default function TeacherParentsPage() {
             />
 
             <button
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => {
+                setSchoolId(sessionSchoolId || "");
+                setIsModalOpen(true);
+              }}
               className="px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl transition-all shadow-md shrink-0"
             >
               + Register Parent
@@ -606,9 +649,15 @@ export default function TeacherParentsPage() {
                     onChange={(e) => setStudentClass(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-violet-500 transition-colors"
                   >
-                    {["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"].map((c) => (
-                      <option key={c} value={c}>Class {c}</option>
-                    ))}
+                    {teacherClasses.length === 0 ? (
+                      <option value="">No classes</option>
+                    ) : (
+                      teacherClasses.map((cls) => (
+                        <option key={cls.id} value={`${cls.className}${cls.section}`}>
+                          Class {cls.className}{cls.section}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
                 <div className="col-span-1">
@@ -630,10 +679,14 @@ export default function TeacherParentsPage() {
                   onChange={(e) => setSchoolId(e.target.value)}
                   className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-violet-500 transition-colors"
                 >
-                  <option value="">-- Select school --</option>
-                  {schools.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name} ({s.dise})</option>
-                  ))}
+                  {schools
+                    .filter((s) => s.id === sessionSchoolId)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>{s.name} ({s.dise})</option>
+                    ))}
+                  {schools.filter((s) => s.id === sessionSchoolId).length === 0 && (
+                    <option value="">No assigned school found</option>
+                  )}
                 </select>
               </div>
 

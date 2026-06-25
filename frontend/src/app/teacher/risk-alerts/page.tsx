@@ -25,20 +25,21 @@ export default function RiskAlertsPage() {
   const [selectedStudentId, setSelectedStudentId] = useState("");
   const [toastMessage, setToastMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
 
   // Intervention UI State
   const [remedialText, setRemedialText] = useState<string | null>(null);
   const [parentDraft, setParentDraft] = useState<string | null>(null);
   const [peerTutor, setPeerTutor] = useState<string | null>(null);
 
-  const fetchWatchlist = async () => {
+  const fetchWatchlist = async (tClasses?: any[]) => {
     try {
       setLoading(true);
       const res = await fetch(`${API_URL}/api/headmaster/students${schoolId ? `?schoolId=${schoolId}` : ""}`);
       const data = await res.json();
       if (data.success && data.data) {
         // Map the backend WatchlistStudent model to the page structure
-        const mapped = data.data.map((st: any) => ({
+        let mapped = data.data.map((st: any) => ({
           id: st.id,
           name: st.name,
           className: st.class,
@@ -49,9 +50,25 @@ export default function RiskAlertsPage() {
           lastScore: st.lastScore || Math.floor(Math.random() * 30) + 40,
           parentName: st.parentName || "Parent / Guardian",
         }));
+
+        // Filter by teacher classes
+        const classesList = tClasses || teacherClasses;
+        if (classesList && classesList.length > 0) {
+          mapped = mapped.filter((st: any) => {
+            return classesList.some((tc: any) => {
+              const tcStr = `${tc.className}${tc.section}`.replace(/[-\s]/g, "").toUpperCase();
+              let stClassStr = st.className.replace(/[-\s]/g, "").toUpperCase();
+              stClassStr = stClassStr.replace(/^CLASS/i, "");
+              return stClassStr === tcStr || stClassStr === tc.className.toUpperCase();
+            });
+          });
+        }
+
         setStudents(mapped);
         if (mapped.length > 0) {
           setSelectedStudentId(mapped[0].id);
+        } else {
+          setSelectedStudentId("");
         }
       }
     } catch (err) {
@@ -62,8 +79,25 @@ export default function RiskAlertsPage() {
   };
 
   useEffect(() => {
-    fetchWatchlist();
-  }, [schoolId, API_URL]);
+    const loadData = async () => {
+      if (!schoolId || !session?.user) return;
+      const teacherId = (session.user as any).id;
+      let tClasses: any[] = [];
+      try {
+        const res = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          tClasses = data.data;
+          setTeacherClasses(tClasses);
+        }
+      } catch (err) {
+        console.error("Error fetching teacher classes:", err);
+      }
+      await fetchWatchlist(tClasses);
+    };
+
+    loadData();
+  }, [schoolId, session, API_URL]);
 
   const selectedStudent = students.find((s) => s.id === selectedStudentId) || students[0];
 

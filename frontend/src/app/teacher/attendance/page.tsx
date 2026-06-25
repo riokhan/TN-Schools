@@ -17,14 +17,40 @@ export default function AttendancePage() {
   const schoolId = (session?.user as any)?.schoolId;
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-  const [selectedClass, setSelectedClass] = useState("10A");
+  const [selectedClass, setSelectedClass] = useState("");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0]);
   const [students, setStudents] = useState<AttendanceStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
+  const [teacherClasses, setTeacherClasses] = useState<any[]>([]);
+
+  // Fetch teacher classes on mount
+  useEffect(() => {
+    const fetchTeacherClasses = async () => {
+      if (!schoolId || !session?.user) return;
+      const teacherId = (session.user as any).id;
+      try {
+        const res = await fetch(`${API_URL}/api/classes?schoolId=${schoolId}&teacherId=${teacherId}`);
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data)) {
+          setTeacherClasses(data.data);
+          if (data.data.length > 0) {
+            setSelectedClass(`${data.data[0].className}${data.data[0].section}`);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching teacher classes:", err);
+      }
+    };
+    fetchTeacherClasses();
+  }, [schoolId, session, API_URL]);
 
   const fetchStudents = async () => {
-    if (!schoolId) return;
+    if (!schoolId || !selectedClass) {
+      setStudents([]);
+      setLoading(false);
+      return;
+    }
     try {
       setLoading(true);
       // parse class and section
@@ -134,9 +160,15 @@ export default function AttendancePage() {
               onChange={(e) => setSelectedClass(e.target.value)}
               className="bg-[var(--bg-main)] border border-[var(--border)] rounded-xl px-3 py-2 text-xs text-[var(--text-heading)] focus:outline-none focus:border-[var(--primary)] transition-colors"
             >
-              <option value="10A">Class 10A</option>
-              <option value="9B">Class 9B</option>
-              <option value="8A">Class 8A</option>
+              {teacherClasses.length > 0 ? (
+                teacherClasses.map((cls) => (
+                  <option key={cls.id} value={`${cls.className}${cls.section}`}>
+                    Class {cls.className}{cls.section} - {cls.subject}
+                  </option>
+                ))
+              ) : (
+                <option value="">No Classes Assigned</option>
+              )}
             </select>
           </div>
           <div>
@@ -244,7 +276,9 @@ export default function AttendancePage() {
             </table>
           ) : (
             <div className="text-center py-8 text-xs text-[var(--text-muted)] italic">
-              No students found in Class {selectedClass} for this school.
+              {teacherClasses.length === 0
+                ? "You have not created any classes yet. Please go to 'My Classes' to create one."
+                : `No students found in Class ${selectedClass} for this school.`}
             </div>
           )}
         </div>

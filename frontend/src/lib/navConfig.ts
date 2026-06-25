@@ -209,7 +209,6 @@ export const roleConfigs: Record<string, PortalConfig> = {
     accentColor: "#f59e0b",
     navItems: [
       { label: "My Classes", href: "/teacher/classes", icon: "🏫" },
-      { label: "My Subjects (Science)", href: "/teacher", icon: "🔬" },
       { label: "Science Labs", href: "/teacher/labs", icon: "🧪" },
       { label: "Subject Analytics", href: "/teacher/subject-analytics", icon: "📊" },
 
@@ -236,6 +235,7 @@ export const roleConfigs: Record<string, PortalConfig> = {
       { label: "Daily Attendance", href: "/teacher/attendance", icon: "📅" },
       { label: "Announcements", href: "/teacher/announcements", icon: "📢" },
       { label: "Leave Requests", href: "/teacher/leave", icon: "📄" },
+      { label: "My Subjects (Science)", href: "/teacher", icon: "🔬" },
     ],
   },
   PARENT: {
