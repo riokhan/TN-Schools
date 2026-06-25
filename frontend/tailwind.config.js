@@ -8,7 +8,10 @@ module.exports = {
   ],
   theme: {
     extend: {
-      fontFamily: { sans: ["var(--font-poppins)", "var(--font-tamil)", "sans-serif"] },
+      fontFamily: { 
+        sans: ["var(--font-poppins)", "var(--font-tamil)", "sans-serif"],
+        tamil: ["var(--font-tamil)", "sans-serif"],
+      },
       colors: {
         primary: "var(--primary)",
         secondary: "var(--secondary)",
@@ -40,6 +43,13 @@ module.exports = {
     { pattern: /hover:bg-(emerald|sky|indigo|amber|rose|teal|violet)-50/ },
     { pattern: /hover:border-(emerald|sky|indigo|amber|rose|teal|violet)-(400|500)/ },
     { pattern: /group-hover:text-(emerald|sky|indigo|amber|rose|teal|violet)-600/ },
+    // Dynamic slide deck accent palette classes
+    { pattern: /from-(blue|emerald|violet|rose|amber)-(500|600)/ },
+    { pattern: /to-(indigo|teal|purple|pink|orange)-(600)/ },
+    { pattern: /bg-(blue|emerald|violet|rose|amber)-(500|600)/ },
+    { pattern: /border-(blue|emerald|violet|rose|amber)-(100|200)/ },
+    { pattern: /text-(blue|emerald|violet|rose|amber)-(700|800)/ },
+    { pattern: /bg-gradient-to-(br|r)/ },
   ],
   plugins: [],
 };

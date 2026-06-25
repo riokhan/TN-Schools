@@ -115,9 +115,11 @@ async function callGemini(prompt: string, jsonMode: boolean = false): Promise<an
     };
 
     const req = https.request(options, (res) => {
-      let body = '';
-      res.on('data', (chunk) => (body += chunk));
+      const chunks: Buffer[] = [];
+      res.on('data', (chunk) => chunks.push(chunk));
       res.on('end', () => {
+        const body = Buffer.concat(chunks).toString('utf8');
+        
         if (res.statusCode && (res.statusCode < 200 || res.statusCode >= 300)) {
           reject(new Error(`Gemini API error ${res.statusCode}: ${body.substring(0, 500)}`));
           return;
@@ -188,7 +190,36 @@ ${truncatedContext ? `Textbook extract context:\n${truncatedContext}` : ''}
 CRITICAL INSTRUCTION: If textbook context is provided, ONLY extract content about "${topic}". Ignore all other chapters.
 If "${topic}" is not found in the context, generate from standard TN Board curriculum.
 
-CONSTRAINTS: objectives=3, timeline=4, bilingual=3, exitTickets=1, slides=2, podcast=4 turns, videoStoryboard=2 scenes.
+CONSTRAINTS: objectives=3, timeline=4, bilingual=3, exitTickets=1, slides=15 (exactly 15 items in the slides array, mapping to Slide 1 through Slide 15 below), podcast=4 turns, videoStoryboard=2 scenes.
+
+SLIDE GENERATION RULES (CRITICAL):
+Generate exactly 15 slides. The "slides" array in JSON MUST contain exactly 15 objects in this precise sequence.
+Each slide must adhere to the following visual style and structure:
+
+VISUAL STYLE & THEME:
+- Background: Clean white/very light blue-white gradient. Professional, clean, modern, magazine-style educational presentation.
+- Color Palette: Primary (Royal Blue, Navy, Indigo, White). Secondary (Emerald, Teal). Accents (Purple, Orange, Cyan).
+- Illustration Style: Ultra-realistic 3D scientific illustration, white background, glassmorphism panels, detailed and professional, government educational standard, highly detailed, no cartoon, no clipart.
+- Lighting: Soft, HDR, global illumination, glass reflections, natural and warm. No neon glow.
+- Typography: Large bold title, numbered bullets, minimal body text (maximum 35 words per slide).
+- Icons: Premium vector, scientific, modern (strictly no cartoons, no clipart).
+
+SLIDE STRUCTURE (EXACTLY 15 SLIDES):
+- Slide 1: Premium Cover → graphicType:"hero" graphicData.label=topic title
+- Slide 2: Learning Outcomes → graphicType:"concept" graphicData.values=[3-4 objectives]
+- Slide 3: Introduction → graphicType:"concept" graphicData.values=[3-4 key introduction points]
+- Slide 4: Concept Visualization → graphicType:"concept" graphicData.label=main concept, values=[4 concept sub-elements]
+- Slide 5: Real World Example → graphicType:"application" graphicData.values=[4 real examples with detail]
+- Slide 6: Working Principle → graphicType:"process" graphicData.label=process name, values=[4 sequential steps]
+- Slide 7: Scientific Formula → graphicType:"formula" graphicData.formula=actual formula, graphicData.variables=[3-4 variable explanations]
+- Slide 8: Comparison → graphicType:"comparison" graphicData.label=comparison title, values=[LeftHeader, RightHeader, row1left, row1right, row2left, row2right]
+- Slide 9: Experiment → graphicType:"experiment" graphicData.label=experiment name, values=[apparatus1, apparatus2, apparatus3]
+- Slide 10: Daily Life Applications → graphicType:"application" graphicData.values=[4 detailed real-world uses]
+- Slide 11: Important Facts → graphicType:"concept" graphicData.values=[4 key facts/milestones]
+- Slide 12: Practice Questions → graphicType:"quiz"
+- Slide 13: Activity → graphicType:"experiment" graphicData.values=[material1, material2, material3]
+- Slide 14: Summary → graphicType:"summary" graphicData.values=[4 key summary points]
+- Slide 15: Thank You → graphicType:"hero" graphicData.label=Next topic teaser
 
 INFOGRAPHIC RULES — MOST IMPORTANT:
 ALL infographic content MUST be about "${topic}" specifically. Do NOT use generic placeholders.
@@ -229,10 +260,28 @@ Output ONLY valid JSON (no markdown, no backticks):
       {"english": "term2", "tamil": "சொல்2", "pronunciation": "pron2"},
       {"english": "term3", "tamil": "சொல்3", "pronunciation": "pron3"}
     ],
-    "exitTickets": [{"question": "mcq?", "options": ["A) a","B) b","C) c","D) d"], "answer": "B) b", "rationale": "because"}],
+    "exitTickets": [
+      {"question": "mcq 1?", "options": ["A) a","B) b","C) c","D) d"], "answer": "B) b", "rationale": "because"},
+      {"question": "mcq 2?", "options": ["A) a","B) b","C) c","D) d"], "answer": "B) b", "rationale": "because"},
+      {"question": "... generate exactly 15 questions in total for this array ...", "options": ["A) a","B) b","C) c","D) d"], "answer": "A", "rationale": ""}
+    ],
     "slides": [
-      {"title": "slide1", "subtitle": "sub1", "bullets": ["b1","b2","b3"], "graphicType": "concept", "graphicData": {"label": "l", "values": ["v1","v2"]}},
-      {"title": "slide2", "subtitle": "sub2", "bullets": ["b1","b2","b3"], "graphicType": "application", "graphicData": {"label": "l", "values": ["v1","v2"]}}
+      {
+        "title": "Slide Title (e.g. Premium Cover)",
+        "subtitle": "Visual Explanation / Subtitle",
+        "bullets": ["Bullet 1", "Bullet 2"],
+        "teacherNotes": "Teacher instruction...",
+        "studentActivity": "Student task...",
+        "illustrationPrompt": "Ultra realistic, 3D scientific illustration, glassmorphism, white background...",
+        "animationSuggestion": "Animated flow...",
+        "graphicType": "hero|concept|formula|comparison|process|experiment|application|summary|quiz",
+        "graphicData": {
+          "label": "Main label or concept name",
+          "values": ["Item 1", "Item 2", "Item 3", "Item 4"],
+          "formula": "E = mc²",
+          "variables": ["E = Energy", "m = Mass", "c = Speed of light"]
+        }
+      }
     ],
     "podcast": {
       "hosts": ["Aravind (AI Teacher)", "Meera (AI Expert)"],
@@ -311,7 +360,36 @@ ${truncatedContext ? `Textbook extract context:\n${truncatedContext}` : ''}
 
 CRITICAL INSTRUCTION: If textbook context is provided, ONLY extract content about "${topic}". Ignore all other chapters.
 
-CONSTRAINTS: goals=3, units=4, each unit: infographicCard (2 formulas, 2 keyConcepts, 1 illustration), audioGuide=2 turns, quiz=1 question.
+CONSTRAINTS: goals=3, units=4, each unit: infographicCard (2 formulas, 2 keyConcepts, 1 illustration), audioGuide=2 turns, quiz=1 question, slides=15 (exactly 15 items in the slides array, mapping to Slide 1 through Slide 15 below).
+
+SLIDE GENERATION RULES (CRITICAL):
+Generate exactly 15 slides. The "slides" array in JSON MUST contain exactly 15 objects in this precise sequence.
+Each slide must adhere to the following visual style and structure:
+
+VISUAL STYLE & THEME:
+- Background: Clean white/very light blue-white gradient. Professional, clean, modern, magazine-style educational presentation.
+- Color Palette: Primary (Royal Blue, Navy, Indigo, White). Secondary (Emerald, Teal). Accents (Purple, Orange, Cyan).
+- Illustration Style: Ultra-realistic 3D scientific illustration, white background, glassmorphism panels, detailed and professional, government educational standard, highly detailed, no cartoon, no clipart.
+- Lighting: Soft, HDR, global illumination, glass reflections, natural and warm. No neon glow.
+- Typography: Large bold title, numbered bullets, minimal body text (maximum 35 words per slide).
+- Icons: Premium vector, scientific, modern (strictly no cartoons, no clipart).
+
+SLIDE STRUCTURE (EXACTLY 15 SLIDES):
+- Slide 1: Premium Cover → graphicType:"hero" graphicData.label=topic title
+- Slide 2: Learning Outcomes → graphicType:"concept" graphicData.values=[3-4 objectives]
+- Slide 3: Introduction → graphicType:"concept" graphicData.values=[3-4 key introduction points]
+- Slide 4: Concept Visualization → graphicType:"concept" graphicData.label=main concept, values=[4 concept sub-elements]
+- Slide 5: Real World Example → graphicType:"application" graphicData.values=[4 real examples with detail]
+- Slide 6: Working Principle → graphicType:"process" graphicData.label=process name, values=[4 sequential steps]
+- Slide 7: Scientific Formula → graphicType:"formula" graphicData.formula=actual formula, graphicData.variables=[3-4 variable explanations]
+- Slide 8: Comparison → graphicType:"comparison" graphicData.label=comparison title, values=[LeftHeader, RightHeader, row1left, row1right, row2left, row2right]
+- Slide 9: Experiment → graphicType:"experiment" graphicData.label=experiment name, values=[apparatus1, apparatus2, apparatus3]
+- Slide 10: Daily Life Applications → graphicType:"application" graphicData.values=[4 detailed real-world uses]
+- Slide 11: Important Facts → graphicType:"concept" graphicData.values=[4 key facts/milestones]
+- Slide 12: Practice Questions → graphicType:"quiz"
+- Slide 13: Activity → graphicType:"experiment" graphicData.values=[material1, material2, material3]
+- Slide 14: Summary → graphicType:"summary" graphicData.values=[4 key summary points]
+- Slide 15: Thank You → graphicType:"hero" graphicData.label=Next topic teaser
 
 INFOGRAPHIC RULES — MOST IMPORTANT:
 ALL infographic content MUST be about "${topic}" specifically. Use REAL educational data from the context.
@@ -322,7 +400,14 @@ ALL infographic content MUST be about "${topic}" specifically. Use REAL educatio
 - modules: 4 real concept modules about ${topic}
 - stats: 3 real quantitative facts/formulas from ${topic}
 - workflow: 4 real steps to master ${topic}
-- formulaBox, formulaExplain, lawTitle, lawDesc, termTable (3 terms), constantName, constantValue, constantExplain
+- formulaBox: the actual primary formula or law for ${topic}
+- formulaExplain: bilingual explanation of the formula
+- lawTitle: name of the main law/theorem (bilingual)
+- lawDesc: statement of the law (bilingual)
+- termTable: 3 real technical terms from ${topic} (english, tamil, definition)
+- constantName: a real key constant for ${topic}
+- constantValue: the actual numeric value
+- constantExplain: bilingual 1-sentence meaning
 
 Output ONLY valid JSON (no markdown, no backticks):
 {
@@ -387,6 +472,24 @@ Output ONLY valid JSON (no markdown, no backticks):
         {"speaker": "Priya (AI Buddy)", "text": "தமிழ் unit 4", "lang": "ta"}
       ],
       "quiz": [{"question": "unit4 mcq?", "options": ["A) a","B) b","C) c","D) d"], "answer": "D) d", "rationale": "because"}]
+    }
+  ],
+  "slides": [
+    {
+      "title": "Slide Title (e.g. Premium Cover)",
+      "subtitle": "Visual Explanation / Subtitle",
+      "bullets": ["Bullet 1", "Bullet 2"],
+      "teacherNotes": "Study notes...",
+      "studentActivity": "Practice task...",
+      "illustrationPrompt": "Ultra realistic, 3D scientific illustration, glassmorphism, white background...",
+      "animationSuggestion": "Animated flow...",
+      "graphicType": "hero|concept|formula|comparison|process|experiment|application|summary|quiz",
+      "graphicData": {
+        "label": "Main label or concept name",
+        "values": ["Item 1", "Item 2", "Item 3", "Item 4"],
+        "formula": "E = mc²",
+        "variables": ["E = Energy", "m = Mass", "c = Speed of light"]
+      }
     }
   ],
   "infographic": {

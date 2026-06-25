@@ -282,8 +282,10 @@ export default function InteractiveInfographic({ topic, subject, data }: Infogra
           </div>
 
           {modules.length === 0 ? (
-            <div className="text-center p-8 text-slate-400 text-sm">
-              <p>📋 Generating topic-specific modules…</p>
+            <div className="text-center p-8 text-slate-500 text-sm bg-slate-50 rounded-2xl border border-slate-200">
+              <span className="text-2xl block mb-2">⚠️</span>
+              <p className="font-bold mb-1">Visual Data Missing</p>
+              <p className="text-xs">This lesson plan was generated before the visual engine was updated. Please <strong>Generate a New Lesson Plan</strong> to unlock interactive infographics.</p>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -324,8 +326,8 @@ export default function InteractiveInfographic({ topic, subject, data }: Infogra
           </div>
 
           {stats.length === 0 ? (
-            <div className="text-center p-6 text-slate-400 text-sm">
-              <p>📊 Loading stats…</p>
+            <div className="text-center p-6 text-slate-500 text-sm bg-slate-50 rounded-2xl border border-slate-200">
+              <p className="text-xs">Regenerate plan to see stats.</p>
             </div>
           ) : (
             <div className="space-y-3">

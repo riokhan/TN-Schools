@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import PortalLayout from "@/components/PortalLayout";
 import Swal from "sweetalert2";
 import InteractiveInfographic from "@/components/InteractiveInfographic";
+import SlideVisual from "@/components/SlideVisual";
 
 const syllabusOptions = ["TN State Board (Samacheer Kalvi)", "CBSE", "ICSE"];
 const grades = ["Grade 8", "Grade 9", "Grade 10", "Grade 11", "Grade 12"];
@@ -73,6 +74,7 @@ export default function LessonPlannerPage() {
 
   // Concept slide deck state
   const [activeSlide, setActiveSlide] = useState(0);
+  const [slideFullscreen, setSlideFullscreen] = useState(false);
 
   // Podcast / Audio synthesis state
   const [isPlayingPodcast, setIsPlayingPodcast] = useState(false);
@@ -889,129 +891,175 @@ export default function LessonPlannerPage() {
                       }
                     ];
                     const slide = slides[activeSlide] || slides[0];
+                    const slideNum = activeSlide + 1;
+                    const totalSlides = slides.length;
 
-                    return (
-                      <div className="space-y-5 flex flex-col justify-between flex-grow">
-                        {/* Glowing Blueprint Slide Container */}
-                        <div className="bg-slate-950 border border-cyan-500/30 bg-[linear-gradient(rgba(10,15,30,0.96),rgba(10,15,30,0.96)),linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:20px_20px] shadow-[0_0_25px_rgba(6,182,212,0.2)] rounded-3xl relative p-6 md:p-8 text-slate-100 min-h-[350px] flex flex-col justify-between overflow-hidden">
-                          
-                          {/* Blueprint corner grid lines */}
-                          <div className="absolute top-2 left-2 text-cyan-500/40 font-mono text-[8px] font-bold">+ 0.00</div>
-                          <div className="absolute top-2 right-2 text-cyan-500/40 font-mono text-[8px] font-bold">+ 1.00</div>
-                          <div className="absolute bottom-2 left-2 text-cyan-500/40 font-mono text-[8px] font-bold">- 1.00</div>
-                          
-                          {/* Slide Header */}
-                          <div className="text-center border-b border-cyan-500/10 pb-4">
-                            <span className="text-[9px] text-amber-500 font-mono font-bold uppercase tracking-wider block mb-1">Slide {activeSlide + 1} of {slides.length}</span>
-                            <h4 className="text-amber-400 font-extrabold text-base md:text-xl font-tamil tracking-wide drop-shadow-[0_0_6px_rgba(245,158,11,0.3)]">
-                              {slide.title}
-                            </h4>
-                            <p className="text-cyan-400 font-bold text-[10px] uppercase tracking-widest mt-1">
-                              {slide.subtitle || "Concept Overview"}
-                            </p>
+                    // Slide color accent based on slide index
+                    const accentPalette = [
+                      { from: "from-blue-600", to: "to-indigo-600", text: "text-blue-700", border: "border-blue-200", badge: "bg-blue-600" },
+                      { from: "from-emerald-600", to: "to-teal-600", text: "text-emerald-700", border: "border-emerald-200", badge: "bg-emerald-600" },
+                      { from: "from-violet-600", to: "to-purple-600", text: "text-violet-700", border: "border-violet-200", badge: "bg-violet-600" },
+                      { from: "from-rose-600", to: "to-pink-600", text: "text-rose-700", border: "border-rose-200", badge: "bg-rose-600" },
+                      { from: "from-amber-500", to: "to-orange-600", text: "text-amber-700", border: "border-amber-200", badge: "bg-amber-500" },
+                    ];
+                    const accent = accentPalette[activeSlide % accentPalette.length];
+
+                    const SlideCard = (
+                      <div className="flex flex-col gap-0 flex-grow">
+                        {/* Premium Slide Card */}
+                        <div className={`relative bg-white rounded-3xl shadow-[0_12px_50px_rgba(15,23,42,0.10)] border border-slate-100 overflow-hidden flex flex-col ${slideFullscreen ? "min-h-[calc(100vh-180px)]" : "min-h-[400px]"}`}>
+                          {/* Gradient accent top bar */}
+                          <div className={`h-1.5 w-full bg-gradient-to-r ${accent.from} ${accent.to}`} />
+
+                          {/* Slide top meta */}
+                          <div className="flex items-center justify-between px-6 pt-4 pb-2">
+                            <span className={`text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full text-white ${accent.badge}`}>
+                              Slide {slideNum} / {totalSlides}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{currentPlan.subject} · {currentPlan.grade}</span>
+                              <button
+                                type="button"
+                                title={slideFullscreen ? "Exit Fullscreen" : "Fullscreen"}
+                                onClick={() => setSlideFullscreen(f => !f)}
+                                className="w-7 h-7 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center text-sm transition-all"
+                              >
+                                {slideFullscreen ? "⛶" : "⛶"}
+                              </button>
+                            </div>
                           </div>
 
-                          {/* Slide Content Grid */}
-                          <div className="flex flex-col md:flex-row gap-6 items-center flex-grow mt-6 z-10">
-                            
-                            {/* Text Content */}
-                            <div className="flex-1 space-y-4">
-                              <ul className="space-y-3 font-sans list-none">
-                                {slide.bullets?.map((bullet, idx) => (
-                                  <li key={idx} className="flex items-start gap-2.5 text-slate-200 text-xs md:text-sm">
-                                    <span className="text-cyan-400 font-extrabold mt-0.5">•</span>
+                          {/* Divider */}
+                          <div className="h-px bg-gradient-to-r from-transparent via-slate-100 to-transparent mx-6" />
+
+                          {/* Slide main content */}
+                          <div className="flex flex-col md:flex-row gap-0 flex-1 overflow-hidden">
+                            {/* Left: Title + Bullets */}
+                            <div className="flex-1 p-6 md:p-8 flex flex-col justify-start gap-5">
+                              <div>
+                                <h4 className={`font-black text-xl md:text-2xl leading-snug font-tamil text-slate-900 mb-1`}>
+                                  {slide.title}
+                                </h4>
+                                <p className={`text-sm font-semibold ${accent.text} uppercase tracking-wider`}>
+                                  {slide.subtitle || "Concept Overview"}
+                                </p>
+                              </div>
+
+                              <ul className="space-y-2.5 font-sans">
+                                {slide.bullets?.map((bullet: string, idx: number) => (
+                                  <li key={idx} className="flex items-start gap-3 text-slate-700 text-sm">
+                                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-[10px] font-black shrink-0 mt-0.5 bg-gradient-to-br ${accent.from} ${accent.to}`}>{idx + 1}</span>
                                     <span className="leading-relaxed">{bullet}</span>
                                   </li>
                                 ))}
                               </ul>
                             </div>
 
-                            {/* Visual graphic on the right (Satellite, Radar, or mechanical arm) */}
-                            <div className="w-full md:w-64 p-4 rounded-2xl border border-cyan-500/20 bg-slate-900/40 flex flex-col items-center justify-center text-center shadow-[0_0_15px_rgba(6,182,212,0.1)] shrink-0 min-h-[160px] relative">
-                              {slide.title.toLowerCase().includes("nasa") || slide.title.toLowerCase().includes("orbiter") || slide.title.toLowerCase().includes("விண்கலம்") || slide.title.toLowerCase().includes("அலகுகள்") || slide.title.toLowerCase().includes("loss") ? (
-                                // Draw Satellite
-                                <svg viewBox="0 0 100 100" className="w-24 h-24 stroke-cyan-400 fill-none">
-                                  <circle cx="50" cy="50" r="10" strokeWidth="1.5" />
-                                  {/* Solar wings */}
-                                  <rect x="15" y="46" width="25" height="8" strokeWidth="1.2" fill="rgba(6,182,212,0.1)" />
-                                  <rect x="60" y="46" width="25" height="8" strokeWidth="1.2" fill="rgba(6,182,212,0.1)" />
-                                  <line x1="27" y1="46" x2="27" y2="54" strokeWidth="1" />
-                                  <line x1="33" y1="46" x2="33" y2="54" strokeWidth="1" />
-                                  <line x1="67" y1="46" x2="67" y2="54" strokeWidth="1" />
-                                  <line x1="73" y1="46" x2="73" y2="54" strokeWidth="1" />
-                                  {/* Antennas */}
-                                  <line x1="50" y1="40" x2="50" y2="20" strokeWidth="1.5" />
-                                  <circle cx="50" cy="18" r="2" fill="#06b6d4" />
-                                  {/* Thrusters */}
-                                  <path d="M 45 60 L 55 60 L 58 70 L 42 70 Z" fill="rgba(245,158,11,0.2)" stroke="#f59e0b" strokeWidth="1" />
-                                  {/* Earth/Planet line indicator */}
-                                  <path d="M 20 85 Q 50 75 80 85" stroke="#ef4444" strokeWidth="1" strokeDasharray="3 3" />
-                                </svg>
-                              ) : slide.title.toLowerCase().includes("விசை") || slide.title.toLowerCase().includes("அழுத்தம்") || slide.title.toLowerCase().includes("force") || slide.title.toLowerCase().includes("pressure") || slide.title.toLowerCase().includes("பருப்பொருள்") ? (
-                                // Draw Mechanical Arm/Hand
-                                <svg viewBox="0 0 100 100" className="w-24 h-24 stroke-cyan-400 fill-none">
-                                  {/* Hand outlines */}
-                                  <path d="M 25 70 L 40 45 L 45 25 M 40 45 L 53 20 M 40 45 L 63 24 M 40 45 L 70 35 M 40 45 L 48 70 Z" strokeWidth="1.5" strokeLinecap="round" />
-                                  <circle cx="45" cy="25" r="2.5" fill="#06b6d4" />
-                                  <circle cx="53" cy="20" r="2.5" fill="#06b6d4" />
-                                  <circle cx="63" cy="24" r="2.5" fill="#06b6d4" />
-                                  <circle cx="70" cy="35" r="2.5" fill="#06b6d4" />
-                                  {/* Force arrow lines */}
-                                  <line x1="30" y1="45" x2="80" y2="45" stroke="#f59e0b" strokeWidth="1.5" strokeDasharray="2 2" />
-                                  <polygon points="80,42 88,45 80,48" fill="#f59e0b" stroke="#f59e0b" />
-                                  {/* Gears */}
-                                  <circle cx="35" cy="60" r="6" strokeWidth="1" />
-                                  <circle cx="45" cy="65" r="4" strokeWidth="1" />
-                                </svg>
-                              ) : (
-                                // Draw Eye Scanner/Radar circle
-                                <svg viewBox="0 0 100 100" className="w-24 h-24 stroke-cyan-400 fill-none">
-                                  <circle cx="50" cy="50" r="30" strokeWidth="1" strokeDasharray="3 3" />
-                                  <circle cx="50" cy="50" r="22" strokeWidth="1.5" />
-                                  <circle cx="50" cy="50" r="6" fill="#06b6d4" />
-                                  <line x1="15" y1="50" x2="85" y2="50" strokeWidth="1" />
-                                  <line x1="50" y1="15" x2="50" y2="85" strokeWidth="1" />
-                                  {/* Grid indicators */}
-                                  <circle cx="38" cy="38" r="2" fill="#f59e0b" />
-                                  <circle cx="62" cy="38" r="2" fill="#f59e0b" />
-                                  <circle cx="38" cy="62" r="2" fill="#f59e0b" />
-                                  <circle cx="62" cy="62" r="2" fill="#f59e0b" />
-                                </svg>
+                             {/* Right: Visual Infographic Panel */}
+                             <div className="w-full md:w-72 bg-gradient-to-br from-slate-50 to-blue-50/40 border-l border-slate-100 flex flex-col gap-2 p-4 shrink-0">
+                               <div className="flex items-center gap-2 mb-1">
+                                 <span className={`w-6 h-6 rounded-md flex items-center justify-center text-white text-xs bg-gradient-to-br ${accent.from} ${accent.to}`}>📊</span>
+                                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Visual Infographic</span>
+                               </div>
+                               <div className="flex-1 min-h-[180px]">
+                                 <SlideVisual
+                                   graphicType={slide.graphicType}
+                                   graphicData={slide.graphicData}
+                                   illustrationPrompt={slide.illustrationPrompt}
+                                   animationSuggestion={slide.animationSuggestion}
+                                   title={slide.title}
+                                   subtitle={slide.subtitle}
+                                   accent={accent}
+                                 />
+                               </div>
+                             </div>
+                          </div>
+
+                          {/* Footer: Teacher Notes + Student Activity */}
+                          {(slide.teacherNotes || slide.studentActivity) && (
+                            <div className="border-t border-slate-100 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x divide-slate-100">
+                              {slide.teacherNotes && (
+                                <div className="flex-1 p-4 flex gap-3">
+                                  <div className="w-1 rounded-full bg-emerald-500 shrink-0" />
+                                  <div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 block mb-0.5">👨‍🏫 Teacher Notes</span>
+                                    <p className="text-xs text-slate-600 leading-relaxed">{slide.teacherNotes}</p>
+                                  </div>
+                                </div>
                               )}
-
-                              <span className="text-[9px] font-bold text-cyan-400 uppercase tracking-widest mt-2">Diagram Sandbox</span>
+                              {slide.studentActivity && (
+                                <div className="flex-1 p-4 flex gap-3">
+                                  <div className="w-1 rounded-full bg-indigo-500 shrink-0" />
+                                  <div>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-indigo-600 block mb-0.5">✍️ Student Activity</span>
+                                    <p className="text-xs text-slate-600 leading-relaxed">{slide.studentActivity}</p>
+                                  </div>
+                                </div>
+                              )}
                             </div>
+                          )}
 
+                          {/* Watermark */}
+                          <div className="absolute bottom-3 right-5 text-slate-200 font-black text-[10px] uppercase tracking-widest select-none pointer-events-none">
+                            Intelligence Studio
                           </div>
-
-                          {/* Brand mark at bottom right */}
-                          <div className="absolute bottom-2 right-4 text-cyan-500/40 font-mono text-[9px] uppercase tracking-widest z-0 flex items-center gap-1 font-bold">
-                            <span>Intelligence</span>
-                          </div>
-
                         </div>
 
-                        <div className="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-850">
+                        {/* Navigation */}
+                        <div className="flex items-center justify-between gap-3 mt-4 px-1">
                           <button
                             type="button"
                             disabled={activeSlide === 0}
                             onClick={() => setActiveSlide((p) => p - 1)}
-                            className="px-3 py-1 bg-slate-900 border border-slate-800 hover:border-amber-500 text-white rounded-lg disabled:opacity-30 disabled:pointer-events-none"
+                            className="px-4 py-2 rounded-xl font-bold text-xs bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1"
                           >
-                            ← Prev
+                            ← Previous
                           </button>
-                          <span className="font-semibold text-slate-400">Slide {activeSlide + 1} / {slides.length}</span>
+
+                          {/* Slide thumbnail pills */}
+                          <div className="flex items-center gap-1 flex-wrap justify-center flex-1">
+                            {slides.map((_: any, i: number) => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => setActiveSlide(i)}
+                                className={`h-2 rounded-full transition-all duration-200 ${
+                                  i === activeSlide
+                                    ? `w-6 bg-gradient-to-r ${accent.from} ${accent.to}`
+                                    : "w-2 bg-slate-200 hover:bg-slate-300"
+                                }`}
+                                title={`Slide ${i + 1}`}
+                              />
+                            ))}
+                          </div>
+
                           <button
                             type="button"
-                            disabled={activeSlide === slides.length - 1}
+                            disabled={activeSlide === totalSlides - 1}
                             onClick={() => setActiveSlide((p) => p + 1)}
-                            className="px-3 py-1 bg-slate-900 border border-slate-800 hover:border-amber-500 text-white rounded-lg disabled:opacity-30 disabled:pointer-events-none"
+                            className="px-4 py-2 rounded-xl font-bold text-xs bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 hover:border-slate-300 shadow-sm disabled:opacity-30 disabled:pointer-events-none transition-all flex items-center gap-1"
                           >
                             Next →
                           </button>
                         </div>
                       </div>
                     );
+
+                    return slideFullscreen ? (
+                      <div className="fixed inset-0 z-[999] bg-gradient-to-br from-slate-100 via-white to-blue-50 flex flex-col p-6 overflow-y-auto">
+                        <div className="max-w-5xl mx-auto w-full flex-1 flex flex-col">
+                          <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-slate-800 font-black text-sm uppercase tracking-widest">🖼️ Slide Deck · {currentPlan.topic}</h2>
+                            <button
+                              type="button"
+                              onClick={() => setSlideFullscreen(false)}
+                              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-900 text-white hover:bg-slate-700 transition-all"
+                            >✕ Exit Fullscreen</button>
+                          </div>
+                          {SlideCard}
+                        </div>
+                      </div>
+                    ) : SlideCard;
                   })()}
                 </div>
               )}
