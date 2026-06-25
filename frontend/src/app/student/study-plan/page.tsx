@@ -43,6 +43,7 @@ interface StudyPlan {
   units: Unit[];
   infographic?: any;
   isTeacherPlan?: boolean;
+  planData?: any;
   slides?: any[];
   podcast?: any;
   videoStoryboard?: any[];
