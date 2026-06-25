@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { prisma } from '../config/prisma';
 import { randomUUID } from 'crypto';
+import { resolveUserId } from '../config/userResolver';
 
 const router = Router();
 
@@ -12,10 +13,15 @@ router.get('/', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'userId is required' });
     }
 
+    const resolvedId = await resolveUserId(String(userId));
+    if (!resolvedId) {
+      return res.json({ success: true, data: [] });
+    }
+
     const notifications: any[] = await prisma.$queryRaw`
       SELECT id, "userId", message, "read", "createdAt"
       FROM "Notification"
-      WHERE "userId" = ${String(userId)}
+      WHERE "userId" = ${resolvedId}
       ORDER BY "createdAt" DESC
       LIMIT 20
     `;
@@ -35,12 +41,17 @@ router.post('/', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'userId and message are required' });
     }
 
+    const resolvedId = await resolveUserId(String(userId));
+    if (!resolvedId) {
+      return res.status(400).json({ success: false, error: 'Could not resolve userId to a PostgreSQL User' });
+    }
+
     const id  = randomUUID();
     const now = new Date();
 
     const rows: any[] = await prisma.$queryRaw`
       INSERT INTO "Notification" (id, "userId", message, "read", "createdAt")
-      VALUES (${id}, ${userId}, ${message}, false, ${now})
+      VALUES (${id}, ${resolvedId}, ${message}, false, ${now})
       RETURNING *
     `;
 
@@ -59,10 +70,15 @@ router.put('/read-all', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: 'userId is required' });
     }
 
+    const resolvedId = await resolveUserId(String(userId));
+    if (!resolvedId) {
+      return res.status(400).json({ success: false, error: 'Could not resolve userId to a PostgreSQL User' });
+    }
+
     await prisma.$queryRaw`
       UPDATE "Notification"
       SET "read" = true
-      WHERE "userId" = ${userId} AND "read" = false
+      WHERE "userId" = ${resolvedId} AND "read" = false
     `;
 
     return res.json({ success: true, message: 'All notifications marked as read' });
