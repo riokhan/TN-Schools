@@ -248,7 +248,54 @@ export default function AnalyticsPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-xs text-[var(--text-muted)]">Loading class analytics...</div>
+          <div className="space-y-6 animate-pulse">
+            {/* Charts & Mastery Grid skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Grade distribution skeleton */}
+              <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-2xl space-y-6">
+                <div className="h-4 bg-slate-800 rounded w-1/2" />
+                <div className="flex items-end justify-between h-40 gap-3 px-2">
+                  {[40, 70, 90, 50, 30].map((h, i) => (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                      <div className="w-full bg-slate-800 rounded-t-lg" style={{ height: `${h}%` }} />
+                      <div className="h-3 bg-slate-800 rounded w-8" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Concept Mastery skeleton */}
+              <div className="lg:col-span-2 bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-2xl space-y-5">
+                <div className="h-4 bg-slate-800 rounded w-1/3" />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} className="bg-[var(--bg-main)] p-4 rounded-xl border border-[var(--border)] flex justify-between items-center">
+                      <div className="space-y-2 w-2/3">
+                        <div className="h-3 bg-slate-800 rounded w-1/2" />
+                        <div className="h-2.5 bg-slate-800 rounded w-full" />
+                      </div>
+                      <div className="h-5 bg-slate-800 rounded w-16" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            {/* Directory table skeleton */}
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-2xl space-y-6">
+              <div className="flex justify-between items-center">
+                <div className="space-y-2 w-1/3">
+                  <div className="h-4 bg-slate-800 rounded w-2/3" />
+                  <div className="h-3 bg-slate-800 rounded w-full" />
+                </div>
+                <div className="h-8 bg-slate-800 rounded w-1/4" />
+              </div>
+              <div className="space-y-3">
+                <div className="h-8 bg-slate-850 rounded w-full" />
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <div key={n} className="h-10 bg-slate-800 rounded w-full" />
+                ))}
+              </div>
+            </div>
+          </div>
         ) : (
           <>
             {/* Charts & Mastery Grid */}
