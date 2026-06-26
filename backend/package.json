@@ -9,7 +9,8 @@
     "kill": "node scripts/kill-port.js",
     "fresh": "node scripts/kill-port.js && nodemon src/index.ts",
     "build": "prisma generate && tsc",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
