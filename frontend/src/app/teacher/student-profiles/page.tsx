@@ -189,7 +189,39 @@ export default function StudentProfilesPage() {
 
       {/* Profiles Grid */}
       {loading ? (
-        <div className="text-center py-12 text-xs text-[var(--text-muted)]">Loading student database roster...</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6 animate-pulse">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <div key={n} className="bg-[var(--bg-card)] border border-[var(--border)] p-5 rounded-2xl flex flex-col justify-between space-y-5">
+              <div>
+                {/* Header skeleton */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-slate-800" />
+                  <div className="space-y-2 flex-1">
+                    <div className="h-4 bg-slate-800 rounded w-1/2" />
+                    <div className="h-3 bg-slate-800 rounded w-1/3" />
+                  </div>
+                </div>
+                {/* Stats skeleton */}
+                <div className="space-y-3 mb-4">
+                  <div className="flex justify-between text-xs">
+                    <div className="h-3 bg-slate-800 rounded w-1/4" />
+                    <div className="h-3 bg-slate-800 rounded w-12" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <div className="h-3 bg-slate-800 rounded w-1/4" />
+                    <div className="h-3 bg-slate-800 rounded w-8" />
+                  </div>
+                  <div className="flex justify-between text-xs">
+                    <div className="h-3 bg-slate-800 rounded w-1/4" />
+                    <div className="h-3 bg-slate-800 rounded w-10" />
+                  </div>
+                </div>
+              </div>
+              {/* Button skeleton */}
+              <div className="h-8 bg-slate-800 rounded-xl w-full" />
+            </div>
+          ))}
+        </div>
       ) : filteredStudents.length === 0 ? (
         <div className="text-center py-12 text-xs text-[var(--text-muted)]">No student records found matching the query.</div>
       ) : (

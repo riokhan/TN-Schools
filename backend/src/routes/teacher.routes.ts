@@ -482,9 +482,12 @@ router.post('/leave', async (req: Request, res: Response) => {
 // GET /api/teacher/lessons
 router.get('/lessons', async (req: Request, res: Response) => {
   try {
-    const { schoolId } = req.query;
+    const { schoolId, subject } = req.query;
     const lessons = await prisma.lessonPlan.findMany({
-      where: schoolId ? { schoolId: String(schoolId) } : undefined,
+      where: {
+        ...(schoolId ? { schoolId: String(schoolId) } : {}),
+        ...(subject ? { subject: { equals: String(subject), mode: 'insensitive' } } : {}),
+      },
       orderBy: { createdAt: 'desc' },
     });
     res.json({ success: true, data: lessons });
@@ -769,21 +772,89 @@ router.post('/messages', async (req: Request, res: Response) => {
 router.get('/analytics/class', async (req: Request, res: Response) => {
   try {
     const { schoolId, class: cls, section } = req.query;
-    const students = await prisma.student.findMany({
-      where: {
-        ...(schoolId ? { schoolId: String(schoolId) } : {}),
-        ...(cls ? { class: String(cls) } : {}),
-        ...(section ? { section: String(section) } : {}),
-      },
-      include: {
-        user: { select: { name: true } },
-        marks: true,
-        attendance: true,
-      },
-      orderBy: { rollNumber: 'asc' },
-    });
+
+    if (!schoolId || !cls || !section) {
+      // Fallback to original query if any parameters are missing
+      const students = await prisma.student.findMany({
+        where: {
+          ...(schoolId ? { schoolId: String(schoolId) } : {}),
+          ...(cls ? { class: String(cls) } : {}),
+          ...(section ? { section: String(section) } : {}),
+        },
+        include: {
+          user: { select: { name: true } },
+          marks: true,
+          attendance: true,
+        },
+        orderBy: { rollNumber: 'asc' },
+      });
+      return res.json({ success: true, data: students });
+    }
+
+    const schoolIdStr = String(schoolId);
+    const classStr = String(cls);
+    const sectionStr = String(section);
+
+    // Optimized Raw SQL query to fetch all required fields, joined and aggregated 
+    // into JSON arrays in a single database roundtrip (minimizing WAN latency).
+    const students = await prisma.$queryRaw<any[]>`
+      SELECT 
+        s.id, 
+        s."userId", 
+        s."schoolId", 
+        s.class, 
+        s.section, 
+        s."rollNumber", 
+        s.dob, 
+        s.gender, 
+        s.religion, 
+        s.caste, 
+        s."parentName", 
+        s."parentMobile", 
+        s."createdAt",
+        s."updatedAt",
+        json_build_object('name', u.name) AS "user",
+        COALESCE(
+          (SELECT json_agg(json_build_object(
+            'id', m.id,
+            'studentId', m."studentId",
+            'subject', m.subject,
+            'examType', m."examType",
+            'maxMarks', m."maxMarks",
+            'scored', m.scored,
+            'grade', m.grade,
+            'academicYear', m."academicYear",
+            'createdAt', m."createdAt"
+          ))
+           FROM "Mark" m 
+           WHERE m."studentId" = s.id), 
+          '[]'::json
+        ) AS marks,
+        COALESCE(
+          (SELECT json_agg(json_build_object(
+            'id', a.id,
+            'studentId', a."studentId",
+            'schoolId', a."schoolId",
+            'date', a.date,
+            'status', a.status,
+            'method', a.method,
+            'createdAt', a."createdAt"
+          ))
+           FROM "Attendance" a 
+           WHERE a."studentId" = s.id), 
+          '[]'::json
+        ) AS attendance
+      FROM "Student" s
+      JOIN "User" u ON s."userId" = u.id
+      WHERE s."schoolId" = ${schoolIdStr} 
+        AND s.class = ${classStr} 
+        AND s.section = ${sectionStr}
+      ORDER BY s."rollNumber" ASC
+    `;
+
     res.json({ success: true, data: students });
   } catch (err) {
+    console.error('Error fetching optimized class analytics:', err);
     res.status(500).json({ success: false, error: String(err) });
   }
 });

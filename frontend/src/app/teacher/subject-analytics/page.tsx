@@ -82,14 +82,10 @@ export default function SubjectAnalyticsPage() {
 
   const fetchChapters = async () => {
     try {
-      const res = await fetch(`${API_URL}/api/teacher/lessons?schoolId=${schoolId || ""}`);
+      const res = await fetch(`${API_URL}/api/teacher/lessons?schoolId=${schoolId || ""}&subject=Science`);
       const data = await res.json();
       if (data.success && data.data) {
-        // Filter by Science subject (case-insensitive) to show chapters for subject-analytics
-        const scienceLessons = data.data.filter(
-          (l: any) => l.subject?.toLowerCase() === "science"
-        );
-        const mappedChapters: Chapter[] = scienceLessons.map((l: any) => {
+        const mappedChapters: Chapter[] = data.data.map((l: any) => {
           const planDetails = l.planData || {};
           return {
             id: l.id,
@@ -462,8 +458,59 @@ export default function SubjectAnalyticsPage() {
       </div>
 
       {loading ? (
-        <div className="text-center py-12 text-xs text-[var(--text-muted)]">
-          Loading subject analytics...
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 animate-pulse">
+          {/* Chapter coverage directory skeleton */}
+          <div className="lg:col-span-2 bg-[var(--bg-card)] border border-[var(--border)] p-6 rounded-2xl space-y-6">
+            <div className="flex justify-between items-center">
+              <div className="h-6 bg-slate-800 rounded w-1/3" />
+              <div className="h-8 bg-slate-800 rounded w-1/4" />
+            </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map((n) => (
+                <div key={n} className="p-4 bg-[var(--bg-main)] rounded-2xl border border-[var(--border)] space-y-4">
+                  <div className="flex justify-between">
+                    <div className="space-y-2 w-1/2">
+                      <div className="h-3 bg-slate-800 rounded w-1/4" />
+                      <div className="h-4 bg-slate-800 rounded w-3/4" />
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="h-6 bg-slate-800 rounded w-16" />
+                      <div className="h-8 bg-slate-800 rounded w-8" />
+                      <div className="h-8 bg-slate-800 rounded w-8" />
+                    </div>
+                  </div>
+                  <div className="h-2 bg-slate-800 rounded w-full" />
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Side panel skeletons */}
+          <div className="space-y-6">
+            {/* AI Predictor skeleton */}
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 space-y-4">
+              <div className="h-5 bg-slate-800 rounded w-2/3" />
+              <div className="space-y-2">
+                <div className="h-3 bg-slate-800 rounded w-full" />
+                <div className="h-3 bg-slate-800 rounded w-5/6" />
+              </div>
+              <div className="h-10 bg-slate-800 rounded w-full" />
+            </div>
+            {/* Distribution skeleton */}
+            <div className="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl p-6 space-y-4">
+              <div className="h-5 bg-slate-800 rounded w-1/2" />
+              <div className="space-y-4">
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <div key={n} className="space-y-2">
+                    <div className="flex justify-between">
+                      <div className="h-3 bg-slate-800 rounded w-1/4" />
+                      <div className="h-3 bg-slate-800 rounded w-1/3" />
+                    </div>
+                    <div className="h-2.5 bg-slate-800 rounded w-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
